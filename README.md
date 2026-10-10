@@ -65,6 +65,14 @@ python tools/check.py
   again. **Do not push unless `tools/check.py` ends with OK.**
 * `docs/data/real_sample_speech.wav`: an Indian-English recording provided by the course instructor.
 
+## Licence
+
+* **Code** (`tools/`, the `*.py` generators and the pages' JavaScript): [MIT](LICENSE).
+* **Content** (text, figures, diagrams, quizzes and course audio, including `docs/data/real_sample_speech.wav`):
+  [CC BY-NC 4.0](LICENSE-content.md): reuse and adapt with credit, not for commercial purposes.
+* Third-party material keeps its own licence (CMU ARCTIC, PHOIBLE, Glottolog, KaTeX; TIMIT is not included): see
+  [LICENSE-content.md](LICENSE-content.md). Every page's footer states the licence.
+
 ## Writing equations
 
 All maths is LaTeX rendered by the local KaTeX: inline `\( ... \)`, display `$$ ... $$` (inside `<div class="eq">`).

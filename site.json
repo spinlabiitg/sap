@@ -1,6 +1,7 @@
 {
   "title": "Speech and Audio Processing",
   "abbr": "SAP",
+  "repo": "https://github.com/spinlabiitg/sap",
   "tagline": "Speech and audio, from the physics of a sound to the models that understand it.",
   "course": "IIT Guwahati",
   "intro": "Interactive notes built for the classroom. Each page starts from intuition and everyday analogies, then adds the maths, figures, listening examples and live demos that run in your browser. New modules are added as the course grows.",

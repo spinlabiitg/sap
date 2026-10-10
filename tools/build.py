@@ -75,12 +75,21 @@ def nav_html(cur):
             f'</div></nav>')
 
 
+def licence_html():
+    """One line on every page: content CC BY-NC 4.0, code MIT (details in the repository's LICENSE files)."""
+    repo = SITE.get("repo")
+    content = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener license">CC BY-NC 4.0</a>'
+    code = f'<a href="{esc(repo)}/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a>' if repo else "MIT"
+    more = f' (<a href="{esc(repo)}/blob/main/LICENSE-content.md" target="_blank" rel="noopener">details</a>)' if repo else ""
+    return f'<span class="ai-lic">Text, figures and audio: {content} &middot; code: {code}{more}</span>'
+
+
 def foot_html(cur):
     ins = SITE.get("instructor")
     who = (f'Instructor: <a href="{esc(ins["url"])}" target="_blank" rel="noopener">{esc(ins["name"])}</a>, {esc(ins["affiliation"])}'
            if ins else esc(SITE["course"]))
     return (f'<footer class="ai-foot"><a href="{rel(cur, "index.html")}">{esc(SITE["title"])}</a> &middot; {who} '
-            f'&middot; <a href="{rel(cur, "index.html")}#credits">data credits</a></footer>')
+            f'&middot; <a href="{rel(cur, "index.html")}#credits">data credits</a>{licence_html()}</footer>')
 
 
 def inject(path, key, block, where):
@@ -162,7 +171,7 @@ def home():
   <ul class="ai-updates">{ups}</ul>
   <details class="ai-credits-box" id="credits"><summary>Data and credits</summary><ul class="ai-credits">{cred}</ul></details>
 </main>
-<footer class="ai-foot">{esc(SITE["title"])} &middot; {esc(SITE["course"])} &middot; <a href="{esc(ins.get("url", "#"))}" target="_blank" rel="noopener">{esc(ins.get("name", ""))}</a></footer>
+<footer class="ai-foot">{esc(SITE["title"])} &middot; {esc(SITE["course"])} &middot; <a href="{esc(ins.get("url", "#"))}" target="_blank" rel="noopener">{esc(ins.get("name", ""))}</a>{licence_html()}</footer>
 <script>/* open the credits panel when arriving via #credits (pages link to it) */
 (function () {{ function o() {{ if (location.hash === '#credits') document.getElementById('credits').open = true; }} o(); window.addEventListener('hashchange', o); }})();</script>
 </body>
