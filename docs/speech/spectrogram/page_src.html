@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seeing Sound: the Spectrogram</title>
+<meta name="description" content="How a spectrogram is computed and inverted (STFT, windows, overlap-add, Griffin-Lim), wideband vs narrowband views, why decibels and colour maps matter, and how to read vowels, fricatives, stops and nasals in real Indian-English speech, with live demos.">
+<!--HEAD-->
+<style>
+<!--STYLE-->
+  :root { --nasal: #7A4BA0; --approx: #2E8B57; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --nasal: #B48BD6; --approx: #5CC48A; } }
+  :root[data-theme="dark"] { --nasal: #B48BD6; --approx: #5CC48A; }
+  table.budget { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+  table.budget td, table.budget th { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  table.budget th { color: var(--ink); }
+  table.budget td.n { text-align: right; font-family: "JetBrains Mono", monospace; white-space: nowrap; }
+  .demo label.lbl { display: block; font-size: 0.8rem; color: var(--muted); margin: 8px 0 3px; }
+  .demo input[type=range] { width: 100%; }
+  .demo h4 { margin: 0 0 6px; }
+  .agrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; margin: 14px 0; }
+  .agrid .card { padding: 12px 14px; }
+  .agrid .card h4 { margin: 0 0 2px; font-size: 0.92rem; }
+  .agrid .card .rate { font-family: "JetBrains Mono", monospace; font-size: 0.8rem; color: var(--accent); }
+  .agrid .card p { font-size: 0.82rem; margin: 4px 0 6px; color: var(--muted); }
+  .agrid audio { width: 100%; height: 32px; }
+  .warn { font-size: 0.82rem; color: var(--muted); }
+  code { overflow-wrap: anywhere; }
+  details summary { cursor: pointer; }
+  .readout div b.txt { font-family: "Inter", sans-serif; font-size: 0.85rem; }
+  .cls { font-weight: 600; }
+  .cls.v { color: var(--accent); } .cls.d { color: var(--teal); } .cls.f { color: var(--accent-2); } .cls.s { color: var(--accent-3); }
+  .cls.n { color: var(--nasal); } .cls.a { color: var(--approx); }
+  .steps ol { margin: 0; padding-left: 22px; }
+  .steps li { margin: 6px 0; }
+  .steps li::marker { color: var(--accent); font-weight: 700; }
+  .steps .katex-display { margin: 6px 0; overflow-x: auto; overflow-y: hidden; }
+  pre.code { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font: 0.82rem/1.5 "JetBrains Mono", monospace;
+    overflow-x: auto; color: var(--ink); margin: 12px 0; }
+  pre.code .cm { color: var(--muted); }
+  #glDemo canvas { width: 100%; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker">Speech and Audio Processing &middot; Module 1</div>
+  <h1>Seeing sound: the spectrogram</h1>
+  <p class="lede">
+    A spectrogram is a picture of sound: time runs left to right, frequency bottom to top, and colour shows how much energy there is at each time and frequency. It is the first thing
+    a speech scientist looks at and the input to most speech and audio models today. This page builds one from scratch, shows what its settings do, turns it back into sound, and
+    then uses it to <strong>read speech</strong>: vowels, hisses, bursts and hums, in a real Indian-English recording.
+  </p>
+  <div class="roadmap">
+    <strong style="color:var(--ink);">The path through this page</strong>
+    <ol>
+      <li><a href="#why">Why we need it</a>: a waveform hides frequency, one big FFT hides time</li>
+      <li><a href="#stft">The STFT, step by step</a>: frame, window, FFT, magnitude, stack (live &ldquo;STFT machine&rdquo;)</li>
+      <li><a href="#windows">Windows and leakage</a>: rectangular, Hann and Hamming</li>
+      <li><a href="#tradeoff">Wideband or narrowband</a>: the time&ndash;frequency trade-off, striations vs harmonics (live)</li>
+      <li><a href="#colour">Decibels and colour</a>: dynamic range, colour maps and the colour bar (live)</li>
+      <li><a href="#inverse">Going back to sound</a>: overlap-add, and what is lost without phase, and <a href="#griffinlim">Griffin&ndash;Lim step by step</a> (live demo)</li>
+      <li><a href="#reading">Reading speech</a>: phones in the spectrogram (live, labelled) and a gallery of sound classes</li>
+      <li><a href="#settings">Practical settings</a>: what people actually use</li>
+      <li><a href="#check">Check your understanding</a></li>
+    </ol>
+  </div>
+  <div class="meta-line">Module 1 of Speech and Audio Processing &middot; next: <a href="sounds_language.html">the sounds of language</a> &middot; background: <a href="decibels.html">why decibels?</a> &middot; speech: CMU ARCTIC speaker ksp (Indian-English male, 16&nbsp;kHz) &middot; headphones help for the listening examples</div>
+</header>
+
+<!-- ============================================================ 1. WHY -->
+<section id="why">
+  <div class="kicker">01 &middot; Why we need it</div>
+  <h2>One picture for <em>when</em> and <em>which frequency</em>.</h2>
+  <p>
+    Here is one sentence, &ldquo;<em>But life's worth more than cash, she argued.</em>&rdquo;, <!--N:dur_s:.2f-->&nbsp;s long, sampled at 16&nbsp;kHz. Look at it three ways.
+  </p>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/01_why_spectrogram.png?v=1" alt="The ksp sentence as a waveform, as one whole-utterance spectrum, and as a spectrogram" loading="lazy"></div>
+    <figcaption><b>Figure 1.</b> The same <!--N:n_samples--> samples, three ways. <b>Top:</b> the waveform shows loud and quiet stretches, so you can find the words, but not which frequencies
+    are present. <b>Middle:</b> one FFT of the whole sentence has a frequency point every <!--N:whole_bin_hz:.3f-->&nbsp;Hz, beautifully detailed, but it mixes the /s/, the vowels and the
+    pauses into one curve: there is no &ldquo;when&rdquo; left. (The fall above 7.5&nbsp;kHz is the recording's anti-aliasing filter.) <b>Bottom:</b> the spectrogram keeps both. The hiss of
+    /s/ in &ldquo;life's&rdquo; and of /ʃ/ in &ldquo;cash, she&rdquo; shows as tall noisy blocks, the vowels as stacks of horizontal lines low down.</figcaption>
+  </figure>
+  <p>
+    The waveform and the whole-signal spectrum are two extremes. One has perfect time detail and no frequency axis; the other has perfect frequency detail and no time axis. Speech needs
+    something in between, because <strong>speech changes all the time</strong>. Over the whole ksp recording set (<!--N:corpus_utts--> sentences, <!--N:corpus_phones--> phones),
+    the median phone lasts <!--N:phone_med_ms-->&nbsp;ms, and 80&nbsp;% of phones last between <!--N:phone_p10_ms--> and <!--N:phone_p90_ms-->&nbsp;ms. Inside a phone, the vocal folds open and
+    close every few milliseconds. A spectrum of the whole sentence averages all of that away.
+  </p>
+  <div class="keyidea">
+    Cut the signal into <strong>short, overlapping slices</strong>, short enough that the sound is roughly steady inside each one (a few to a few tens of milliseconds), take the spectrum of
+    every slice, and stand the spectra side by side. That is the <strong>short-time Fourier transform</strong> (STFT), and its magnitude, drawn as an image, is the spectrogram.
+  </div>
+  <div class="intuition">
+    A spectrogram is like a musical score that writes itself: time left to right, pitch bottom to top, and loudness as darkness or colour. The difference is that it shows <em>every</em>
+    frequency, not just the notes, so it also draws noises, bursts and the resonances of the vocal tract.
+  </div>
+  <p>
+    The idea is older than digital computers. In 1946 Koenig, Dunn and Lacy at Bell Telephone Laboratories described the <em>sound spectrograph</em>, which scanned a recording with a tunable
+    band-pass filter and burnt the output onto paper. A year later Potter, Kopp and Green published <em>Visible Speech</em>, a book that taught people to read words from these pictures.
+    Every spectrogram on this page is computed the digital way, with the FFT.
+  </p>
+</section>
+
+<!-- ============================================================ 2. STFT -->
+<section id="stft">
+  <div class="kicker">02 &middot; The STFT, step by step</div>
+  <h2>Frame, window, FFT, magnitude, stack.</h2>
+  <p>The recipe has five steps, and three numbers control it.</p>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/02_stft_steps.png?v=1" alt="The STFT steps on a vowel: framing with Hann windows, the windowed frame, and its spectrum in dB" loading="lazy"></div>
+    <figcaption><b>Figure 2.</b> The steps on the vowel of &ldquo;cash&rdquo;. ① Choose a frame of \(L\) samples, then move along by a <em>hop</em> of \(H\) samples to the next one (here 25&nbsp;ms and 10&nbsp;ms,
+    so neighbouring frames overlap by 60&nbsp;%). ② Multiply the frame by a smooth window that falls to zero at both ends. ③ Take the FFT and keep the magnitude, in dB. ④ Do this for every
+    frame and place the spectra side by side as columns.</figcaption>
+  </figure>
+  <p>Written as one formula, the STFT of a signal \(x[n]\) with a window \(w[n]\) of length \(L\) is</p>
+  <div class="eq">$$X[m,k] \;=\; \sum_{n} x[n]\; w[n - mH]\; e^{-j 2\pi k n / N}, \qquad k = 0, 1, \dots, N-1$$
+    <span class="note">\(m\) numbers the frames (frame \(m\) starts at sample \(mH\)), \(k\) numbers the frequency bins, and \(N \ge L\) is the FFT size. The window is zero outside \(0 \le n - mH < L\), so each \(X[m,\cdot]\) only sees one slice. Written this way the phase is measured from the start of the signal; many libraries put \(n - mH\) in the exponent instead, which changes the phase of \(X\) but not \(|X|\).</span></div>
+  <p>Frame \(m\) sits at time \(t_m = mH/f_s\) and bin \(k\) at frequency \(f_k = k f_s / N\). The <strong>spectrogram</strong> is the magnitude, usually squared and in decibels:</p>
+  <div class="eq">$$S_{\text{dB}}[m,k] = 20\log_{10}\bigl|X[m,k]\bigr| \;=\; 10\log_{10}\bigl|X[m,k]\bigr|^2$$
+    <span class="note">The phase \(\angle X[m,k]\) is thrown away for the picture. Section 6 shows what that costs when we want the sound back.</span></div>
+
+  <h3>The three numbers: \(L\), \(H\) and \(N\)</h3>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>symbol</th><th>name</th><th>what it controls</th><th>typical for speech at 16&nbsp;kHz</th></tr>
+      <tr><td><b>\(L\)</b></td><td>window length</td><td>how long a slice the analysis &ldquo;sees&rdquo;, and so the trade-off between time detail and frequency detail (section 4)</td><td>5&ndash;40&nbsp;ms (80&ndash;640 samples)</td></tr>
+      <tr><td><b>\(H\)</b></td><td>hop</td><td>how often a column is computed; it sets the picture's time sampling but not its time resolution</td><td>1&ndash;10&nbsp;ms, usually \(L/4\) to \(L/2\)</td></tr>
+      <tr><td><b>\(N\)</b></td><td>FFT size</td><td>how many frequency points are drawn: the bin spacing is \(f_s/N\)</td><td>the next power of two \(\ge L\), e.g. 512</td></tr>
+    </table>
+  </div>
+
+  <h3>Bin spacing is not resolution</h3>
+  <p>
+    A common confusion: if \(N\) sets the bin spacing, why not use a huge FFT and get fine frequency detail for free? You can pad the frame with zeros up to any \(N\). But the zeros add no
+    information. They only <strong>interpolate</strong> between the points you already had. The ability to tell two nearby frequencies apart, the <strong>resolution</strong>, is set by how
+    long a stretch of signal you looked at: roughly \(f_s/L\) hertz, times a factor of 1&ndash;2 that depends on the window.
+  </p>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/03_zero_padding.png?v=1" alt="Two tones 40 Hz apart: a short window with and without zero-padding, and a long window" loading="lazy"></div>
+    <figcaption><b>Figure 3.</b> A synthetic signal: two equal tones at <!--N:zp_f1--> and <!--N:zp_f2-->&nbsp;Hz, Hann window. <b>Left:</b> a 16&nbsp;ms window and a 256-point FFT gives one point
+    every 62.5&nbsp;Hz. <b>Middle:</b> the same 16&nbsp;ms padded to 4096 points draws a smooth curve, but still one lump: zero-padding only interpolated it. <b>Right:</b> a 64&nbsp;ms window
+    separates the two tones. Only a longer look resolves them.</figcaption>
+  </figure>
+
+  <div class="card demo" id="stftDemo">
+    <h4>The STFT machine</h4>
+    <p class="warn" style="margin:0 0 6px;">Drag the time slider, or press run: the red window slides along the sentence, and every 2&nbsp;ms its spectrum is painted as one more column of the spectrogram.</p>
+    <div class="ctlrow">
+      <span>window length:</span>
+      <span class="seg" id="smL"><button data-l="4">4 ms</button><button data-l="10">10 ms</button><button data-l="25" class="on">25 ms</button><button data-l="40">40 ms</button></span>
+      <span>window:</span>
+      <span class="seg" id="smW"><button data-w="rect">rectangular</button><button data-w="hann" class="on">Hann</button><button data-w="hamming">Hamming</button></span>
+    </div>
+    <label class="lbl" for="smT">time: <span class="valpill" id="smTV"></span></label>
+    <input type="range" id="smT" min="0" max="2985" step="1" value="700">
+    <div class="ctlrow"><button id="smRun">▶ run the machine (with sound)</button><button id="smPlay">▶ play 0.3 s around here</button></div>
+    <div class="plotlabel">① the sentence and the current window (red)</div>
+    <canvas id="smWave" class="plot" height="80"></canvas>
+    <div class="grid2" style="gap:10px;">
+      <div><div class="plotlabel">② the frame (grey) and the windowed frame (red)</div><canvas id="smFrame" class="plot" height="140"></canvas></div>
+      <div><div class="plotlabel">③ its spectrum, dB re the loudest frame of the sentence</div><canvas id="smSpec" class="plot" height="140"></canvas></div>
+    </div>
+    <div class="plotlabel">④ the spectrogram so far (80&nbsp;dB range)</div>
+    <canvas id="smSg" class="plot" height="190"></canvas>
+    <div class="readout" id="smRead"></div>
+  </div>
+  <div class="try">
+    Park the slider in the /s/ of &ldquo;life's&rdquo; (about 0.70&nbsp;s) and then in the vowel of &ldquo;cash&rdquo; (about 1.70&nbsp;s). The /s/ spectrum is a ragged plateau above 3&ndash;4&nbsp;kHz; the vowel
+    spectrum is a comb of harmonics with humps (formants). Switch to the rectangular window in the vowel and watch the gaps between harmonics fill up: that is leakage, the topic of the next section.
+  </div>
+</section>
+
+<!-- ============================================================ 3. WINDOWS -->
+<section id="windows">
+  <div class="kicker">03 &middot; Windows and leakage</div>
+  <h2>Why not just cut the signal with scissors?</h2>
+  <p>
+    Cutting a frame out with no window at all is the same as multiplying by a <em>rectangular</em> window: 1 inside, 0 outside. Multiplying in time is convolving in frequency, so every
+    spectral line in the frame is replaced by a copy of the window's own spectrum. A sharp-edged window has a spectrum with tall <strong>side lobes</strong>, so energy from a strong
+    component spills, or <strong>leaks</strong>, into bins far away and can bury weak components there. A window that tapers smoothly to zero has much lower side lobes, at the price of
+    a wider <strong>main lobe</strong>, which blurs nearby frequencies together.
+  </p>
+  <div class="eq">$$w_{\text{Hann}}[n] = 0.5 - 0.5\cos\frac{2\pi n}{L}, \qquad w_{\text{Hamming}}[n] = 0.54 - 0.46\cos\frac{2\pi n}{L}, \qquad 0 \le n < L$$
+    <span class="note">Hamming is a Hann window lifted onto a small pedestal (it ends at 0.08, not 0). The weights are chosen to cancel the first side lobe, which lowers the highest side lobe but leaves a step at the edges, so its far side lobes decay slowly. (With \(L-1\) in the denominator instead of \(L\) these are the <em>symmetric</em> versions; section 6 explains why the difference matters.)</span></div>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/04_windows_leakage.png?v=1" alt="Rectangular, Hann and Hamming windows, their spectra, and a two-tone leakage test" loading="lazy"></div>
+    <figcaption><b>Figure 4.</b> <b>Top:</b> the three windows and their spectra, with frequency in bins of \(f_s/L\). <b>Bottom:</b> a synthetic test with a strong tone at <!--N:lk_fA-->&nbsp;Hz and one
+    <!--N:lk_gB:abs.0f-->&nbsp;dB weaker at <!--N:lk_fB-->&nbsp;Hz, <!--N:lk_sep_bins--> bins away, analysed over 32&nbsp;ms. With the rectangular window the strong tone's leakage near the weak one is
+    about <!--N:lk_floor_rect-->&nbsp;dB and hides it. With Hann the leakage there has fallen to about <!--N:lk_floor_hann-->&nbsp;dB and the weak tone stands out. Hamming has the lowest
+    <em>highest</em> side lobe, but its side lobes stay near <!--N:lk_floor_hamming-->&nbsp;dB far from the peak, which is just enough to swamp a tone at <!--N:lk_gB:d-->&nbsp;dB.</figcaption>
+  </figure>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>window</th><th>highest side lobe</th><th>main lobe, null to null</th><th>main lobe, −6&nbsp;dB width</th><th>far side lobes fall at</th></tr>
+      <tr><td>rectangular</td><td class="n"><!--N:sl_rect-->&nbsp;dB</td><td class="n"><!--N:null_rect--> bins</td><td class="n"><!--N:bw6_rect:.2f--> bins</td><td>−6&nbsp;dB per octave</td></tr>
+      <tr><td>Hann</td><td class="n"><!--N:sl_hann-->&nbsp;dB</td><td class="n"><!--N:null_hann:.1f--> bins</td><td class="n"><!--N:bw6_hann:.2f--> bins</td><td>−18&nbsp;dB per octave</td></tr>
+      <tr><td>Hamming</td><td class="n"><!--N:sl_hamming-->&nbsp;dB</td><td class="n"><!--N:null_hamming:.1f--> bins</td><td class="n"><!--N:bw6_hamming:.2f--> bins</td><td>−6&nbsp;dB per octave</td></tr>
+    </table>
+    <p class="note" style="margin-top:8px;">Measured here on 64-sample symmetric windows (hence null-to-null widths slightly above 4 bins). Harris (1978) gives −13, −31 and −43&nbsp;dB for long windows; the roll-off rates are his.
+    One bin is \(f_s/L\): 40&nbsp;Hz for a 25&nbsp;ms window at 16&nbsp;kHz.</p>
+  </div>
+  <p style="margin-top:14px;">
+    For speech, Hann and Hamming are both fine and both common: classic speech recognisers used Hamming (HTK, for example), while many newer toolkits default to Hann. The rectangular window is
+    almost never right for a spectrogram. The &minus;6&nbsp;dB main-lobe width is a fair measure of resolution: with a Hann window two equal components need to be about
+    <!--N:bw6_hann:.0f--> bins, \(2f_s/L\), apart to show as two peaks.
+  </p>
+  <div class="keyidea">
+    A window trades <strong>leakage</strong> (side lobes, which let loud parts spill into quiet regions) against <strong>blur</strong> (main-lobe width, which merges close frequencies). In a
+    speech spectrogram, where loud low harmonics sit next to formants 40&ndash;60&nbsp;dB weaker, low side lobes matter more than the last bit of sharpness, so we always taper.
+  </div>
+</section>
+
+<!-- ============================================================ 4. TRADE-OFF -->
+<section id="tradeoff">
+  <div class="kicker">04 &middot; Wideband or narrowband</div>
+  <h2>You cannot have sharp time and sharp frequency at once.</h2>
+  <p>
+    A window of \(L\) samples lasts \(\Delta t \approx L/f_s\) seconds and resolves about \(\Delta f \approx f_s/L\) hertz. Their product is a constant: make the window shorter for better timing and the
+    frequency detail gets coarser by the same factor. This is a property of the Fourier transform itself (Gabor's form of the uncertainty principle), not of the FFT:
+  </p>
+  <div class="eq">$$\Delta t \cdot \Delta f \approx \frac{L}{f_s}\cdot\frac{f_s}{L} = 1, \qquad\text{and strictly}\quad \sigma_t\,\sigma_f \ge \frac{1}{4\pi}$$
+    <span class="note">\(\sigma_t\) and \(\sigma_f\) are the rms durations and bandwidths of the window; a Gaussian window reaches the bound. The exact constant depends on how widths are defined, the trade-off does not.</span></div>
+  <p>
+    For voiced speech the natural ruler is the <strong>pitch period</strong> \(T_0 = 1/F_0\), the time between glottal pulses. From the corpus pitch marks inside the vowels of our sentence, ksp's median
+    period is <strong><!--N:T0_ms-->&nbsp;ms</strong>, so \(F_0 \approx\) <strong><!--N:F0_hz-->&nbsp;Hz</strong> (80&nbsp;% of the <!--N:n_periods--> periods lie between <!--N:F0_p10--> and
+    <!--N:F0_p90-->&nbsp;Hz). Compare the window with that period:
+  </p>
+  <div class="grid2">
+    <div class="card"><h4>Wideband: \(L &lt; T_0\)</h4><p style="font-size:0.92rem;margin:0;">A 3&ndash;5&nbsp;ms window sees less than one period. Each frame either contains a glottal pulse or does not, so the picture shows
+    <strong>vertical striations</strong>, one per pulse. Its frequency blur (about 250&nbsp;Hz for 4&nbsp;ms) smears the harmonics together into broad <strong>formant bands</strong>. Best for formants, bursts and timing.</p></div>
+    <div class="card"><h4>Narrowband: \(L \gtrsim 2\text{–}3\,T_0\)</h4><p style="font-size:0.92rem;margin:0;">A 25&ndash;40&nbsp;ms window spans several periods. The periodicity shows up in frequency as
+    <strong>horizontal harmonics</strong> at \(F_0, 2F_0, 3F_0, \dots\), each about \(f_s/L\) = 25&ndash;40&nbsp;Hz wide. Timing blurs over the window. Best for pitch and intonation.</p></div>
+  </div>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/05_wide_vs_narrow.png?v=1" alt="The sentence with 4, 10, 25 and 40 ms windows" loading="lazy"></div>
+    <figcaption><b>Figure 5.</b> The same sentence with Hann windows of 4, 10, 25 and 40&nbsp;ms (<!--N:ppw_4-->, <!--N:ppw_10-->, <!--N:ppw_25--> and <!--N:ppw_40--> pitch periods of
+    <!--N:T0_ms-->&nbsp;ms). At 4&nbsp;ms the vowels are vertical stripes under dark formant bands and every burst is a crisp vertical line. At 25&ndash;40&nbsp;ms the vowels turn into
+    stacks of harmonic lines and the bursts smear sideways. 10&nbsp;ms, about one period, shows neither pattern cleanly.</figcaption>
+  </figure>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/06_striations_vs_harmonics.png?v=1" alt="Close-up of the vowel in cash: striations with a 4 ms window and harmonics with a 40 ms window" loading="lazy"></div>
+    <figcaption><b>Figure 6.</b> A close-up of the vowel /æ/ in &ldquo;cash&rdquo;. <b>Left (4&nbsp;ms):</b> the vertical striations line up with the corpus pitch marks (ticks at the top), one per glottal
+    closure. <b>Right (40&nbsp;ms):</b> the harmonics follow the dotted lines at multiples of the \(F_0\) measured from those pitch marks. Pitch falls through this vowel, from about
+    <!--N:F0_cash_start--> to <!--N:F0_cash_end-->&nbsp;Hz, so every harmonic slopes down, and the tenth falls ten times as far as the first. That fast change is also why high harmonics
+    blur in a long window: the pitch moves during the 40&nbsp;ms the window looks at.</figcaption>
+  </figure>
+
+  <div class="card demo" id="wnDemo">
+    <h4>Slide the window length</h4>
+    <div class="ctlrow">
+      <span class="seg" id="wnPre"><button data-l="3">3 ms</button><button data-l="4" class="on">4 ms</button><button data-l="10">10 ms</button><button data-l="25">25 ms</button><button data-l="40">40 ms</button></span>
+      <span class="seg" id="wnView"><button data-v="zoom" class="on">zoom: &ldquo;cash&rdquo;</button><button data-v="whole">whole sentence</button></span>
+      <span class="seg" id="wnF"><button data-f="4000" class="on">0&ndash;4 kHz</button><button data-f="8000">0&ndash;8 kHz</button></span>
+      <button id="wnPlay">▶ play this view</button>
+    </div>
+    <label class="lbl" for="wnL">window length \(L\): <span class="valpill" id="wnLV"></span></label>
+    <input type="range" id="wnL" min="2" max="64" step="1" value="4">
+    <canvas id="wnCv" class="plot" height="250"></canvas>
+    <div class="readout" id="wnRead"></div>
+  </div>
+  <div class="try">
+    Start at 4&nbsp;ms in the &ldquo;cash&rdquo; zoom and count the striations in 50&nbsp;ms: there should be about \(50/<!--N:T0_ms--> \approx 7\). Then slide slowly up. Near 8&ndash;12&nbsp;ms (one period) the stripes fade
+    and the harmonics have not yet appeared. By 25&nbsp;ms the harmonics are clear. A child or many female voices, with \(F_0\) of 200&ndash;300&nbsp;Hz, would need a window of about 3&nbsp;ms or less for a true wideband view.
+  </div>
+  <p>
+    Phoneticians usually read <strong>wideband</strong> spectrograms, because formants and the timing of bursts and closures carry most of the phonetic information. The classic analogue
+    sound spectrograph offered exactly these two choices: a wide (300&nbsp;Hz) and a narrow (45&nbsp;Hz) analysing filter. Speech recognisers and neural models use a compromise, typically 25&nbsp;ms (section 8).
+  </p>
+</section>
+
+<!-- ============================================================ 5. COLOUR -->
+<section id="colour">
+  <div class="kicker">05 &middot; Decibels and colour</div>
+  <h2>How the numbers become a picture.</h2>
+  <p>
+    A spectrogram is a grid of numbers, \(|X[m,k]|\). To draw it we choose a <strong>scale</strong> (linear or decibels), a <strong>range</strong> (which values map to the darkest and brightest
+    colours) and a <strong>colour map</strong>. Each choice changes what you can see.
+  </p>
+  <h3>Linear or dB, and how many dB</h3>
+  <p>
+    Voiced speech has strong low harmonics and formants 40&ndash;60&nbsp;dB weaker higher up (see <a href="decibels.html#spectrum">why decibels?</a>). On a linear scale only the loudest few
+    components show: in our sentence only <!--N:vis_lin10:.1f-->&nbsp;% of the time&ndash;frequency cells exceed a tenth of the peak magnitude. Taking \(20\log_{10}\) compresses the range so that
+    quiet detail becomes visible, and then we must pick a <strong>floor</strong>: everything more than \(R\) dB below the maximum is drawn in the darkest colour.
+  </p>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/07_linear_vs_db_range.png?v=1" alt="The sentence drawn with a linear scale and with 40, 60 and 80 dB ranges" loading="lazy"></div>
+    <figcaption><b>Figure 7.</b> One spectrogram (25&nbsp;ms Hann, 2&nbsp;ms hop), four renderings. Linear magnitude shows little more than the low harmonics of the loudest vowels. With a
+    40&nbsp;dB range, <!--N:vis_40-->&nbsp;% of the cells are above the floor; with 60&nbsp;dB, <!--N:vis_60-->&nbsp;%; with 80&nbsp;dB, <!--N:vis_80-->&nbsp;%, including the weak fricatives
+    and the background noise in the pauses. 60&ndash;80&nbsp;dB suits a clean 16-bit recording; for noisy audio a smaller range hides the noise floor.</figcaption>
+  </figure>
+  <h3>Colour maps: why rainbows lie</h3>
+  <p>
+    The eye judges the size of a value mostly by <strong>lightness</strong>. A good colour map changes lightness steadily from one end to the other, so equal steps in dB look like equal
+    steps. Grey, <em>viridis</em> and <em>magma</em> are designed this way (viridis and magma are &ldquo;perceptually uniform&rdquo;: equal steps also look equally different in hue and
+    saturation). The rainbow map <em>jet</em> is not. Its lightness climbs to a peak of \(L^* \approx <!--N:jet_L_max-->\) in the cyan-to-yellow part, about <!--N:jet_L_max_at_db:.0f-->&nbsp;dB on
+    a 70&nbsp;dB scale, then falls again to <!--N:jet_L_top--> at the top (dark red). So mid-level values look brighter than the loudest ones, and the sharp hue changes at cyan and yellow
+    draw <strong>edges that are not in the data</strong>.
+  </p>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/08_colour_maps.png?v=1" alt="The same spectrogram in grey, viridis, magma and jet, and the lightness of each colour map" loading="lazy"></div>
+    <figcaption><b>Figure 8.</b> Part of the sentence with a 70&nbsp;dB range in four colour maps, each with its colour bar. <b>Bottom:</b> lightness \(L^*\) (CIELAB) along each map. Grey (dark
+    = loud, the convention of paper spectrograms), viridis and magma change monotonically; jet rises and falls, so its bright yellow band sits in the <em>middle</em> of the range and the
+    fricative noise looks like a solid object with a hard outline.</figcaption>
+  </figure>
+  <p>
+    Whatever the map, <strong>always draw the colour bar</strong>. Without it a reader cannot tell whether dark blue means &minus;40&nbsp;dB or &minus;80&nbsp;dB, or whether the scale is linear
+    at all, and two spectrograms with different ranges cannot be compared.
+  </p>
+  <div class="card demo" id="colDemo">
+    <h4>Change the scale, the range and the colour map</h4>
+    <div class="ctlrow">
+      <span>scale:</span><span class="seg" id="colS"><button data-s="lin">linear \(|X|\)</button><button data-s="db" class="on">dB</button></span>
+      <span>colour map:</span><span class="seg" id="colM"><button data-m="grey">grey</button><button data-m="viridis">viridis</button><button data-m="magma" class="on">magma</button><button data-m="jet">jet</button></span>
+    </div>
+    <label class="lbl" for="colR">dynamic range (dB below the maximum that still gets a colour): <span class="valpill" id="colRV"></span></label>
+    <input type="range" id="colR" min="20" max="120" step="5" value="80">
+    <canvas id="colCv" class="plot" height="250"></canvas>
+    <div class="readout" id="colRead"></div>
+  </div>
+  <div class="try">
+    Set jet and an 80&nbsp;dB range and look at the /ʃ/ of &ldquo;cash, she&rdquo; (about 1.8&ndash;2.1&nbsp;s): it seems to have a crisp yellow border. Switch to grey or viridis: the border melts into
+    a gradual change, which is what the numbers really do. Then drop the range to 30&nbsp;dB and see which sounds vanish first.
+  </div>
+</section>
+
+<!-- ============================================================ 6. INVERSE -->
+<section id="inverse">
+  <div class="kicker">06 &middot; Going back to sound</div>
+  <h2>Overlap-add, and the missing phase.</h2>
+  <h3>With the phase: exact reconstruction</h3>
+  <p>
+    The STFT keeps both magnitude and phase, and with them the signal can be rebuilt exactly. Take the inverse FFT of every column to get the windowed frames back, optionally multiply
+    by a <em>synthesis</em> window \(w_s\), slide each frame back to where it came from, and add. This is <strong>overlap-add</strong> (OLA), or <strong>weighted overlap-add</strong> (WOLA)
+    when a synthesis window is used (Allen and Rabiner, 1977):
+  </p>
+  <div class="eq">$$\hat{x}[n] = \frac{\sum_m y_m[n - mH]\; w_s[n - mH]}{\sum_m w[n - mH]\; w_s[n - mH]}, \qquad y_m[\cdot] = \text{IDFT}\bigl(X[m,\cdot]\bigr)$$
+    <span class="note">If the denominator is the same constant for every \(n\), you can skip the division (or divide by that constant). For plain OLA (\(w_s = 1\)) the condition is <strong>COLA</strong>, &ldquo;constant overlap-add&rdquo;: \(\sum_m w[n-mH] = C\). For WOLA with the same window twice it is \(\sum_m w^2[n-mH] = C\).</span></div>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/09_overlap_add.png?v=1" alt="Overlapping Hann windows and their sums" loading="lazy"></div>
+    <figcaption><b>Figure 9.</b> Shifted windows (grey) and their sum (red), \(L = 512\). <b>Top:</b> a <em>periodic</em> Hann window at 50&nbsp;% overlap sums to exactly 1. <b>Middle:</b> the
+    <em>symmetric</em> Hann (as returned by <code>numpy.hanning</code>) at the same hop ripples by <!--N:cola_sym50_ripple_pct:.2f-->&nbsp;%: tiny, but not exact. <b>Bottom:</b> for WOLA,
+    Hann squared at 75&nbsp;% overlap sums to exactly <!--N:wola75_sum:.1f-->. (At 50&nbsp;% overlap, Hann squared ripples by <!--N:wola50_ripple_pct-->&nbsp;%, which is why WOLA with Hann uses 75&nbsp;%.)</figcaption>
+  </figure>
+  <p>
+    The difference between periodic and symmetric is only the denominator, \(L\) or \(L-1\) in the cosine. The periodic form is one exact period of a raised cosine, and copies of it shifted by
+    \(L/2\) or \(L/4\) fill each other's gaps perfectly. Tested on our sentence (<!--N:n_samples--> samples, \(L = 512\)):
+  </p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>analysis &rarr; synthesis</th><th>hop</th><th>largest sample error</th></tr>
+      <tr><td>periodic Hann &rarr; plain OLA</td><td>\(L/2\)</td><td class="n"><!--N:err_ola50:sci--></td></tr>
+      <tr><td>periodic Hann &rarr; periodic Hann (WOLA), \(\div\, <!--N:wola75_sum:.1f-->\)</td><td>\(L/4\)</td><td class="n"><!--N:err_wola75:sci--></td></tr>
+      <tr><td>symmetric Hann &rarr; plain OLA</td><td>\(L/2\)</td><td class="n"><!--N:err_sym50:.4f--> (SNR <!--N:snr_sym50-->&nbsp;dB)</td></tr>
+    </table>
+  </div>
+  <p style="margin-top:14px;">
+    The first two errors are at the level of double-precision rounding (about \(10^{-16}\) for samples of size 1): the STFT is <strong>perfectly invertible</strong>. The symmetric window's
+    small ripple shows up as a real, if quiet, error. In practice libraries avoid the problem by dividing by the summed windows (the denominator above), which works for any window and hop
+    as long as the windows overlap.
+  </p>
+
+  <h3>Without the phase: what a spectrogram cannot tell you</h3>
+  <p>
+    A spectrogram keeps only \(|X|\). How much does the phase matter? Rebuild the sentence from the magnitudes (\(L = 512\), \(H = 128\), Hann) with made-up phases and listen:
+  </p>
+  <div class="agrid">
+    <div class="card"><h4>Original</h4><div class="rate">true magnitude and phase</div><p>Exact reconstruction would sound identical.</p><audio controls preload="none" src="spectrogram/audio/sentence.wav"></audio></div>
+    <div class="card"><h4>Zero phase</h4><div class="rate">spectral convergence <!--N:sc_zero_phase:.2f--></div><p>Every frame turns into a pulse at the frame's edge, so the output repeats every hop: listen for a mechanical buzz at \(f_s/H\) = <!--N:zero_phase_buzz_hz:.0f-->&nbsp;Hz.</p><audio controls preload="none" src="spectrogram/audio/zero_phase.wav"></audio></div>
+    <div class="card"><h4>Random phase</h4><div class="rate">spectral convergence <!--N:sc_0:.2f--></div><p>The starting point of Griffin&ndash;Lim. Listen for a rough, noisy voice: overlapping frames no longer agree and partly cancel.</p><audio controls preload="none" src="spectrogram/audio/gl_000.wav"></audio></div>
+    <div class="card"><h4>Griffin&ndash;Lim, 10 iterations</h4><div class="rate">spectral convergence <!--N:sc_10:.3f--></div><p>Smoother; listen for remaining roughness.</p><audio controls preload="none" src="spectrogram/audio/gl_010.wav"></audio></div>
+    <div class="card"><h4>Griffin&ndash;Lim, 100 iterations</h4><div class="rate">spectral convergence <!--N:sc_100:.3f--></div><p>Close to the original; Griffin&ndash;Lim output typically keeps a slightly &ldquo;phasey&rdquo;, metallic colour.</p><audio controls preload="none" src="spectrogram/audio/gl_100.wav"></audio></div>
+    <div class="card"><h4>Griffin&ndash;Lim, <!--N:gl_iters--> iterations</h4><div class="rate">spectral convergence <!--N:sc_200:.3f--></div><p>Diminishing returns: twice the work for a small gain.</p><audio controls preload="none" src="spectrogram/audio/gl_200.wav"></audio></div>
+  </div>
+  <p class="warn">All six files are scaled to the same rms level. The zero-phase output repeats every \(H\) = <!--N:zero_phase_lag--> samples (its autocorrelation at that lag is <!--N:zero_phase_r:.2f-->), which is the buzz you hear.</p>
+  <h3 id="griffinlim">Griffin&ndash;Lim: inventing the phase, one round at a time</h3>
+  <p>
+    Why can't we just pair the magnitudes with <em>any</em> phase? Because the frames overlap. With \(H = L/4\), every sample of the signal is described by four different frames.
+    Their phases must agree about what that sample is. Pick phases at random and the four descriptions disagree: when you add the frames back together they partly cancel, and the
+    result's spectrogram is no longer the one you started from. A spectrogram whose frames agree is called <strong>consistent</strong>: it is the STFT of some real signal. Most arrays of
+    numbers are not.
+  </p>
+  <p>So the puzzle has two requirements, and each one on its own is easy to meet:</p>
+  <div class="grid2" style="gap:14px;margin:12px 0;">
+    <div class="card"><h4 style="margin:0 0 4px;">\(\mathcal{A}\): the right magnitudes</h4><p style="margin:0;font-size:0.9rem;">All arrays \(S[m,k]\,e^{j\phi[m,k]}\): keep the target magnitudes \(S\), any phase. Easy to reach from any array: <em>replace its magnitudes by \(S\), keep its phase</em>.</p></div>
+    <div class="card"><h4 style="margin:0 0 4px;">\(\mathcal{B}\): consistent spectrograms</h4><p style="margin:0;font-size:0.9rem;">All arrays that are the STFT of a real signal. Easy to reach from any array: <em>inverse-STFT it, then STFT the result</em>.</p></div>
+  </div>
+  <p>
+    We want an array that lies in both. Griffin and Lim's idea (1984) is to <strong>bounce between the two sets</strong>: step onto \(\mathcal{B}\), step back onto \(\mathcal{A}\), and repeat.
+    Each step moves to the <em>nearest</em> point of the other set, so the distance between where you are and where you were can only shrink:
+  </p>
+  <figure>
+    <div class="card" style="padding:10px;">
+      <svg viewBox="0 0 760 250" role="img" aria-label="Alternating projections: a zigzag between two curves converging towards their crossing point" style="width:100%;height:auto;display:block;">
+        <defs><marker id="glar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent-2)"/></marker></defs>
+        <path d="M30,40 C230,70 430,150 730,205" fill="none" stroke="var(--accent)" stroke-width="3"/>
+        <path d="M30,215 C250,190 470,160 730,95" fill="none" stroke="var(--teal)" stroke-width="3"/>
+        <g stroke="var(--accent-2)" stroke-width="1.8" fill="none" marker-end="url(#glar)">
+          <line x1="78" y1="47" x2="86" y2="204"/><line x1="86" y1="204" x2="198" y2="66"/><line x1="198" y1="66" x2="246" y2="188"/>
+          <line x1="246" y1="188" x2="318" y2="96"/><line x1="318" y1="96" x2="352" y2="172"/><line x1="352" y1="172" x2="398" y2="122"/>
+          <line x1="398" y1="122" x2="420" y2="160"/><line x1="420" y1="160" x2="442" y2="138"/>
+        </g>
+        <circle cx="78" cy="47" r="6" fill="var(--accent-2)"/>
+        <circle cx="462" cy="150" r="9" fill="none" stroke="var(--accent-3)" stroke-width="3"/>
+        <g font-family="Inter, sans-serif" font-size="13">
+          <foreignObject x="40" y="12.1" width="560" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;line-height:26px;text-align:left;color:var(--accent);font-weight:700;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(\mathcal{A}\) · right magnitudes, any phase</div></foreignObject>
+          <foreignObject x="40" y="226.1" width="560" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;line-height:26px;text-align:left;color:var(--teal);font-weight:700;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(\mathcal{B}\) · consistent: the STFT of a real signal</div></foreignObject>
+          <text x="98" y="44" fill="var(--accent-2)">start: random phase</text>
+          <text x="480" y="150" fill="var(--ink)">the goal: a real signal</text>
+          <text x="480" y="167" fill="var(--ink)">with the target spectrogram</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Figure 10.</b> Alternating projections, drawn schematically. Each red arrow moves to the nearest point of the other set. Steps get shorter as the two descriptions agree more.
+    The real sets live in a space with one dimension per time&ndash;frequency cell (here about <!--N:gl_cells:.0f--> of them), and they are not straight lines, so the zigzag can settle near, rather than exactly at, a crossing.</figcaption>
+  </figure>
+
+  <h4 style="margin-top:18px;">The algorithm, step by step</h4>
+  <div class="card steps">
+    <p style="margin:0 0 8px;"><b>Given:</b> the target magnitudes \(S[m,k]\), the window \(w\) (length \(L\)) and the hop \(H\) used to make them. <b>Wanted:</b> a signal \(y[n]\) with \(|\text{STFT}(y)| \approx S\).</p>
+    <ol>
+      <li><b>Guess a phase.</b> Start from random phases, uniform on \([-\pi, \pi)\):
+        $$\phi^{(0)}[m,k] \sim \mathcal{U}[-\pi, \pi)$$</li>
+      <li><b>Attach it to the magnitudes</b> (we are on \(\mathcal{A}\)):
+        $$X^{(i)}[m,k] = S[m,k]\; e^{\,j\phi^{(i)}[m,k]}$$</li>
+      <li><b>Go back to a waveform</b> by overlap-add. Griffin and Lim showed that, of all signals, this one has the STFT closest (in squared error) to \(X^{(i)}\):
+        $$y^{(i)}[n] = \frac{\sum_m w[n - mH]\; \text{IDFT}\bigl(X^{(i)}[m,\cdot]\bigr)[n - mH]}{\sum_m w^2[n - mH]}$$</li>
+      <li><b>Analyse it again</b> (we are now on \(\mathcal{B}\): consistent, but the magnitudes have drifted away from \(S\)):
+        $$Z^{(i)}[m,k] = \text{STFT}\bigl(y^{(i)}\bigr)[m,k]$$</li>
+      <li><b>Keep the new phase, throw away the new magnitude,</b> and go back to step 2:
+        $$\phi^{(i+1)}[m,k] = \angle\, Z^{(i)}[m,k]$$</li>
+    </ol>
+    <p style="margin:6px 0 0;">Track progress with the <strong>spectral convergence</strong> \(\;\mathrm{SC}^{(i)} = \bigl\|\,S - |Z^{(i)}|\,\bigr\|_F \,/\, \|S\|_F\), where \(\|\cdot\|_F\) is the square root of the sum of squares over all cells. Stop when it stops falling; the answer is \(y^{(i)}\).</p>
+  </div>
+  <pre class="code"><span class="cm"># Griffin-Lim in a few lines (numpy + librosa-style stft/istft)</span>
+phase = np.exp(2j * np.pi * np.random.rand(*S.shape))      <span class="cm"># step 1</span>
+for i in range(n_iter):
+    y = istft(S * phase, hop=H, window=w)                    <span class="cm"># steps 2-3</span>
+    Z = stft(y, hop=H, window=w)                             <span class="cm"># step 4</span>
+    phase = np.exp(1j * np.angle(Z))                         <span class="cm"># step 5</span></pre>
+  <div class="keyidea">
+    <strong>Why it can never get worse.</strong> Let \(d^{(i)} = \|Z^{(i)} - X^{(i)}\|_F\) be the gap between the consistent array and the one with the right magnitudes. Step 5 picks the point of
+    \(\mathcal{A}\) nearest to \(Z^{(i)}\) (same phase, magnitudes reset to \(S\)), and step 3 picks the point of \(\mathcal{B}\) nearest to that. A nearest point can only be closer than any other
+    point, including the one you came from, so \(d^{(i+1)} \le d^{(i)}\) at every round. Griffin and Lim proved exactly this. What they could not promise is that the gap reaches zero: it can stall at a
+    local minimum.
+  </div>
+  <div class="intuition">
+    Think of each sample as a meeting of the four frames that overlap it. With random phases, each frame argues for a different value and the votes cancel into mush. Overlap-add takes the
+    average, which is a compromise. When each frame then re-reads the phase from that compromise, it moves a little towards agreeing with its neighbours. Small agreements spread from frame to frame, a bit like a
+    crowd's clapping falling into step. After a few dozen rounds the harmonics line up across frames and the voice comes back.
+  </div>
+
+  <div class="card demo" id="glDemo">
+    <h4>Live: watch Griffin&ndash;Lim learn the phase</h4>
+    <p style="font-size:0.9rem;margin:0 0 8px;">
+      The page takes the magnitudes of our sentence (\(L = 512\), \(H = 128\), periodic Hann), throws the phase away and runs the five steps above in your browser. The spectrogram on the left is
+      \(|Z^{(i)}|\), what the current estimate really contains; the target is on the right. Press <b>Run</b> and listen at any point.
+    </p>
+    <div class="ctlrow" style="flex-wrap:wrap;">
+      <button id="glRun" class="on">▶ Run</button><button id="glStep">+1 step</button><button id="glReset">↺ new random phase</button>
+      <span style="margin-left:6px;">start from:</span><button data-gls="rand" class="on">random phase</button><button data-gls="zero">zero phase</button>
+      <label style="display:inline-flex;align-items:center;gap:6px;margin-left:6px;"><input type="checkbox" id="glFast"> fast Griffin&ndash;Lim (momentum 0.99)</label>
+    </div>
+    <div class="ctlrow"><button id="glPlay">▶ play current estimate</button><button id="glPlayOrig">▶ play original</button><button id="glPlay0">▶ play the starting point</button></div>
+    <div class="readout" id="glRead"></div>
+    <div class="grid2" style="gap:12px;margin-top:8px;">
+      <div><div class="plotlabel">current estimate \(|Z^{(i)}|\)</div><canvas id="glSpec" class="plot" height="190"></canvas></div>
+      <div><div class="plotlabel">target \(S\) (the magnitudes we kept)</div><canvas id="glTarget" class="plot" height="190"></canvas></div>
+    </div>
+    <div class="grid2" style="gap:12px;margin-top:8px;">
+      <div><div class="plotlabel">spectral convergence vs iteration (log scale)</div><canvas id="glCurve" class="plot" height="170"></canvas></div>
+      <div><div class="plotlabel">30&nbsp;ms of the vowel in &ldquo;cash&rdquo;: original (grey) and current estimate</div><canvas id="glWave" class="plot" height="170"></canvas></div>
+    </div>
+    <p class="warn" style="margin-top:8px;">
+      Things to notice: the first few rounds give the biggest jump; the harmonics in the vowels come back as clean horizontal lines over the first few tens of rounds; and the waveform never matches the original
+      sample for sample, even when the spectrogram does, because many waveforms share one spectrogram (the sign of the whole signal, for a start). With momentum ticked (Perraudin, Balazs and
+      S&oslash;ndergaard, 2013) each round also pushes a little further in the direction the last round moved: in our offline run it matched 100 plain rounds after only <!--N:fgla_iters_to_match_gl100--> rounds, and reached a spectral convergence of <!--N:fgla_sc_200:.3f--> after <!--N:gl_iters--> (plain: <!--N:sc_200:.3f-->).
+    </p>
+  </div>
+  <h4 style="margin-top:22px;">The numbers from a longer run</h4>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/10_griffin_lim.png?v=1" alt="Griffin-Lim spectral convergence against iterations, and waveforms" loading="lazy"></div>
+    <figcaption><b>Figure 10.</b> <b>Left:</b> spectral convergence falls from <!--N:sc_0:.2f--> (random phase) to <!--N:sc_1:.2f--> after one iteration, <!--N:sc_10:.3f--> after 10,
+    <!--N:sc_100:.3f--> after 100 and <!--N:sc_200:.3f--> after <!--N:gl_iters-->. It fell at every single iteration of our run. With the true phase it is <!--N:sc_true_phase:sci-->. <b>Right:</b> 30&nbsp;ms of the vowel in
+    &ldquo;cash&rdquo;. The Griffin&ndash;Lim waveform (100 iterations) has nearly the same spectrogram as the original but a visibly different waveform: many waveforms share one magnitude.</figcaption>
+  </figure>
+  <p>
+    Griffin&ndash;Lim never quite reaches zero: it is a local search, not every magnitude array is the STFT of any signal, and some differences (an overall sign flip, for one) are invisible in \(|X|\).
+    For decades it was the standard way to hear a modified spectrogram. Today, text-to-speech systems first predict a <strong>mel spectrogram</strong> (section 8) and then use a <strong>neural
+    vocoder</strong> (WaveNet, WaveRNN, HiFi-GAN and their successors), a network trained to generate a natural-sounding waveform, phase included, from it.
+  </p>
+</section>
+
+<!-- ============================================================ 7. READING -->
+<section id="reading">
+  <div class="kicker">07 &middot; Reading speech</div>
+  <h2>Phones you can see.</h2>
+  <p>
+    With a wideband spectrogram, and a little practice, you can see the classes of speech sounds. Each class has a typical look because each is made in a typical way (the <a href="source_filter.html">source&ndash;filter
+    model</a>): a voiced buzz or a turbulent hiss as the source, shaped by the resonances of the vocal tract.
+  </p>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/11_annotated_sentence.png?v=1" alt="Wideband spectrogram of the sentence with IPA phone labels and words" loading="lazy"></div>
+    <figcaption><b>Figure 11.</b> The sentence in a 6&nbsp;ms wideband view (grey, dark = loud, 70&nbsp;dB range) with the corpus's phone labels in IPA, coloured by class. The labels were made
+    automatically by a speech aligner and were not hand-corrected, so some boundaries are off by a frame or two (we merged one 10&nbsp;ms pause the aligner put inside &ldquo;cash, she&rdquo;).</figcaption>
+  </figure>
+  <div class="card demo" id="phDemo">
+    <h4>Hover to read, click to listen</h4>
+    <div class="ctlrow">
+      <span>click plays:</span><span class="seg" id="phMode"><button data-p="phone" class="on">the phone</button><button data-p="word">its word</button></span>
+      <button id="phAll">▶ whole sentence</button>
+    </div>
+    <canvas id="phCv" class="plot" height="300" style="cursor:pointer;"></canvas>
+    <div class="readout" id="phRead"><div>phone<b>hover or tap the spectrogram</b></div></div>
+  </div>
+  <p class="warn">A single phone played alone often sounds odd or is hard to recognise: in fluent speech each sound is shaped by its neighbours (coarticulation). Try the word as well.</p>
+
+  <h3>A gallery of sound classes</h3>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/12_phone_gallery.png?v=1" alt="Nine wideband spectrogram excerpts: vowels, a diphthong, three fricatives, a stop, a nasal and an approximant" loading="lazy"></div>
+    <figcaption><b>Figure 12.</b> Nine tokens of ksp's speech, each with its neighbours, in the same 6&nbsp;ms wideband view and on <em>one common dB scale</em> (so weak sounds look weak).
+    Dashed lines mark the labelled boundaries. The numbers above each panel were measured from the audio by <code>make_figures.py</code> (formants by linear prediction), as a check on the
+    automatic labels. Seven tokens come from our sentence; /f/ is from &ldquo;faced&rdquo;, /m/ from &ldquo;all my might&rdquo; and /ɹ/ from &ldquo;destroy&rdquo;.</figcaption>
+  </figure>
+  <div class="agrid">
+    <div class="card"><h4><span class="cls v">vowel</span> /æ/ &ldquo;cash&rdquo;</h4><audio controls preload="none" src="spectrogram/audio/gal_1.wav"></audio></div>
+    <div class="card"><h4><span class="cls v">vowel</span> /i/ &ldquo;she&rdquo;</h4><audio controls preload="none" src="spectrogram/audio/gal_2.wav"></audio></div>
+    <div class="card"><h4><span class="cls d">diphthong</span> /aɪ/ &ldquo;life's&rdquo;</h4><audio controls preload="none" src="spectrogram/audio/gal_3.wav"></audio></div>
+    <div class="card"><h4><span class="cls f">fricative</span> /s/ &ldquo;life's&rdquo;</h4><audio controls preload="none" src="spectrogram/audio/gal_4.wav"></audio></div>
+    <div class="card"><h4><span class="cls f">fricative</span> /ʃ/ &ldquo;she&rdquo;</h4><audio controls preload="none" src="spectrogram/audio/gal_5.wav"></audio></div>
+    <div class="card"><h4><span class="cls f">fricative</span> /f/ &ldquo;faced&rdquo;</h4><audio controls preload="none" src="spectrogram/audio/gal_6.wav"></audio></div>
+    <div class="card"><h4><span class="cls s">stop</span> /k/ &ldquo;cash&rdquo;</h4><audio controls preload="none" src="spectrogram/audio/gal_7.wav"></audio></div>
+    <div class="card"><h4><span class="cls n">nasal</span> /m/ &ldquo;my might&rdquo;</h4><audio controls preload="none" src="spectrogram/audio/gal_8.wav"></audio></div>
+    <div class="card"><h4><span class="cls a">approximant</span> /ɹ/ &ldquo;destroy&rdquo;</h4><audio controls preload="none" src="spectrogram/audio/gal_9.wav"></audio></div>
+  </div>
+
+  <h4 style="margin-top:22px;"><span class="cls v">Vowels</span>: dark bands and striations</h4>
+  <p>
+    Vowels are voiced and the tract is open, so a wideband view shows vertical glottal striations under dark horizontal <strong>formant</strong> bands, the resonances \(F_1, F_2, F_3\). \(F_1\) goes up as
+    the jaw opens; \(F_2\) goes up as the tongue moves forward. Open front /æ/ in &ldquo;cash&rdquo; has \(F_1 \approx <!--N:ae_F1-->\)&nbsp;Hz and \(F_2 \approx <!--N:ae_F2-->\)&nbsp;Hz; close front /i/ in
+    &ldquo;she&rdquo; has a low \(F_1\) (\(\approx <!--N:iy_F1-->\)&nbsp;Hz) and a high \(F_2\) (\(\approx <!--N:iy_F2-->\)&nbsp;Hz). In a narrowband view the same vowels are stacks of harmonics, and the formants are the regions where the harmonics are strongest.
+  </p>
+  <h4><span class="cls d">Diphthongs</span>: formants on the move</h4>
+  <p>
+    A diphthong glides from one vowel to another, so its formants move. In /aɪ/ of &ldquo;life's&rdquo; \(F_1\) falls from about <!--N:ay_F1_start--> to <!--N:ay_F1_end-->&nbsp;Hz and \(F_2\) rises from
+    about <!--N:ay_F2_start--> to <!--N:ay_F2_end-->&nbsp;Hz, from an open /a/ towards a close front /ɪ/.
+  </p>
+  <h4><span class="cls f">Fricatives</span>: noise, and where it sits</h4>
+  <p>
+    Fricatives are turbulent noise from a narrow constriction, so they look like random speckle with no striations (unless voiced, like /z/ or /v/). The smaller the cavity in front of the
+    constriction, the higher the noise. In ksp's /s/ of &ldquo;life's&rdquo; <!--N:s_above4_pct-->&nbsp;% of the energy above 500&nbsp;Hz lies above 4&nbsp;kHz (spectral peak near
+    <!--N:s_peak:.0f-->&nbsp;Hz). /ʃ/, with lip rounding and a longer front cavity, starts lower: its peak in &ldquo;she&rdquo; is near <!--N:sh_peak:.0f-->&nbsp;Hz and only
+    <!--N:sh_above4_pct-->&nbsp;% of its energy is above 4&nbsp;kHz. /f/ and /θ/ have almost no front cavity: their noise is weak and spread flat; ksp's /f/ in &ldquo;faced&rdquo; is
+    <!--N:f_weaker_than_s_db-->&nbsp;dB weaker than the /s/.
+  </p>
+  <figure>
+    <div class="frame"><img src="spectrogram/fig/13_fricative_spectra.png?v=1" alt="Average spectra of ksp's s, sh and f" loading="lazy"></div>
+    <figcaption><b>Figure 13.</b> The same contrast averaged over the <!--N:avg_s_ntok--> longest tokens of each fricative in ksp's recordings (20&nbsp;ms Hann frames from the middle of each token).
+    /ʃ/ comes within 6&nbsp;dB of its maximum from about <!--N:avg_sh_edge-->&nbsp;Hz, /s/ only from about <!--N:avg_s_edge-->&nbsp;Hz; /f/ stays flat and on average <!--N:avg_s_minus_f_db-->&nbsp;dB
+    weaker than /s/. (This speaker's /s/ is broad, reaching up to the 7.5&nbsp;kHz limit of the recording; in many English speakers it peaks higher still.)</figcaption>
+  </figure>
+  <h4><span class="cls s">Stops</span>: silence, a click, then the vowel</h4>
+  <p>
+    A stop is a complete closure, so it shows as a <strong>gap</strong>: near silence (a faint voice bar at the bottom if the stop is voiced). The release is a <strong>burst</strong>, a thin
+    vertical line across many frequencies. Then comes the time until the vocal folds start vibrating, the <strong>voice onset time</strong> (VOT), filled with aspiration noise for
+    aspirated stops. For /k/ in &ldquo;cash&rdquo; the closure lasts about <!--N:k_closure_ms-->&nbsp;ms (<!--N:k_closure_db:abs.0f-->&nbsp;dB weaker than the following vowel), the burst comes at
+    <!--N:k_burst_s:.2f-->&nbsp;s and voicing starts about <!--N:k_vot_ms-->&nbsp;ms later; across <!--N:k_vot_corpus_n--> of ksp's /k/ tokens before a vowel the median VOT is
+    <!--N:k_vot_corpus_med_ms-->&nbsp;ms. Compare /b/ in &ldquo;But&rdquo;, where voicing follows the burst after about <!--N:b_vot_ms-->&nbsp;ms. The place of articulation shows in the
+    burst's spectrum and in how the formants bend into the next vowel.
+  </p>
+  <h4><span class="cls n">Nasals</span>: a low murmur with the top cut off</h4>
+  <p>
+    In a nasal the mouth is closed and sound leaves through the nose. The long nasal tract gives a strong resonance low down (the <em>nasal murmur</em>), and the closed mouth acts as a side
+    branch that traps energy at some frequencies (<strong>antiresonances</strong>, zeros of the transfer function), so the upper formants are weak. In /m/ of &ldquo;my might&rdquo;
+    <!--N:m_below500_pct-->&nbsp;% of the energy lies below 500&nbsp;Hz (the following vowel /aɪ/: <!--N:vow_below500_pct-->&nbsp;%), and the 1&ndash;3&nbsp;kHz region is
+    <!--N:m_vs_vow_1to3k_db:abs.0f-->&nbsp;dB weaker than in the vowel. The edges are abrupt, because the lips close and open quickly.
+  </p>
+  <h4><span class="cls a">Approximants</span>: vowel-like, but moving</h4>
+  <p>
+    /w, j, ɹ, l/ are made with a narrowing that is too wide for noise, so they look like weak vowels whose formants move into the next sound. /w/ has a low \(F_2\), /j/ a high \(F_2\), and the
+    English /ɹ/ is famous for a very low \(F_3\). In &ldquo;destroy&rdquo; ksp's \(F_3\) dips to about <!--N:r_F3_min-->&nbsp;Hz, against about <!--N:oy_F3_med-->&nbsp;Hz in the following /ɔɪ/. That
+    dip is weaker in many Indian-English accents, where /r/ is often a tap or a lighter approximant rather than the bunched or retroflex /ɹ/ of American English: across the <!--N:r_corpus_n--> longest /r/ tokens of ksp the median lowest \(F_3\) is
+    about <!--N:r_corpus_med_F3-->&nbsp;Hz, and only <!--N:r_corpus_below2200_pct-->&nbsp;% go below 2.2&nbsp;kHz. Spectrograms show accents too.
+  </p>
+  <div class="keyidea">
+    Read a speech spectrogram in three passes. <strong>Where is the energy in time?</strong> Gaps are stop closures or pauses; vertical lines are bursts. <strong>Is it periodic or noisy?</strong>
+    Striations (or harmonics) mean voicing; speckle means friction. <strong>Where is it in frequency?</strong> Formant positions name the vowel; the lower edge of the noise names the fricative;
+    a strong low band with a weak top suggests a nasal.
+  </div>
+</section>
+
+<!-- ============================================================ 8. SETTINGS -->
+<section id="settings">
+  <div class="kicker">08 &middot; Practical settings</div>
+  <h2>What people actually use.</h2>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>purpose</th><th>sample rate</th><th>window</th><th>hop</th><th>FFT size</th><th>then</th></tr>
+      <tr><td>reading phonetics (wideband)</td><td>16&nbsp;kHz</td><td>3&ndash;6&nbsp;ms Hann</td><td>1&nbsp;ms</td><td>256&ndash;512</td><td>dB, 60&ndash;80&nbsp;dB range, grey</td></tr>
+      <tr><td>pitch and harmonics (narrowband)</td><td>16&nbsp;kHz</td><td>30&ndash;50&nbsp;ms Hann</td><td>5&ndash;10&nbsp;ms</td><td>1024&ndash;2048</td><td>dB, often 0&ndash;4&nbsp;kHz only</td></tr>
+      <tr><td>speech recognition features</td><td>16&nbsp;kHz</td><td>25&nbsp;ms (400 samples) Hamming or Hann</td><td>10&nbsp;ms (160)</td><td>400&ndash;512</td><td>80&ndash;128 mel bands, log (Kaldi-style filterbanks; Whisper uses 80, its large-v3 model 128)</td></tr>
+      <tr><td>neural TTS vocoder input</td><td>22.05&ndash;24&nbsp;kHz</td><td>\(\approx 46\)&nbsp;ms (1024 samples) Hann</td><td>\(\approx 11.6\)&nbsp;ms (256)</td><td>1024</td><td>80 mel bands, log (e.g. HiFi-GAN)</td></tr>
+      <tr><td>telephone speech</td><td>8&nbsp;kHz</td><td>20&ndash;32&nbsp;ms Hamming</td><td>10&nbsp;ms</td><td>256</td><td>only 0&ndash;4&nbsp;kHz exists</td></tr>
+      <tr><td>music analysis</td><td>44.1&ndash;48&nbsp;kHz</td><td>\(\approx 46\)&nbsp;ms (2048) Hann</td><td>\(\approx 11.6\)&nbsp;ms (512)</td><td>2048&ndash;4096</td><td>dB or log-frequency (constant-Q)</td></tr>
+    </table>
+  </div>
+  <ul style="margin-top:16px;">
+    <li><strong>Sample rate.</strong> A spectrogram reaches up to \(f_s/2\). 8&nbsp;kHz keeps 0&ndash;4&nbsp;kHz (enough to understand speech, but /s/ and /f/ lose most of their energy); 16&nbsp;kHz keeps up to 8&nbsp;kHz and is the standard for speech recognition; 22.05&ndash;48&nbsp;kHz are used for synthesis and music.</li>
+    <li><strong>Hop.</strong> \(H = L/4\) to \(L/2\) is usual. A smaller hop draws a smoother picture and costs more columns; it does not add resolution. For resynthesis, choose a hop that satisfies COLA for your window (section 6).</li>
+    <li><strong>FFT size.</strong> The next power of two at or above \(L\). More zero-padding draws a smoother picture without adding detail (Figure 3).</li>
+    <li><strong>Mel.</strong> A <em>mel spectrogram</em> keeps the same STFT but sums the power \(|X|^2\) into 40&ndash;128 overlapping triangular bands spaced evenly on the mel scale (roughly linear below 1&nbsp;kHz, logarithmic above), copying the ear's coarser resolution at high frequencies and shrinking, for example, 257 bins to 80 numbers per frame. Its logarithm is the standard input to speech recognisers and vocoders.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ 9. CHECK -->
+<section id="check">
+  <div class="kicker">09 &middot; Check your understanding</div>
+  <h2>Six questions.</h2>
+  <details><summary>1. At 16 kHz you use 20 ms frames and a 512-point FFT. What is the bin spacing, and can you separate two tones 40 Hz apart? What would you change?</summary>
+    <p style="font-size:0.93rem;">Bin spacing \(16000/512 = 31.25\) Hz. But the resolution is set by \(L = 320\) samples: \(f_s/L = 50\) Hz per bin of the window, and a Hann window needs about 2 such bins (100 Hz) to separate two equal tones. So no. A bigger FFT will not help (Figure 3); a longer window will: about \(2 \times 16000/40 = 800\) samples, 50 ms.</p></details>
+  <details><summary>2. A child speaks with \(F_0 = 300\) Hz. What window lengths give a wideband and a narrowband view? Is the usual 25 ms window wideband or narrowband for this child?</summary>
+    <p style="font-size:0.93rem;">\(T_0 = 1/300 \approx 3.3\) ms. Wideband needs \(L &lt; T_0\), say 2 ms (32 samples at 16 kHz). Narrowband needs two or three periods or more, from about 7&ndash;10 ms. A 25 ms window covers 7.5 periods: strongly narrowband. For high voices, &ldquo;standard&rdquo; settings resolve harmonics, not formants, which is one reason formant tracking is harder for children's speech.</p></details>
+  <details><summary>3. A spectrogram of a whistle drawn with a rectangular window shows a bright line with a faint haze above and below it across the whole picture. Where does the haze come from?</summary>
+    <p style="font-size:0.93rem;">Leakage. The rectangular window's spectrum has side lobes starting at about <!--N:sl_rect-->&nbsp;dB that fall only 6 dB per octave, so the strong line spreads into every bin. A Hann window's side lobes start at <!--N:sl_hann-->&nbsp;dB and fall 18 dB per octave, so the haze disappears into the floor.</p></details>
+  <details><summary>4. On a spectrogram drawn with a 40 dB range you cannot find the /f/ of &ldquo;faced&rdquo;. Was the /f/ missing?</summary>
+    <p style="font-size:0.93rem;">Probably not. /f/ is weak: about <!--N:f_weaker_than_s_db:.0f--> dB below this speaker's /s/, and the /s/ is itself far below the loudest vowel bins. With only 40 dB between the brightest and darkest colours the /f/ falls under the floor. Increase the range to 60&ndash;80 dB (Figure 7, and the colour demo).</p></details>
+  <details><summary>5. You analyse with numpy's <code>hanning(512)</code>, hop 256, and resynthesise by plain overlap-add. The result is close but not exact. Why, and give two fixes.</summary>
+    <p style="font-size:0.93rem;"><code>numpy.hanning</code> is the symmetric Hann window, whose shifted copies at 50&nbsp;% overlap sum to a constant only approximately (ripple <!--N:cola_sym50_ripple_pct:.2f-->&nbsp;%, error SNR <!--N:snr_sym50-->&nbsp;dB on our sentence). Fix 1: use the periodic Hann (<code>scipy.signal.get_window('hann', 512)</code>), which is COLA at hop \(L/2\). Fix 2: divide the overlap-added output by the summed windows, which makes any window work.</p></details>
+  <details><summary>6. After 100 iterations Griffin&ndash;Lim reaches a spectral convergence of <!--N:sc_100:.3f-->, not 0. Give two reasons why it cannot simply recover the original waveform.</summary>
+    <p style="font-size:0.93rem;">(a) Different signals share the same STFT magnitude: at the very least \(x\) and \(-x\), so the original is not the only answer. (b) Griffin&ndash;Lim is a local, alternating search started from random phase: each step cannot make things worse, but it can settle in a poor, &ldquo;phasey&rdquo; solution that is not globally best. (Also, once a spectrogram has been edited or predicted by a model, it may not be the magnitude of <em>any</em> signal, and then no phase gives zero error.)</p></details>
+</section>
+
+<footer>
+  Speech and Audio Processing &middot; Module 1 &middot; figures, audio and quoted numbers from <code>spectrogram/make_figures.py</code>; live demos in <code>spectrogram/page.js</code> (the sentence and its labels are embedded in <code>spectrogram/sentence.js</code>).
+  <!--CREDIT--> CMU ARCTIC databases by J. Kominek and A. W. Black, Carnegie Mellon University, used under the CMU ARCTIC licence; the sentence is peak-normalised. Phone labels and pitch marks are the corpus's automatic ones. Signals called synthetic are generated by the script.
+  <ul class="refs" style="margin-top:12px;">
+    <li>W. Koenig, H. K. Dunn and L. Y. Lacy, &ldquo;The sound spectrograph,&rdquo; <em>J. Acoust. Soc. Am.</em> 18(1), 19&ndash;49, 1946.</li>
+    <li>R. K. Potter, G. A. Kopp and H. C. Green, <em>Visible Speech</em>, Van Nostrand, 1947.</li>
+    <li>J. B. Allen and L. R. Rabiner, &ldquo;A unified approach to short-time Fourier analysis and synthesis,&rdquo; <em>Proc. IEEE</em> 65(11), 1558&ndash;1564, 1977.</li>
+    <li>F. J. Harris, &ldquo;On the use of windows for harmonic analysis with the discrete Fourier transform,&rdquo; <em>Proc. IEEE</em> 66(1), 51&ndash;83, 1978.</li>
+    <li>D. W. Griffin and J. S. Lim, &ldquo;Signal estimation from modified short-time Fourier transform,&rdquo; <em>IEEE Trans. Acoust., Speech, Signal Process.</em> 32(2), 236&ndash;243, 1984.</li>
+    <li>N. Perraudin, P. Balazs and P. L. S&oslash;ndergaard, &ldquo;A fast Griffin&ndash;Lim algorithm,&rdquo; <em>IEEE Workshop on Applications of Signal Processing to Audio and Acoustics (WASPAA)</em>, 2013.</li>
+    <li>L. R. Rabiner and R. W. Schafer, <em>Theory and Applications of Digital Speech Processing</em>, Pearson, 2011 (chapter on short-time Fourier analysis).</li>
+    <li>D. Gabor, &ldquo;Theory of communication,&rdquo; <em>J. IEE</em> 93(26), 429&ndash;457, 1946 (the time&ndash;frequency uncertainty relation).</li>
+    <li>D. Borland and R. M. Taylor II, &ldquo;Rainbow color map (still) considered harmful,&rdquo; <em>IEEE Comput. Graph. Appl.</em> 27(2), 14&ndash;17, 2007; S. van der Walt and N. Smith, &ldquo;mpl colormaps&rdquo; (viridis, magma), 2015.</li>
+    <li>J. Kong, J. Kim and J. Bae, &ldquo;HiFi-GAN: generative adversarial networks for efficient and high fidelity speech synthesis,&rdquo; <em>NeurIPS</em>, 2020.</li>
+    <li>J. Kominek and A. W. Black, &ldquo;The CMU Arctic speech databases,&rdquo; <em>5th ISCA Speech Synthesis Workshop</em>, 2004.</li>
+  </ul>
+</footer>
+
+<script src="spectrogram/sentence.js?v=1"></script>
+<script src="spectrogram/page.js?v=2"></script>
+</body>
+</html>

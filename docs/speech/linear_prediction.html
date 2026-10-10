@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guessing the Next Sample</title>
+<meta name="description" content="Linear prediction from intuition: correlation between neighbouring samples, prediction as a weighted vote of the past, least squares, and its history from astronomy to mobile phones.">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, { delimiters: [ { left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false } ], throwOnError: false });"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #F5F7FA; --bg-grid: #E7ECF2; --surface: #FFFFFF; --surface-2: #EAF0F7;
+    --ink: #10233F; --ink-soft: #24344F; --muted: #5C6B80; --line: #D7DEE8; --line-strong: #AEB9CB;
+    --accent: #14508C; --accent-2: #C1272D; --accent-3: #C9971B; --accent-4: #5B7083; --teal: #1D7A8C;
+    --shadow: 0 1px 0 rgba(16,35,63,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+      --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+      --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+      --shadow: 0 1px 0 rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+    --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+    --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+    --shadow: 0 1px 0 rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background:
+      repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      var(--bg);
+    color: var(--ink-soft);
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: 17px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: #fff; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1, h2, h3, h4 { font-family: "Poppins", ui-sans-serif, system-ui, sans-serif; color: var(--ink); font-weight: 600; }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.3rem); line-height: 1.08; margin: 0 0 0.35em; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; margin: 0 0 0.5em; }
+  h3 { font-size: 1.22rem; margin: 2em 0 0.3em; }
+  h4 { font-size: 1rem; margin: 0.2em 0 0.3em; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.88em; }
+
+  header.hero, section, footer { max-width: 900px; margin: 0 auto; padding: 56px 20px; }
+  section { border-top: 1px solid var(--line); }
+  header.hero { padding-top: 72px; }
+  .kicker { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.74rem; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+  .lede { font-size: 1.12rem; }
+  .meta-line { font-size: 0.85rem; color: var(--muted); margin-top: 18px; }
+
+  .roadmap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-top: 26px; font-size: 0.92rem; }
+  .roadmap ol { margin: 6px 0 0; padding-left: 20px; }
+  .roadmap li { margin: 3px 0; }
+  .roadmap .later { color: var(--muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  .intuition { border-left: 3px solid var(--accent-3); background: var(--surface-2); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 0.97rem; }
+  .keyidea { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .keyidea::before { content: "Key idea"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .try { border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 16px; margin: 16px 0; font-size: 0.93rem; }
+  .try::before { content: "Try this yourself"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-bottom: 2px; }
+  .eq { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.95rem; background: var(--surface); border: 1px solid var(--line);
+        border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; overflow-x: auto; color: var(--ink); line-height: 2; }
+
+  figure { margin: 22px 0 26px; }
+  figure .frame { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 0.86rem; color: var(--muted); margin-top: 8px; line-height: 1.55; }
+  figcaption b { color: var(--ink-soft); }
+
+  button { font-family: inherit; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--line-strong);
+           background: var(--surface); color: var(--ink-soft); padding: 6px 12px; transition: all 0.15s ease; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .ctlrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 10px 0; font-size: 0.85rem; color: var(--muted); }
+  .valpill { font-family: "JetBrains Mono", monospace; color: var(--accent); font-weight: 600; }
+  input[type=range] { accent-color: var(--accent); }
+  canvas.plot { width: 100%; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .plotlabel { font-size: 0.75rem; color: var(--muted); margin: 8px 0 3px; }
+
+  /* slab rack */
+  .rack { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .rack { grid-template-columns: repeat(2, 1fr); } }
+  .slab { background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 6px 6px 10px; cursor: pointer; text-align: center; transition: border-color 0.15s; font: inherit; color: inherit; }
+  .slab:hover, .slab.sel { border-color: var(--accent); }
+  .slab svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .slab .name { font-weight: 600; color: var(--ink); font-size: 0.92rem; }
+  .slab .hint { font-size: 0.72rem; color: var(--muted); }
+  .mallet { transform-origin: 150px 12px; transform: rotate(22deg); transition: transform 0.12s ease-in; }
+  .slab.hit .mallet { transform: rotate(0deg); transition: transform 0.07s ease-in; }
+  .slab.ring .body { animation: shake 0.35s linear; }
+  @keyframes shake { 0%,100% { transform: translateY(0); } 20% { transform: translateY(1.6px); } 40% { transform: translateY(-1.2px); } 60% { transform: translateY(0.8px); } 80% { transform: translateY(-0.4px); } }
+  @media (prefers-reduced-motion: reduce) { .slab.ring .body { animation: none; } .mallet { transition: none; } }
+
+  .examples { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .examples { grid-template-columns: 1fr; } }
+  .examples .card p { font-size: 0.88rem; margin: 0; }
+  .examples .emoji { font-size: 1.5rem; line-height: 1; }
+  .examples audio { width: 100%; height: 32px; margin-top: 8px; }
+
+  /* voice grid */
+  .vgrid { display: grid; grid-template-columns: 120px repeat(4, 1fr); gap: 6px; align-items: stretch; font-size: 0.85rem; }
+  .vgrid .hdr { font-weight: 600; color: var(--ink); text-align: center; padding: 6px 2px; font-size: 0.8rem; }
+  .vgrid .rowh { font-weight: 600; color: var(--ink); display: flex; align-items: center; font-size: 0.8rem; }
+  .vgrid button { padding: 10px 4px; }
+  @media (max-width: 600px) { .vgrid { grid-template-columns: 78px repeat(4, 1fr); } .vgrid button { font-size: 0.72rem; } }
+
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram text { font-family: "Inter", sans-serif; }
+  .players { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 10px 0; }
+  .player { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+  .player audio { height: 34px; max-width: 250px; width: 100%; }
+  ul.refs li { font-size: 0.9rem; margin-bottom: 5px; }
+  footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); }
+  .scatterwrap { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 700px) { .scatterwrap { grid-template-columns: 1fr; } }
+  .bigr { font-family: "JetBrains Mono", monospace; font-size: 1.5rem; font-weight: 600; color: var(--ink); }
+  .timeline { position: relative; margin: 10px 0 0 8px; padding-left: 26px; border-left: 2px solid var(--line-strong); }
+  .timeline .ev { position: relative; margin: 0 0 16px; }
+  .timeline .ev::before { content: ""; position: absolute; left: -33px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--accent); }
+  .timeline .ev.speech::before { border-color: var(--accent-2); }
+  .timeline .yr { font-family: "JetBrains Mono", monospace; font-weight: 600; color: var(--accent); font-size: 0.9rem; }
+  .timeline .ev.speech .yr { color: var(--accent-2); }
+  .timeline p { margin: 2px 0 0; font-size: 0.92rem; }
+  .score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .score div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; font-size: 0.78rem; color: var(--muted); }
+  .score b { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.95rem; color: var(--ink); }
+  .readout { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .readout div { background: var(--surface-2); border-radius: 8px; padding: 6px 10px; font-size: 0.75rem; color: var(--muted); }
+  .eq { font-family: inherit; white-space: normal; line-height: 1.5; }
+  .eq .katex-display { margin: 0.4em 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+  .eq .note, .note { display: block; font-family: "Inter", sans-serif; font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .card .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+  .budget { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 58px; padding: 6px 8px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; }
+  .budget small { font-weight: 400; font-size: 0.7rem; color: var(--muted); }
+  .budget.f { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border: 1px solid var(--accent); color: var(--accent); }
+  .budget.f::after { content: "2 weights"; font-size: 0.66rem; font-weight: 400; color: var(--ink-soft); }
+  .budget.t { background: color-mix(in srgb, var(--accent-3) 18%, var(--surface)); border: 1px solid var(--accent-3); color: var(--ink); }
+  .budget.t::after { content: "2 weights"; font-size: 0.66rem; font-weight: 400; color: var(--ink-soft); }
+  .readout b { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.95rem; color: var(--ink); }
+</style>
+<!--ai:head--><link rel="stylesheet" href="../assets/site.css?v=3bd065aa"><!--/ai:head-->
+</head>
+<body>
+<!--ai:nav--><nav class="ai-nav" aria-label="Course navigation"><div class="ai-nav-in"><a class="ai-brand" href="../index.html" title="Speech and Audio Processing"><span class="ai-logo" aria-hidden="true">◖◗</span><span class="ai-brand-full">Speech and Audio Processing</span><span class="ai-brand-short">SAP</span></a><span class="ai-where">Module 4 &middot; Guessing the next sample: correlation, prediction and AR models</span><details class="ai-menu"><summary>All pages</summary><ul><li><a href="spectrogram.html">1. Seeing sound: the spectrogram</a></li><li><a href="sounds_language.html">2. The sounds of language: from sound to phoneme</a></li><li><a href="phoneme_inventories.html">2. Phoneme inventories: India and the world</a></li><li><a href="source_filter.html">3. A buzz and a tube</a></li><li><a href="vocal_tract.html">3. Vocal tract, live</a></li><li><a href="linear_prediction.html" aria-current="page">4. Guessing the next sample</a></li><li><a href="ar_model.html">5. The all-pole vocal tract</a></li><li><a href="codecs.html">6. Squeezing speech</a></li><li><a href="decibels.html">Why does audio live in decibels?</a></li><li><a href="../convolution/index.html">Convolution, animated</a></li></ul></details><a class="ai-step ai-prev" href="vocal_tract.html" title="Vocal tract, live">← prev</a><a class="ai-step ai-next" href="ar_model.html" title="The all-pole vocal tract">next →</a></div></nav><!--/ai:nav-->
+
+<header class="hero">
+  <div class="kicker">Speech and Audio Processing &middot; Module 4</div>
+  <h1>Guessing the next sample.</h1>
+  <p class="lede">
+    On the <a href="source_filter.html">source&ndash;filter page</a> we saw that speech is a train of glottal kicks, each ringing through the vocal tract.
+    Ringing is <em>predictable</em>: once a bell has been struck, you know roughly what it will do next. This page turns that hunch into one of the most
+    successful ideas in speech technology, <strong>linear prediction</strong>: guess each new sample of a signal as a weighted sum of the last few.
+    We build it from scratch, starting with a game and a scatter plot, and end up with the method inside every mobile-phone call you've made.
+  </p>
+  <div class="roadmap">
+    <strong style="color:var(--ink);">The path through this page</strong>
+    <ol>
+      <li><a href="#game">A guessing game</a>: can you predict the next sample?</li>
+      <li><a href="#correlation">Neighbours are related</a>: correlation between \(x[n]\) and \(x[n+k]\)</li>
+      <li><a href="#onestep">From correlation to prediction</a>: the best straight line, and <a href="#gain">what prediction gain means</a></li>
+      <li><a href="#vote">A weighted vote of the past</a>: using \(p\) previous samples</li>
+      <li><a href="#weights">Finding the weights</a>: least squares, gently</li>
+      <li><a href="#history">Where the idea came from</a>: from a lost planet to your phone; <a href="#sunspots">what sunspots are and why they mattered</a>; <a href="#yule">how Yule and Walker did it</a></li>
+      <li><a href="#leftover">What can't be predicted</a>: the source, recovered</li>
+    </ol>
+  </div>
+  <div class="meta-line">Module 4 of <a href="source_filter.html">A buzz and a tube</a> &middot; continues in <a href="ar_model.html">module 5: the all-pole vocal tract</a> &middot; turn your sound on for the audio examples</div>
+</header>
+
+<!-- ============================================================ 1. GAME -->
+<section id="game">
+  <div class="kicker">01 &middot; A guessing game</div>
+  <h2>Can you guess what comes next?</h2>
+  <p>
+    Below are the last few samples of a signal. <strong>Click where you think the next sample will be</strong> (the dashed column). Then we reveal the true value, and also
+    the guess of a simple formula that only looks at the previous 12 samples. Play a few rounds of each signal.
+  </p>
+  <div class="card">
+    <div class="ctlrow"><span>Signal:</span><span class="seg" id="gameSig"></span></div>
+    <canvas id="gameCanvas" class="plot" height="230" style="cursor:crosshair;" aria-label="The last samples of a signal; click to guess the next one"></canvas>
+    <div class="ctlrow" style="margin-top:8px;">
+      <button id="gameNext" class="on">Next round ↻</button>
+      <span id="gameMsg" style="flex:1;">Click inside the dashed column to make your guess.</span>
+    </div>
+    <div class="score" id="gameScore"></div>
+  </div>
+  <p style="margin-top:16px;">
+    You will find the <strong>tone</strong> easy, the <strong>vowel</strong> fairly easy (it keeps going smoothly in the direction it was heading), and <strong>white noise</strong> impossible: the past
+    tells you nothing about the next value, and the best you can do is guess zero. The formula behaves exactly the same way. The rest of this page is about <em>why</em>,
+    and how that formula is built.
+  </p>
+</section>
+
+<!-- ============================================================ 2. CORRELATION -->
+<section id="correlation">
+  <div class="kicker">02 &middot; Neighbours are related</div>
+  <h2>A scatter plot of a signal against itself.</h2>
+  <p>
+    Here is a simple way to ask &ldquo;does the past say anything about the future?&rdquo;. Take every sample \(x[n]\) and pair it with the sample \(k\) steps later,
+    \(x[n+k]\). Plot all the pairs as dots. If the dots form a <strong>tilted line</strong>, knowing one sample tells you a lot about the other. If they form a
+    <strong>round blob</strong>, it tells you nothing. The tilt and tightness of the cloud are summarised by one number, the <strong>correlation</strong>:
+  </p>
+  <div class="eq">$$r(k) = \frac{\sum_n x[n]\,x[n+k]}{\sum_n x[n]^2}$$
+    <span class="note">\(+1\): a perfect rising line · \(0\): a round blob · \(-1\): a perfect falling line</span></div>
+  <p>Pick a signal and slide the lag \(k\):</p>
+  <div class="card">
+    <div class="ctlrow"><span>Signal:</span><span class="seg" id="scSig"></span></div>
+    <div class="scatterwrap">
+      <div>
+        <canvas id="scCanvas" class="plot" height="280" aria-label="Scatter of x[n] against x[n+k]"></canvas>
+        <div class="ctlrow" style="margin-top:6px;">
+          <label><input type="checkbox" id="scLine"> show the best-fit line</label>
+        </div>
+      </div>
+      <div>
+        <div class="ctlrow" style="margin-top:0;">
+          <label for="scK">Lag \(k\): <span class="valpill" id="scKv"></span></label>
+          <input type="range" id="scK" min="1" max="200" value="1" style="flex:1;min-width:140px;">
+        </div>
+        <div><span style="font-size:0.85rem;color:var(--muted);">correlation&nbsp;</span><span class="bigr" id="scR"></span></div>
+        <div class="plotlabel">\(r(k)\) for every lag (the dot marks the current \(k\))</div>
+        <canvas id="scCurve" class="plot" height="150"></canvas>
+        <p id="scNote" style="font-size:0.86rem;color:var(--muted);margin:8px 0 0;"></p>
+        <div class="players" id="scPlayers"></div>
+      </div>
+    </div>
+  </div>
+
+  <figure>
+    <div class="frame"><img src="linear_prediction/fig/01_scatter_grid.png?v=3" alt="Scatter plots of x[n] against x[n+k] for white noise, a vowel and a fricative, at four lags" loading="lazy"></div>
+    <figcaption><b>Figure 1.</b> The same idea for three signals (rows) at four lags (columns). 80&nbsp;ms excerpts from CMU ARCTIC speaker ksp (an Indian-English male voice):
+    /ɑ/ from the exclamation &ldquo;Ah&rdquo;, /s/ from &ldquo;see&rdquo;.
+    <b>White noise:</b> round blobs at every lag, \(r \approx 0\). The past says nothing about the future.
+    <b>Vowel /ɑ/:</b> at \(k = 1\) the dots hug a line (\(r = +0.96\)): consecutive samples are almost equal, because a 16&nbsp;kHz sampler is much faster than the formant ringing.
+    By \(k = 11\) the line tilts the other way (\(r = -0.34\)): we've moved about half a cycle along the ringing of the first formant (\(F_1 \approx 660\)&nbsp;Hz, one cycle \(\approx 24\) samples).
+    At \(k = 116\), exactly one pitch period (7.25&nbsp;ms, \(F_0 \approx 138\)&nbsp;Hz), the line comes back (\(r = +0.75\)): the waveform repeats.
+    <b>Fricative /s/:</b> weak, and <em>negative</em> at \(k = 1\) (\(r = -0.37\)). Its energy sits at high frequencies (most of it between about 4 and 7&nbsp;kHz), so the waveform flips sign every couple of samples.
+    There's a bit of structure, but much less than for the vowel.</figcaption>
+  </figure>
+  <figure>
+    <div class="frame"><img src="linear_prediction/fig/02_correlation_vs_lag.png?v=3" alt="Correlation versus lag for noise, a vowel and a fricative" loading="lazy"></div>
+    <figcaption><b>Figure 2.</b> The correlation for every lag, from 0 to 15&nbsp;ms. This curve is the <em>autocorrelation</em>. The vowel's curve oscillates at the formant frequencies and peaks again at the pitch period:
+    the two time scales of the source&ndash;filter model, visible in one plot.</figcaption>
+  </figure>
+  <div class="keyidea">
+    For speech, <strong>neighbouring samples are strongly correlated</strong>, mainly because the vocal tract rings smoothly between glottal kicks. Correlation means the past
+    contains information about the present. That is the whole basis of prediction. White noise has no correlation, and nothing can predict it.
+  </div>
+</section>
+
+<!-- ============================================================ 3. ONE-STEP PREDICTION -->
+<section id="onestep">
+  <div class="kicker">03 &middot; From correlation to prediction</div>
+  <h2>The best straight line through the scatter.</h2>
+  <p>
+    Go back to the lag-1 scatter of the vowel and tick <em>show the best-fit line</em>. That line <em>is</em> a predictor: read off \(x[n-1]\) on the horizontal axis and the line
+    gives a guess for \(x[n]\). The simplest possible predictor uses one weight:
+  </p>
+  <div class="eq">$$\hat{x}[n] = a\,x[n-1], \qquad e[n] = x[n] - \hat{x}[n]$$
+    <span class="note">\(\hat{x}\) (&ldquo;x-hat&rdquo;) is the prediction; \(e[n]\) is the prediction error.</span></div>
+  <p>Which slope \(a\) is best? The one that makes the errors as small as possible overall, i.e. minimises the total squared error. Set its derivative to zero:</p>
+  <div class="eq">$$E(a) = \sum_n \bigl(x[n] - a\,x[n-1]\bigr)^2$$
+    $$\frac{dE}{da} = -2\sum_n x[n-1]\bigl(x[n] - a\,x[n-1]\bigr) = 0 \quad\Longrightarrow\quad a = \frac{\sum_n x[n]\,x[n-1]}{\sum_n x[n-1]^2}$$</div>
+  <p>Now compare this with the definition \(r(k) = \sum_n x[n]\,x[n+k] \big/ \sum_n x[n]^2\), one piece at a time:</p>
+  <ul>
+    <li><strong>Numerator.</strong> Rename the time index, \(m = n-1\): &nbsp;\(\sum_n x[n]\,x[n-1] = \sum_m x[m]\,x[m+1]\). This is exactly the numerator of \(r(1)\): each sample times the one <em>after</em> it.
+      (Seen from the other sample it is the numerator of \(r(-1)\). That is fine: for a real signal \(r(-k) = r(k)\) always, because the same products are being summed. Only the
+      <em>distance</em> between the two samples matters, not which one comes first.)</li>
+    <li><strong>Denominator.</strong> \(\sum_n x[n-1]^2\) is the energy of the signal shifted by one sample, and shifting doesn't change total energy. If the sums run over <em>all</em> \(n\)
+      (treating the frame as zero outside its window, the usual &ldquo;autocorrelation method&rdquo;), then \(\sum_n x[n-1]^2 = \sum_n x[n]^2\) exactly. If they only run over the samples inside a finite frame,
+      the two differ by one edge sample, a tiny difference in a frame of hundreds of samples.</li>
+  </ul>
+  <div class="eq">$$a = r(1)$$
+    <span class="note">exactly, with the autocorrelation method; very nearly, if the sums stop at the frame edges (the &ldquo;covariance method&rdquo;).</span></div>
+  <p>
+    So <strong>the best slope is just the correlation at lag 1</strong>. And how much does it help? Let's work out how much error energy is left.
+  </p>
+  <p><strong>Step 1: expand the square.</strong> Multiply out the error energy term by term:</p>
+  <div class="eq">$$E(a) = \sum_n x[n]^2 \;-\; 2a\sum_n x[n]\,x[n-1] \;+\; a^2\sum_n x[n-1]^2$$</div>
+  <p>
+    <strong>Step 2: name the three sums.</strong> Write \(R(0) = \sum_n x[n]^2\) for the signal's energy. As we just saw, \(\sum_n x[n-1]^2\) is the same energy \(R(0)\), and
+    \(\sum_n x[n]\,x[n-1]\) is the lag-1 sum \(R(1) = r(1)\,R(0)\) (since \(r(1) = R(1)/R(0)\)). Substitute and take \(R(0)\) out as a common factor:
+  </p>
+  <div class="eq">$$E(a) = R(0) - 2a\,r(1)\,R(0) + a^2 R(0) = R(0)\,\bigl[\,1 - 2a\,r(1) + a^2\,\bigr]$$</div>
+  <p><strong>Step 3: put in the best slope, \(a = r(1)\).</strong></p>
+  <div class="eq">$$E_{\min} = R(0)\,\bigl[\,1 - 2r(1)^2 + r(1)^2\,\bigr] = R(0)\,\bigl(1 - r(1)^2\bigr)$$
+    $$\frac{E_{\min}}{R(0)} = 1 - r(1)^2, \qquad \text{prediction gain} = 10\log_{10}\frac{R(0)}{E_{\min}} = -10\log_{10}\bigl(1 - r(1)^2\bigr)\ \text{dB}$$</div>
+  <p>
+    A bonus from Step 2: completing the square,
+  </p>
+  <div class="eq">$$E(a) = R(0)\,\Bigl[\bigl(1 - r(1)^2\bigr) + \bigl(a - r(1)\bigr)^2\Bigr]$$</div>
+  <p>
+    This is a parabola in \(a\) whose lowest point is at \(a = r(1)\): any other slope adds the extra \((a - r(1))^2\), which confirms the calculus without derivatives. Since \(r(1)^2\) can never exceed 1,
+    the error can never be negative, and it only reaches zero when \(|r(1)| = 1\), i.e. when the scatter is a perfect straight line.
+  </p>
+  <p>Plugging in our three signals:</p>
+  <div class="grid3">
+    <div class="card"><h4>White noise</h4><p style="font-size:0.9rem;margin:0;">\(r(1) \approx 0 \Rightarrow a \approx 0\): the best guess is <em>zero</em>, and the error is as big as the signal. <strong>Gain 0&nbsp;dB.</strong></p></div>
+    <div class="card"><h4>Fricative /s/</h4><p style="font-size:0.9rem;margin:0;">\(r(1) = -0.37\): guess the <em>opposite sign</em>, a lot smaller. Error energy \(1 - 0.13 = 87\%\). <strong>Gain \(\approx 0.6\)&nbsp;dB.</strong></p></div>
+    <div class="card"><h4>Vowel /ɑ/</h4><p style="font-size:0.9rem;margin:0;">\(r(1) = 0.96\): &ldquo;next \(\approx\) previous&rdquo;. Error energy \(1 - 0.92 = 8\%\). <strong>Gain \(\approx 11\)&nbsp;dB</strong> from one weight.</p></div>
+  </div>
+  <h3 id="gain">What is prediction gain?</h3>
+  <p>
+    The three cards above already used it. <strong>Prediction gain</strong> is the standard single number for <em>how predictable a signal is</em>. It compares the energy of the signal with the energy of what
+    the predictor leaves behind:
+  </p>
+  <div class="eq">$$G_p = 10\log_{10}\frac{\sum_n x[n]^2}{\sum_n e[n]^2}\ \text{dB}, \qquad e[n] = x[n] - \hat{x}[n] = x[n] - \sum_{k=1}^{p} a_k\,x[n-k]$$
+    <span class="note">For one weight, section 03's algebra gives \(G_p = -10\log_{10}\bigl(1 - r(1)^2\bigr)\). For more weights it is computed from the actual error.</span></div>
+  <p>Reading the decibels: the gain says what fraction of the signal's energy was <em>not</em> predictable. (New to decibels, or wondering why audio uses them everywhere? See the extra page <a href="decibels.html">Why does audio live in decibels?</a>)</p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget" style="border-collapse:collapse;width:100%;font-size:0.9rem;">
+      <tr><th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);">prediction gain</th><th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);">error energy left</th><th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);">in words</th></tr>
+      <tr><td style="padding:5px 8px;">0 dB</td><td style="padding:5px 8px;">100 %</td><td style="padding:5px 8px;">the past says nothing about the next sample</td></tr>
+      <tr><td style="padding:5px 8px;">3 dB</td><td style="padding:5px 8px;">50 %</td><td style="padding:5px 8px;">half of it was predictable</td></tr>
+      <tr><td style="padding:5px 8px;">10 dB</td><td style="padding:5px 8px;">10 %</td><td style="padding:5px 8px;">90 % was predictable</td></tr>
+      <tr><td style="padding:5px 8px;">20 dB</td><td style="padding:5px 8px;">1 %</td><td style="padding:5px 8px;">99 % was predictable</td></tr>
+      <tr><td style="padding:5px 8px;">30 dB</td><td style="padding:5px 8px;">0.1 %</td><td style="padding:5px 8px;">almost completely predictable</td></tr>
+    </table>
+  </div>
+  <p style="margin-top:14px;">The values met on this page and the next ones, side by side:</p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget" style="border-collapse:collapse;width:100%;font-size:0.9rem;">
+      <tr><th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);">signal</th><th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);">predictor</th><th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);">gain</th><th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);">why</th></tr>
+      <tr><td style="padding:5px 8px;">white noise</td><td style="padding:5px 8px;">any order</td><td style="padding:5px 8px;">\(\approx 0\) dB</td><td style="padding:5px 8px;">no correlation at any lag</td></tr>
+      <tr><td style="padding:5px 8px;">fricative /s/</td><td style="padding:5px 8px;">1 weight → 24 weights</td><td style="padding:5px 8px;">0.6 → \(\approx 8\) dB</td><td style="padding:5px 8px;">turbulent noise; only its spectral shape is predictable</td></tr>
+      <tr><td style="padding:5px 8px;">vowel /ɑ/</td><td style="padding:5px 8px;">1 weight → 18 weights</td><td style="padding:5px 8px;">11 → \(\approx 24\) dB</td><td style="padding:5px 8px;">two strong, low formants (\(F_1 \approx 660\), \(F_2 \approx 1200\) Hz): a smooth waveform</td></tr>
+      <tr><td style="padding:5px 8px;">vowel /i/</td><td style="padding:5px 8px;">1 weight → 18 weights</td><td style="padding:5px 8px;">17 → \(\approx 27\) dB</td><td style="padding:5px 8px;">a very low \(F_1\) (\(\approx 290\) Hz) makes it even smoother; its high \(F_2/F_3\) need the extra weights</td></tr>
+      <tr><td style="padding:5px 8px;">/ɑ/, pre-emphasised (section 07)</td><td style="padding:5px 8px;">14 weights</td><td style="padding:5px 8px;">\(\approx 13\) dB</td><td style="padding:5px 8px;">pre-emphasis removed the easy low-frequency part</td></tr>
+      <tr><td style="padding:5px 8px;">speech at 8&nbsp;kHz (<a href="codecs.html#better">codecs page</a>)</td><td style="padding:5px 8px;">10 weights, refitted every 20 ms</td><td style="padding:5px 8px;">\(\approx 13\) dB</td><td style="padding:5px 8px;">averaged over a whole recording, vowels and consonants</td></tr>
+      <tr><td style="padding:5px 8px;">pure tone</td><td style="padding:5px 8px;">2 weights</td><td style="padding:5px 8px;">\(\infty\) (in theory)</td><td style="padding:5px 8px;">a sinusoid is exactly predictable (section 04)</td></tr>
+    </table>
+  </div>
+  <p style="margin-top:14px;"><strong>A gain is only meaningful together with how it was measured.</strong> The same speech can give very different numbers depending on:</p>
+  <ul>
+    <li><strong>the order \(p\):</strong> more weights capture more resonances (try the slider in section 04), with diminishing returns beyond about \(2 + f_s/1000\);</li>
+    <li><strong>the sampling rate:</strong> at a higher \(f_s\), neighbouring samples are closer together in time and more alike, so the gain rises;</li>
+    <li><strong>pre-processing:</strong> pre-emphasis flattens the spectral tilt and removes the &ldquo;easy&rdquo; predictability, which explains 13 vs 24&nbsp;dB for the same vowel;</li>
+    <li><strong>the frame and how often the weights are refitted:</strong> speech changes, so the weights are re-estimated every 10&ndash;20&nbsp;ms, and a reported gain is usually an average over frames;</li>
+    <li><strong>what the predictor is allowed to see:</strong> a coder's decoder has only <em>decoded</em> (noisy) samples, so the gain it achieves in practice is lower than the ideal one computed on clean speech.</li>
+  </ul>
+  <div class="keyidea">
+    Prediction gain is the bridge from &ldquo;speech is predictable&rdquo; to &ldquo;speech can be sent with fewer bits&rdquo;. Every bit of quantiser resolution is worth about 6&nbsp;dB, so a predictor with gain \(G_p\) lets a coder send the
+    error instead of the signal and save about \(G_p / 6\) bits per sample. That is the idea behind ADPCM on the <a href="codecs.html#adpcm">codecs page</a>.
+  </div>
+</section>
+
+<!-- ============================================================ 4. WEIGHTED VOTE -->
+<section id="vote">
+  <div class="kicker">04 &middot; A weighted vote of the past</div>
+  <h2>Why stop at one previous sample?</h2>
+  <p>
+    One weight can only express &ldquo;the signal changes slowly&rdquo;. A ringing resonance does more than that: it curves, overshoots and comes back. To follow a curve you need to know not just
+    where the signal is but where it was heading, which takes <strong>two</strong> previous samples. In fact, two weights predict a pure sinusoid <em>perfectly</em>, thanks to this identity:
+  </p>
+  <div class="eq">$$\sin(\omega n) = 2\cos\omega \cdot \sin\bigl(\omega(n-1)\bigr) - \sin\bigl(\omega(n-2)\bigr)$$</div>
+
+  <div class="card" style="border-left:3px solid var(--accent);">
+    <h4>Proof</h4>
+    <p style="font-size:0.93rem;margin:6px 0;">Start from the two angle-sum formulas, for any angles \(A\) and \(B\):</p>
+    $$\sin(A+B) = \sin A\cos B + \cos A\sin B$$
+    $$\sin(A-B) = \sin A\cos B - \cos A\sin B$$
+    <p style="font-size:0.93rem;margin:6px 0;">Add them: the \(\cos A\sin B\) terms cancel.</p>
+    $$\sin(A+B) + \sin(A-B) = 2\sin A\cos B$$
+    <p style="font-size:0.93rem;margin:6px 0;">Now choose \(A = \omega(n-1)\), the <em>middle</em> sample's angle, and \(B = \omega\), one step. Then \(A + B = \omega n\) and \(A - B = \omega(n-2)\):</p>
+    $$\sin(\omega n) + \sin\bigl(\omega(n-2)\bigr) = 2\cos\omega\,\sin\bigl(\omega(n-1)\bigr)$$
+    <p style="font-size:0.93rem;margin:6px 0;">Move \(\sin(\omega(n-2))\) to the right-hand side and we have the identity. \(\blacksquare\)</p>
+  </div>
+  <p style="margin-top:14px;">Three things to take from it:</p>
+  <ul>
+    <li><strong>It is a predictor with two weights.</strong> Writing \(x[n] = \sin(\omega n)\):
+      $$\hat{x}[n] = a_1\,x[n-1] + a_2\,x[n-2] \quad\text{with}\quad a_1 = 2\cos\omega,\;\; a_2 = -1$$
+      and the prediction is <em>exact</em>: zero error, for every \(n\). For our 200&nbsp;Hz tone at 16&nbsp;kHz, \(\omega = 2\pi \cdot 200/16000 = 0.0785\) rad, so \(a_1 = 2\cos(0.0785) = 1.994\) and \(a_2 = -1\).
+      This is what the demo below finds.</li>
+    <li><strong>Amplitude and phase don't matter.</strong> The same proof works for \(x[n] = C\sin(\omega n + \varphi)\) (take \(A = \omega(n-1) + \varphi\) and multiply through by \(C\)). The weights depend <em>only on the frequency</em>.
+      So the two weights encode exactly one thing, <em>which frequency is ringing</em>. That is why they will later tell us where the formants are.</li>
+    <li><strong>An intuition.</strong> Rearranged, the identity says \(x[n] + x[n-2] = 2\cos\omega \cdot x[n-1]\): the two neighbours of any sample add up to a fixed multiple of it. A slow oscillation
+      (\(\omega\) small, \(2\cos\omega \approx 2\)) means the neighbours almost average to the middle sample, i.e. the waveform is nearly straight locally. A fast oscillation bends sharply, so the neighbours fall well short of twice the middle value.</li>
+  </ul>
+  <h3 id="order">How many weights does speech need? The rule \(p \approx 2 + f_s/1000\)</h3>
+  <p>
+    This rule of thumb for the predictor order looks arbitrary, but every part of it has a meaning. It is a <em>budget</em>: count the resonances the predictor has to capture,
+    give each one two weights, and add a little extra for the overall slope of the spectrum.
+  </p>
+
+  <h4>Step 1 · One formant costs two weights</h4>
+  <p>
+    We just proved that a sinusoid is predicted exactly by two weights. A formant is a sinusoid that <em>dies away</em>, the decaying ring of a resonance. That also costs exactly two weights.
+    Multiply both sides of the identity by \(\rho^{\,n}\) (with \(0 &lt; \rho &lt; 1\) setting how fast the ring decays) and regroup the powers of \(\rho\):
+  </p>
+  <div class="eq">$$\underbrace{\rho^{n}\sin(\omega n)}_{x[n]} = 2\rho\cos\omega\cdot\underbrace{\rho^{\,n-1}\sin\bigl(\omega(n-1)\bigr)}_{x[n-1]} \;-\; \rho^{2}\cdot\underbrace{\rho^{\,n-2}\sin\bigl(\omega(n-2)\bigr)}_{x[n-2]}$$
+    <span class="note">so a decaying ring is predicted exactly by \(a_1 = 2\rho\cos\omega\) and \(a_2 = -\rho^2\): one weight pair per resonance. \(\omega\) sets where the formant is, \(\rho\) how sharp it is.</span></div>
+
+  <h4>Step 2 · How many formants are there to capture?</h4>
+  <p>
+    Recall the tube from the <a href="source_filter.html#filter">source&ndash;filter page</a>: a 17.5&nbsp;cm vocal tract has resonances at 500, 1500, 2500, 3500&nbsp;Hz, &hellip;. They are spaced
+    <strong>about 1000&nbsp;Hz apart</strong>, because the spacing is \(c/2L = 350/(2 \times 0.175) = 1000\) Hz. Real vowels push individual formants up and down, but the <em>average</em> density stays about one formant per kilohertz.
+  </p>
+  <p>
+    A signal sampled at \(f_s\) only contains frequencies up to \(f_s/2\) (the Nyquist frequency), so the predictor only has to deal with the formants below that:
+  </p>
+  <div class="eq">$$\text{number of formants} \approx \frac{f_s/2}{1000\ \text{Hz}}$$</div>
+
+  <h4>Step 3 · Add up the budget</h4>
+  <div class="eq">$$p \;\approx\; \underbrace{2 \times \frac{f_s/2}{1000}}_{\text{two weights per formant}} \;+\; \underbrace{2}_{\text{spectral tilt}} \;=\; \frac{f_s}{1000} + 2$$</div>
+  <p>
+    <strong>Why the extra 2?</strong> Besides its peaks, a voiced spectrum has an overall downward <em>slope</em> (about −6&nbsp;dB per octave), from the smooth glottal pulse and the radiation at the lips
+    (section 05 of the source&ndash;filter page). A slope is not a resonance, but the predictor still has to model it, and a couple of extra weights take care of it.
+    (Pre-emphasis, which flattens that slope, is partly a way of saving those weights for the formants.)
+  </p>
+
+  <div class="card">
+    <div class="plotlabel" style="margin-top:0;">The weight budget at 16 kHz: one box per formant below 8 kHz, two weights each, plus the tilt</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+      <span class="budget f">\(F_1\)<small>~0.5k</small></span><span class="budget f">\(F_2\)<small>~1.5k</small></span><span class="budget f">\(F_3\)<small>~2.5k</small></span><span class="budget f">\(F_4\)<small>~3.5k</small></span>
+      <span class="budget f">\(F_5\)<small>~4.5k</small></span><span class="budget f">\(F_6\)<small>~5.5k</small></span><span class="budget f">\(F_7\)<small>~6.5k</small></span><span class="budget f">\(F_8\)<small>~7.5k</small></span>
+      <span class="budget t">tilt<small>slope</small></span>
+    </div>
+    <p style="font-size:0.86rem;color:var(--muted);margin:8px 0 0;">\(8 \text{ formants} \times 2 \text{ weights} + 2 \text{ for tilt} = \mathbf{18}\). At 8&nbsp;kHz sampling only \(F_1\)&ndash;\(F_4\) lie below the 4&nbsp;kHz Nyquist limit, giving \(4 \times 2 + 2 = \mathbf{10}\).</p>
+  </div>
+
+  <div class="card" style="overflow-x:auto;margin-top:12px;">
+    <table style="border-collapse:collapse;width:100%;font-size:0.9rem;">
+      <thead><tr style="text-align:left;">
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Sampling rate \(f_s\)</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Nyquist \(f_s/2\)</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Formants below it</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Order \(p\)</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Typical use</th></tr></thead>
+      <tbody>
+        <tr><td style="padding:6px 8px;">8 kHz</td><td style="padding:6px 8px;">4 kHz</td><td style="padding:6px 8px;">\(\approx 4\)</td><td style="padding:6px 8px;"><strong>10</strong></td><td style="padding:6px 8px;">telephone speech, LPC-10, most phone codecs</td></tr>
+        <tr><td style="padding:6px 8px;">10 kHz</td><td style="padding:6px 8px;">5 kHz</td><td style="padding:6px 8px;">\(\approx 5\)</td><td style="padding:6px 8px;"><strong>12</strong></td><td style="padding:6px 8px;">classic speech-analysis setups</td></tr>
+        <tr><td style="padding:6px 8px;">16 kHz</td><td style="padding:6px 8px;">8 kHz</td><td style="padding:6px 8px;">\(\approx 8\)</td><td style="padding:6px 8px;"><strong>18</strong></td><td style="padding:6px 8px;">wideband speech, most speech corpora (e.g. CMU ARCTIC), ASR</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:14px;">
+    <strong>It's a guideline, not a law.</strong> The 1000 in the formula is really the formant spacing \(c/2L\), so it depends on the speaker. A shorter (female or child) tract has formants about
+    1200&ndash;1500&nbsp;Hz apart, so slightly fewer of them fit below Nyquist and a slightly lower order suffices. The high formants are also weak, so in the demo below the gain for /ɑ/ is already
+    within about 2&nbsp;dB of its maximum by \(p \approx 12\). Too <em>low</em> an order merges or misses formants. Too <em>high</em> an order starts fitting individual harmonics and noise, giving
+    spurious peaks. The rule puts you safely in between.
+  </p>
+  <p>Putting it together, the general predictor is a weighted vote of the last \(p\) samples:</p>
+  <div class="eq">$$\hat{x}[n] = a_1 x[n-1] + a_2 x[n-2] + \dots + a_p x[n-p] = \sum_{k=1}^{p} a_k\,x[n-k]$$</div>
+  <p>
+    It is called <em>linear</em> prediction because the guess is a weighted sum: no squares, no thresholds, nothing fancy. Try different orders:
+  </p>
+  <div class="card">
+    <div class="ctlrow"><span>Signal:</span><span class="seg" id="lpSig"></span></div>
+    <div class="ctlrow">
+      <label for="lpP">Order \(p\) (number of past samples): <span class="valpill" id="lpPv"></span></label>
+      <input type="range" id="lpP" min="0" max="24" value="2" style="flex:1;min-width:160px;">
+    </div>
+    <div class="plotlabel"><span style="color:var(--line-strong);">&#9632;</span> actual &nbsp; <span style="color:var(--accent);">&#9632;</span> predicted &nbsp; <span style="color:var(--accent-2);">&#9632;</span> error (same scale), first 25 ms</div>
+    <canvas id="lpWave" class="plot" height="200"></canvas>
+    <div class="grid2" style="gap:12px;margin-top:8px;">
+      <div><div class="plotlabel">Prediction gain vs. order (dot = current \(p\))</div><canvas id="lpGain" class="plot" height="160"></canvas></div>
+      <div><div class="plotlabel">The weights \(a_1, \dots, a_p\)</div><canvas id="lpW" class="plot" height="160"></canvas></div>
+    </div>
+    <div class="readout"><div>prediction gain<b id="lpG"></b></div><div>error energy left<b id="lpE"></b></div></div>
+    <p id="lpNote" style="font-size:0.86rem;color:var(--muted);margin:8px 0 0;"></p>
+  </div>
+  <p style="margin-top:16px;">What to notice:</p>
+  <ul>
+    <li><strong>Tone:</strong> \(p = 2\) is perfect, and the gain shoots off the chart (limited only by the rounding of the stored samples). Extra weights add nothing to the gain,
+      but notice that they are <em>not zero</em> (see the box below).</li>
+    <li><strong>Vowels:</strong> the gain climbs quickly, about 2 weights per formant, then levels off around \(p \approx 12\)&ndash;18. Beyond that the leftover error is the part that is <em>genuinely</em> new each period: the glottal kicks.</li>
+    <li><strong>Fricative:</strong> about 8&nbsp;dB at most. Turbulent noise is mostly unpredictable, but its spectral <em>shape</em> (where the noise energy sits) is still captured by the weights.</li>
+    <li><strong>Noise:</strong> zero gain at every order. No pattern, nothing to exploit.</li>
+  </ul>
+  <div class="card" style="border-left:3px solid var(--accent-3);margin-top:6px;">
+    <h4>Why aren't the extra weights zero for the tone when \(p > 2\)?</h4>
+    <p style="font-size:0.93rem;margin:6px 0;">
+      Because there is no longer <em>one</em> best answer: there are infinitely many, all perfect. For a sinusoid, any three consecutive samples are tied together by the identity itself
+      (written one step earlier):
+    </p>
+    $$x[n-1] - 2\cos\omega\,x[n-2] + x[n-3] = 0 \quad\text{for every } n$$
+    <p style="font-size:0.93rem;margin:6px 0;">
+      So we can add <em>any</em> multiple \(\lambda\) of that zero to the two-weight predictor without changing a single prediction. With \(c = \cos\omega\), every member of this family is exact:
+    </p>
+    $$\bigl(a_1, a_2, a_3\bigr) = \bigl(2c,\; -1,\; 0\bigr) + \lambda\,\bigl(1,\; -2c,\; 1\bigr)$$
+    <p style="font-size:0.93rem;margin:6px 0;">
+      For our 200&nbsp;Hz tone: \(\lambda = 0\) gives \((1.994, -1, 0)\); \(\lambda = -2c\) gives \((0,\, 2.975,\, -1.994)\), a predictor that ignores the most recent sample entirely; and the demo shows
+      \((1.552,\, -0.120,\, -0.441)\), which is \(\lambda \approx -0.44\). All three have zero error.
+    </p>
+    <p style="font-size:0.93rem;margin:6px 0;">
+      In matrix terms, the normal-equation matrix for a pure tone has rank 2. For \(p = 3\) it is <em>singular</em> (one eigenvalue is exactly zero), so the equations don't pin down a unique solution.
+      The solver needs a tie-breaker. A tiny amount of &ldquo;prefer small weights&rdquo; (regularisation) would select the family member with the smallest total
+      \(\sum_k a_k^2\), which is \(\lambda = -2c/(1 + 2c^2) \approx -0.667\), i.e. \((1.327,\, 0.330,\, -0.667)\). That <em>spreads</em> the weight over all the lags rather than zeroing the extra ones.
+      The demo lands on a different member for a mundane reason: its samples are stored rounded to 4 decimals, and that rounding acts like a tiny, periodic &ldquo;noise&rdquo; that makes the matrix very slightly
+      non-singular, so the rounding, not the regulariser, breaks the tie. Either way, the extra weights are not zero.
+    </p>
+    <p style="font-size:0.93rem;margin:6px 0;">
+      <strong>Real signals don't have this problem.</strong> Speech, noise, even a tone with a little added noise, carry information in more than two dimensions, so the matrix is invertible and the
+      weights are unique. The pure tone is the special case that shows exactly how much structure a signal has: <em>two</em> numbers' worth, so a third weight is redundant.
+    </p>
+  </div>
+
+</section>
+
+<!-- ============================================================ 5. WEIGHTS -->
+<section id="weights">
+  <div class="kicker">05 &middot; Finding the weights</div>
+  <h2>Least squares, with the same trick as before.</h2>
+  <p>
+    With one weight we set a derivative to zero and got \(a = r(1)\). With \(p\) weights we do exactly the same thing, once for each weight: minimise the total squared error
+  </p>
+  <div class="eq">$$E = \sum_n \Bigl(x[n] - \sum_{k=1}^{p} a_k\,x[n-k]\Bigr)^2 \qquad\text{and set}\qquad \frac{\partial E}{\partial a_i} = 0, \quad i = 1,\dots,p$$</div>
+  <p>Each condition says &ldquo;the error must be uncorrelated with \(x[n-i]\)&rdquo;: whatever is left over shouldn't still be predictable from the past. Written out, they are \(p\) linear equations that only involve the correlations \(r(k)\) we already know how to compute:</p>
+  <div class="eq">$$\sum_{k=1}^{p} a_k\, r(|i-k|) = r(i), \qquad i = 1,\dots,p$$
+    <span class="note">the normal equations, a.k.a. the Yule&ndash;Walker equations. For \(p = 2\):</span>
+    $$\begin{bmatrix} r(0) & r(1) \\ r(1) & r(0) \end{bmatrix}\begin{bmatrix} a_1 \\ a_2 \end{bmatrix} = \begin{bmatrix} r(1) \\ r(2) \end{bmatrix}$$</div>
+  <p>
+    The absolute value in \(r(|i-k|)\) is the symmetry from section 03 again: \(r(-k) = r(k)\), so only the distance between the two samples counts. The matrix therefore has the same value along every diagonal (a <em>Toeplitz</em> matrix), and it is also symmetric. That structure lets the
+    <strong>Levinson&ndash;Durbin recursion</strong> solve the system in about \(p^2\) operations instead of \(p^3\): fast enough for 1970s chips to do it 50 times a second.
+    (The demos on this page solve the same least-squares problem directly, in your browser, each time you move a slider.)
+  </p>
+  <div class="card" style="font-size:0.9rem;">
+    <strong>In practice</strong> (the &ldquo;autocorrelation method&rdquo;): take a 20&ndash;30&nbsp;ms frame, apply a smooth window (Hamming) and usually a little pre-emphasis (to flatten the spectral tilt),
+    compute \(r(0), \dots, r(p)\), solve for the weights, move on 10&nbsp;ms, repeat. Speech changes, so the weights are re-estimated for every frame.
+  </div>
+</section>
+
+<!-- ============================================================ 6. HISTORY -->
+<section id="history">
+  <div class="kicker">06 &middot; History</div>
+  <h2>From a lost planet to your phone.</h2>
+  <p>
+    Did prediction start in astronomy? <strong>Mostly yes.</strong> The <em>fitting machinery</em> (least squares, which is exactly how we found the weights) was born predicting the motion
+    of a celestial body. The specific idea of predicting a signal <em>from its own past</em> came in the 1920s, again from a sky-watching problem (sunspots), and reached speech in the 1960s.
+  </p>
+  <div class="timeline">
+    <div class="ev"><span class="yr">1801–1809</span><p><strong>Gauss and the lost planet Ceres.</strong> Ceres was spotted in January 1801, then lost in the Sun's glare after only 41 days of observations. The 24-year-old Carl Friedrich Gauss fitted an orbit to those few noisy positions by <em>least squares</em> and predicted where it would reappear; it was found there on 31 December 1801. Legendre published least squares first (1805); Gauss published his method in 1809.</p></div>
+    <div class="ev"><span class="yr">1927</span><p><strong>Yule and the sunspots.</strong> Udny Yule modelled the yearly sunspot numbers as each value predicted from the previous two plus a random disturbance. This was the first <em>autoregressive</em> (AR) model, and the same structure as our predictor.</p></div>
+    <div class="ev"><span class="yr">1931</span><p><strong>Walker</strong> generalised it to more past values while studying atmospheric pressure at Darwin, giving the <em>Yule&ndash;Walker equations</em>, the very equations of section 05.</p></div>
+    <div class="ev"><span class="yr">1941–1949</span><p><strong>Kolmogorov and Wiener</strong> founded the theory of optimal prediction of random signals. Wiener's version came from a wartime problem: predicting where an aircraft would be by the time an anti-aircraft shell arrived.</p></div>
+    <div class="ev"><span class="yr">1947</span><p><strong>Levinson</strong> found the fast recursion for the Toeplitz equations (refined by Durbin in 1960).</p></div>
+    <div class="ev speech"><span class="yr">1966–1971</span><p><strong>Speech arrives.</strong> Fumitada Itakura and Shuzo Saito at NTT in Japan, and Bishnu Atal and Manfred Schroeder at Bell Labs, independently realised that the vocal tract makes speech highly predictable, so a predictor's weights are a compact description of the filter. Atal &amp; Hanauer's 1971 paper &ldquo;Speech analysis and synthesis by linear prediction of the speech wave&rdquo; became the field's foundation.</p></div>
+    <div class="ev speech"><span class="yr">1975</span><p>John Makhoul's tutorial &ldquo;Linear prediction: a tutorial review&rdquo; makes LPC the standard tool of speech processing.</p></div>
+    <div class="ev speech"><span class="yr">1978</span><p>Texas Instruments' <strong>Speak &amp; Spell</strong> toy talks using a single LPC synthesis chip: the source&ndash;filter model, in a children's toy.</p></div>
+    <div class="ev speech"><span class="yr">1984</span><p><strong>LPC-10</strong> (US standard FS-1015) sends intelligible speech at 2.4&nbsp;kbit/s: per frame just ~10 predictor weights, a pitch, a voicing flag and a gain.</p></div>
+    <div class="ev speech"><span class="yr">1985 →</span><p><strong>CELP</strong> (Schroeder &amp; Atal) adds a smarter way to code the prediction error. Its descendants (GSM's enhanced full-rate codec, AMR, EVS, &hellip;) and close linear-predictive relatives such as the speech mode of Opus run in essentially every mobile phone today.</p></div>
+  </div>
+  <h3 id="sunspots">First: what are sunspots, and why did anyone care?</h3>
+  <p>
+    <strong>Sunspots</strong> are dark patches on the Sun's visible surface (the photosphere). They are dark only by comparison: at roughly 3,500&ndash;4,500&nbsp;K they are cooler than the
+    surrounding surface at about 5,800&nbsp;K, and on their own they would glow bright orange. They form where bundles of intense <em>magnetic field</em> push up through the surface and choke the
+    churning convection that normally carries heat up from below. Big ones are several times wider than the Earth. They last from days to weeks, appear in <em>groups</em>, usually in two
+    bands either side of the solar equator, and are carried across the disk by the Sun's rotation (about 27 days as seen from Earth).
+  </p>
+  <figure>
+    <div class="card diagram" style="padding:12px;">
+      <svg viewBox="0 0 780 310" role="img" aria-label="Left: the solar disk with three groups of sunspots. Middle: a zoom on one large sunspot with its dark umbra and filamentary penumbra, with the Earth drawn to scale. Right: Wolf's sunspot number computed for the drawing: 3 groups and 11 spots give R = 41.">
+        <defs>
+          <radialGradient id="sunG" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFE9A8"/><stop offset="62%" stop-color="#FDBA4E"/><stop offset="100%" stop-color="#D9661A"/>
+          </radialGradient>
+          <radialGradient id="penG" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#5a2e0c"/><stop offset="55%" stop-color="#7c4214"/><stop offset="100%" stop-color="#b8681f"/>
+          </radialGradient>
+        </defs>
+        <!-- solar disk -->
+        <circle cx="150" cy="155" r="128" fill="url(#sunG)"/>
+        <line x1="22" y1="155" x2="278" y2="155" stroke="#b5561a" stroke-dasharray="4 5" stroke-width="1" opacity="0.6"/>
+        <text x="282" y="158" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">equator</text>
+        <!-- group 1 (4 spots) -->
+        <g fill="#3a1d08"><ellipse cx="96" cy="118" rx="9" ry="7" fill="#8a4a12" opacity="0.75"/><ellipse cx="96" cy="118" rx="4.5" ry="3.5"/>
+          <ellipse cx="114" cy="122" rx="5" ry="4" fill="#8a4a12" opacity="0.75"/><ellipse cx="114" cy="122" rx="2.2" ry="1.8"/>
+          <circle cx="124" cy="116" r="1.8"/><circle cx="106" cy="127" r="1.6"/></g>
+        <!-- group 2 (5 spots) -->
+        <g fill="#3a1d08"><ellipse cx="186" cy="182" rx="12" ry="9" fill="#8a4a12" opacity="0.75"/><ellipse cx="186" cy="182" rx="6" ry="4.5"/>
+          <ellipse cx="207" cy="186" rx="6" ry="5" fill="#8a4a12" opacity="0.75"/><ellipse cx="207" cy="186" rx="2.6" ry="2.2"/>
+          <circle cx="197" cy="175" r="1.7"/><circle cx="216" cy="178" r="1.5"/><circle cx="175" cy="190" r="1.6"/></g>
+        <!-- group 3 (2 spots) -->
+        <g fill="#3a1d08"><ellipse cx="128" cy="203" rx="7" ry="5.5" fill="#8a4a12" opacity="0.75"/><ellipse cx="128" cy="203" rx="3.2" ry="2.6"/><circle cx="141" cy="206" r="1.7"/></g>
+        <g fill="none" stroke="var(--ink)" stroke-dasharray="3 3" stroke-width="1"><circle cx="110" cy="121" r="22"/><circle cx="196" cy="182" r="28"/><circle cx="133" cy="204" r="17"/></g>
+        <g font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="var(--ink)"><text x="70" y="93">group 1</text><text x="200" y="146">group 2</text><text x="96" y="238">group 3</text></g>
+        <text x="150" y="304" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="var(--muted)">the solar disk (spots enlarged for visibility)</text>
+        <!-- zoom -->
+        <line x1="218" y1="168" x2="330" y2="70" stroke="var(--line-strong)" stroke-width="1"/>
+        <line x1="218" y1="196" x2="330" y2="250" stroke="var(--line-strong)" stroke-width="1"/>
+        <rect x="330" y="40" width="210" height="230" rx="8" fill="#F9B44A" stroke="var(--line-strong)"/>
+        <g transform="translate(430,150)">
+          <circle r="84" fill="url(#penG)"/>
+          <g stroke="#c27a2a" stroke-width="1.2" opacity="0.55">
+            <line x1="0" y1="-84" x2="0" y2="-40"/><line x1="40" y1="-74" x2="20" y2="-35"/><line x1="72" y1="-44" x2="34" y2="-20"/><line x1="84" y1="0" x2="40" y2="0"/>
+            <line x1="72" y1="44" x2="34" y2="20"/><line x1="40" y1="74" x2="20" y2="35"/><line x1="0" y1="84" x2="0" y2="40"/><line x1="-40" y1="74" x2="-20" y2="35"/>
+            <line x1="-72" y1="44" x2="-34" y2="20"/><line x1="-84" y1="0" x2="-40" y2="0"/><line x1="-72" y1="-44" x2="-34" y2="-20"/><line x1="-40" y1="-74" x2="-20" y2="-35"/>
+          </g>
+          <circle r="38" fill="#2a1406"/>
+        </g>
+        <circle cx="508" cy="74" r="17" fill="#2f6db5" stroke="#fff" stroke-width="1.5"/>
+        <path d="M499,68 q6,-5 12,0 q4,5 -2,9 q-6,3 -9,-2z" fill="#4f9a4f" opacity="0.9"/>
+        <g font-family="Inter, sans-serif" font-size="10.5" fill="var(--ink)">
+          <text x="508" y="104" text-anchor="middle" font-weight="600">Earth</text><text x="508" y="117" text-anchor="middle">(to scale)</text>
+          <text x="430" y="154" text-anchor="middle" fill="#f5d7a8">umbra</text>
+          <text x="430" y="226" text-anchor="middle" fill="#fbe3bd">penumbra</text>
+        </g>
+        <text x="435" y="290" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="var(--muted)">one large spot: dark core (umbra), striped rim (penumbra)</text>
+        <!-- Wolf number -->
+        <g font-family="Inter, sans-serif" fill="var(--ink)">
+          <text x="565" y="70" font-size="13" font-weight="700">Wolf's sunspot number (1848)</text>
+          <foreignObject x="565" y="80.4" width="360" height="32"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px;line-height:32px;text-align:left;color:var(--ink);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(R = k\,(10\,g + s)\)</div></foreignObject>
+          <foreignObject x="565" y="117.8" width="360" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;line-height:24px;text-align:left;color:var(--ink);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(g\) = number of groups</div></foreignObject>
+          <foreignObject x="565" y="135.8" width="360" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;line-height:24px;text-align:left;color:var(--ink);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(s\) = number of individual spots</div></foreignObject>
+          <foreignObject x="565" y="153.8" width="360" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;line-height:24px;text-align:left;color:var(--ink);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(k\) = observer / telescope factor</div></foreignObject>
+          <foreignObject x="565" y="187.8" width="360" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;line-height:24px;text-align:left;color:var(--muted);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">For the disk on the left (\(k = 1\)):</div></foreignObject>
+          <foreignObject x="565" y="207.8" width="360" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;line-height:24px;text-align:left;color:var(--ink);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(g = 3,\quad s = 4 + 5 + 2 = 11\)</div></foreignObject>
+          <foreignObject x="565" y="230.4" width="360" height="32"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px;line-height:32px;text-align:left;color:var(--accent-2);font-weight:700;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(R = 10 \times 3 + 11 = 41\)</div></foreignObject>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Figure 3.</b> What is being counted. A sunspot has a dark core (the <em>umbra</em>) and a lighter, striped rim (the <em>penumbra</em>), and a large one can swallow several Earths.
+    Rudolf Wolf's count weights each <em>group</em> ten times more than an individual spot, because small spots come and go and are easy to miss, while groups are a steadier sign of activity.
+    \(R\) is computed <em>each day</em> from what is visible that day.</figcaption>
+  </figure>
+  <div class="card" style="border-left:3px solid var(--accent-3);">
+    <h4>What does a &ldquo;yearly sunspot number&rdquo; mean?</h4>
+    <p style="font-size:0.9rem;margin:6px 0;">
+      It is <strong>not</strong> a count of how many different spots appeared during the year. It is the <strong>average of the daily numbers</strong>:
+    </p>
+    $$R_{\text{day}} = k\,(10\,g + s) \quad\text{(from the visible half of the Sun on that day)}, \qquad R_{\text{year}} = \frac{1}{\text{days}}\sum_{\text{days in the year}} R_{\text{day}}$$
+    <p style="font-size:0.9rem;margin:6px 0;">
+      Nobody tracks individual spots from day to day. A long-lived group is simply counted again on every day it is visible: about two weeks as the Sun's rotation carries it across the disk, and again
+      if it survives to come back round about 27 days later. So the yearly number measures <em>how spotted the Sun looks on a typical day of that year</em>, a level of activity.
+      For example, 1957's record yearly value of about 190 corresponds to an average day showing something like 12 groups and 70 spots (\(10 \times 12 + 70 = 190\)). The factor \(k\) puts different observers
+      and telescopes on a common scale. Today a worldwide network of stations contributes, which also covers days when one site is clouded out.
+    </p>
+  </div>
+
+  <h4>Counting them: 250 years of patient observation</h4>
+  <p>
+    Sunspots were noted with the naked eye in Chinese chronicles over two thousand years ago, and drawn through the first telescopes by Harriot, Galileo, Scheiner and Fabricius in 1610&ndash;1611.
+    The <strong>cycle</strong> was discovered almost by accident: Heinrich Schwabe, an apothecary and amateur astronomer, counted spots on every clear day from 1826, hoping to catch an unknown
+    planet crossing the Sun. He found no planet, but in 1843 he announced that the number of spots rises and falls over about ten years. In 1848 Rudolf Wolf in Bern (later Zürich) defined
+    the sunspot number above, began a systematic daily record, and painstakingly reconstructed earlier years from old observations: monthly back to 1749, yearly back to 1700. His successor
+    Alfred Wolfer continued it, which is why Yule speaks of &ldquo;Wolfer's sunspot numbers&rdquo;. The series is still maintained today (by the Royal Observatory of Belgium) and is one of the longest
+    scientific records that exists.
+  </p>
+  <figure>
+    <div class="frame"><img src="linear_prediction/fig/08_sunspot_record.png?v=2" alt="Yearly sunspot numbers from 1700 to 2008 with solar cycles numbered and a histogram of cycle lengths from 9 to 14 years" loading="lazy"></div>
+    <figcaption><b>Figure 4.</b> The yearly sunspot record, 1700&ndash;2008, with the solar cycles numbered from 1 (starting 1755). The shaded band is the stretch Yule analysed. <b>Right:</b> how long each cycle lasted,
+    measured minimum to minimum. They range from 9 to 14 years, mean 10.9. The peaks vary even more, from about 45 to 190. A regular cycle that refuses to keep regular time: that is exactly
+    the puzzle described below.</figcaption>
+  </figure>
+
+  <h4>Why did predicting sunspots matter then?</h4>
+  <div class="grid2">
+    <div class="card"><h4>🧭 Compasses and telegraphs</h4><p style="font-size:0.88rem;margin:0;">
+      In 1852 Edward Sabine (and independently Wolf and Gautier) showed that disturbances of the Earth's magnetic field, the restless twitching of compass needles, rise and fall in step with the
+      sunspot cycle. Then in September 1859 Richard Carrington saw a brilliant flare on the Sun, and within a day the largest magnetic storm on record struck. Aurorae were seen near the tropics,
+      and telegraph systems across Europe and America failed, threw sparks, or kept working on currents induced by the storm alone. The Sun clearly mattered for the new electrical technologies.</p></div>
+    <div class="card"><h4>🌾 Weather, harvests and prices</h4><p style="font-size:0.88rem;margin:0;">
+      If the Sun's output varied with the cycle, perhaps the weather did too. William Herschel suggested in 1801 that English wheat prices were higher in years with few sunspots. In the 1870s the economist
+      W. S. Jevons argued that trade crises recurred with the sunspot cycle (the &ldquo;sunspot theory&rdquo; of business cycles). Most such links did not survive careful testing, but for decades
+      the sunspot cycle was a prime suspect for <em>anything</em> that seemed to repeat.</p></div>
+    <div class="card"><h4>🌧️ The Indian monsoon</h4><p style="font-size:0.88rem;margin:0;">
+      When the monsoon failed, millions died: in the famines of 1876&ndash;78 and 1899&ndash;1900. Forecasting the monsoon became a priority of the India Meteorological Department (H. F. Blanford issued
+      long-range forecasts from 1886), and sunspots were among the predictors examined. In 1904 <strong>Gilbert Walker</strong>, a Cambridge mathematician, became Director-General of Observatories in India
+      with exactly this task. Searching worldwide weather records for anything that foretold the monsoon, he discovered the <em>Southern Oscillation</em>, a see-saw of air pressure across the Pacific
+      (Darwin vs. Tahiti), today known as part of ENSO (El Niño) and still a key monsoon predictor. His 1931 paper was built to analyse exactly such series.</p></div>
+    <div class="card"><h4>📈 Statistics itself</h4><p style="font-size:0.88rem;margin:0;">
+      With over two centuries of numbers and an obvious but irregular rhythm, the sunspot series became the standard test case for methods of finding cycles in data. Yule was worried about
+      how easily one finds <em>spurious</em> patterns in time series (his 1926 paper asked &ldquo;Why do we sometimes get nonsense-correlations between time-series?&rdquo;). The sunspots were
+      the natural place to show that a better model was needed.</p></div>
+  </div>
+  <p style="margin-top:14px;">
+    The question has never gone away. Solar storms now threaten satellites, GPS, radio links and power grids: the March 1989 storm blacked out the Québec grid for nine hours. Space-weather centres
+    forecast the sunspot cycle (cycle 25 reached its maximum around 2024&ndash;25), and autoregressive models in Yule's spirit are still among the tools used.
+  </p>
+
+  <h3 id="yule">How Yule and Walker actually did it</h3>
+  <p>
+    The equations in sections 03&ndash;05 were not invented for speech. They were worked out by two statisticians trying to understand <strong>sunspots</strong>, and seeing how they did it makes the
+    method feel much less arbitrary. We can redo their analysis on the same data (the yearly sunspot numbers of 1749&ndash;1924 that Yule used).
+  </p>
+
+  <h4>The puzzle: is the 11-year sunspot cycle a hidden sine wave?</h4>
+  <p>
+    Astronomers had long known that sunspots come and go in a cycle of roughly 11 years. Around 1900 the standard tool for finding such cycles was Arthur Schuster's <em>periodogram</em>
+    (essentially a Fourier transform). It assumed the data were <strong>one or more perfect sine waves plus independent measurement errors</strong>. But the sunspot cycle doesn't behave like that.
+    Its length wanders between about 9 and 14 years and its peaks vary wildly in height. A perfect sine wave can't drift like that: the &ldquo;errors&rdquo; in one year have no effect on the next.
+  </p>
+
+  <h4>Yule's idea (1927): a pendulum pelted with peas</h4>
+  <p>
+    George Udny Yule proposed a different picture, in a famous image. Imagine a pendulum swinging in a room, and some boys who keep pelting it with peas. Each pea doesn't add an error <em>on top of</em>
+    the swing. It knocks the pendulum, and the pendulum <em>carries that knock forward</em> into all its future swinging. The motion still looks roughly periodic (a pendulum has a natural period), but
+    its timing and size wander irregularly, just like sunspots.
+  </p>
+  <figure>
+    <div class="frame"><img src="linear_prediction/fig/07_two_hypotheses.png?v=2" alt="Three time series: a sine wave plus noise, a simulated randomly-disturbed damped pendulum, and the real sunspot numbers" loading="lazy"></div>
+    <figcaption><b>Figure 5.</b> The two hypotheses, simulated, next to the real data. <b>Schuster</b>: the cycle is perfectly regular, and the noise only jiggles each point. <b>Yule</b>: random knocks fed through a
+    damped two-step &ldquo;pendulum&rdquo; (the model he fitted, below) produce cycles whose length and height wander, much more like the <b>real record</b>. (The simulated series can dip below zero
+    because the models are linear; real counts can't.)</figcaption>
+  </figure>
+  <p>Try it yourself: throw some peas.</p>
+  <div class="card">
+    <canvas id="yuleCanvas" class="plot" height="200" aria-label="A simulated randomly disturbed pendulum, optionally over the real sunspot record"></canvas>
+    <div class="ctlrow" style="margin-top:8px;">
+      <label for="yuleShock">How hard the peas are thrown: <span class="valpill" id="yuleShockV"></span></label>
+      <input type="range" id="yuleShock" min="0" max="200" value="100" style="flex:1;min-width:140px;">
+    </div>
+    <div class="ctlrow">
+      <button id="yuleNew" class="on">↻ Throw new peas</button>
+      <label><input type="checkbox" id="yuleReal" checked> show the real sunspot record</label>
+      <span id="yuleNote" style="flex:1;font-size:0.84rem;color:var(--muted);"></span>
+    </div>
+  </div>
+  <p style="margin-top:14px;">
+    Set the peas to zero and the pendulum just swings down to rest: without disturbances the cycle dies away. The random knocks are what keep it going <em>and</em> what make it irregular.
+  </p>
+
+  <h4>How Yule fitted it: correlation and least squares</h4>
+  <p>
+    A damped pendulum, written one time step at a time, says that this year's value is a fixed mix of the last two years' values. So Yule wrote, with \(x_t\) the sunspot number in year \(t\)
+    (measured from its average) and \(\varepsilon_t\) the year's random &ldquo;pea&rdquo;:
+  </p>
+  <div class="eq">$$x_t = a_1\,x_{t-1} + a_2\,x_{t-2} + \varepsilon_t$$
+    <span class="note">This is exactly our two-weight predictor from section 04, with years instead of samples and peas instead of glottal kicks.</span></div>
+  <p>
+    To find \(a_1\) and \(a_2\) he did what we did. First he checked that neighbouring years are correlated, with the same kind of lagged scatter plot as in section 02:
+  </p>
+  <figure>
+    <div class="frame"><img src="linear_prediction/fig/05_yule_scatter.png?v=2" alt="Scatter plots of sunspot numbers against the same series 1, 2 and 5 years later" loading="lazy"></div>
+    <figcaption><b>Figure 6.</b> Sunspot number in year \(t\) against year \(t+k\). One year apart they are strongly related (\(r = +0.81\)). Two years apart, less so (\(+0.43\)). Five years apart,
+    half a cycle, they are <em>anti</em>-correlated (\(-0.40\)), just like the vowel at half a formant period in Figure 1.</figcaption>
+  </figure>
+  <p>
+    Then he chose the weights that minimise the squared prediction error (least squares, Gauss's tool from the Ceres story), exactly as in section 05. On his data this gives:
+  </p>
+  <div class="eq">$$x_t = 1.34\,x_{t-1} - 0.65\,x_{t-2} + \varepsilon_t$$
+    <span class="note">Our recomputation on the same years gives 1.336 and −0.650. Yule (1927) reported coefficients of about 1.34 and −0.65.</span></div>
+  <figure>
+    <div class="frame"><img src="linear_prediction/fig/04_yule_sunspots.png?v=2" alt="The sunspot record 1749 to 1924 with Yule's one-year-ahead predictions and the residual shocks" loading="lazy"></div>
+    <figcaption><b>Figure 7.</b> Yule's predictor in action: each year predicted from the two before. The prediction tracks the cycle closely. What it can't predict (red) is the random &ldquo;peas&rdquo;:
+    about 20&nbsp;% of the variance, versus 35&nbsp;% if only one previous year is used.</figcaption>
+  </figure>
+  <p>
+    And the two numbers have a physical meaning, the same one they have for speech. Using section 04's result for a decaying ring, \(a_1 = 2\rho\cos\omega\) and \(a_2 = -\rho^2\):
+  </p>
+  <div class="eq">$$\rho = \sqrt{0.650} = 0.81, \qquad \cos\omega = \frac{1.336}{2 \times 0.81} \;\Rightarrow\; \omega = 0.594 \text{ rad/year} \;\Rightarrow\; \text{period} = \frac{2\pi}{\omega} = 10.6 \text{ years}$$
+    <span class="note">The fitted &ldquo;pendulum&rdquo; has a natural period of 10.6 years, the sunspot cycle, and loses about 19&nbsp;% of its swing each year (\(\rho = 0.81\)).</span></div>
+  <p>
+    In speech terms, Yule found the sunspot record's single <em>formant</em>: its resonant frequency and its damping, read directly off two prediction weights. This is the same calculation that gives \(F_1\) from a vowel, some 40 years before anyone did it for speech.
+  </p>
+
+  <h4>Walker's step (1931): let the correlations do the work</h4>
+  <p>
+    Sir Gilbert Walker, studying the Southern Oscillation (the see-saw of air pressure across the Pacific, measured at Darwin), extended Yule's model to any number of past values and noticed something elegant.
+    Take the model, multiply both sides by an earlier value \(x_{t-j}\), and average over all \(t\):
+  </p>
+  <div class="eq">$$x_t\,x_{t-j} = \sum_{k=1}^{p} a_k\, x_{t-k}\,x_{t-j} + \varepsilon_t\,x_{t-j} \quad\xrightarrow{\text{average}}\quad r(j) = \sum_{k=1}^{p} a_k\, r(j-k) + 0$$
+    <span class="note">The pea term averages to zero because this year's pea can't be correlated with a value from an <em>earlier</em> year: it hadn't been thrown yet.</span></div>
+  <p>Two consequences:</p>
+  <ul>
+    <li><strong>The weights come straight from the correlations.</strong> Writing that equation for \(j = 1, \dots, p\) gives \(p\) equations in the \(p\) unknown weights, which are exactly the normal equations of section 05.
+      Hence the name <strong>Yule&ndash;Walker equations</strong>. For \(p = 2\):
+      $$\begin{bmatrix} 1 & r(1) \\ r(1) & 1 \end{bmatrix}\begin{bmatrix} a_1 \\ a_2 \end{bmatrix} = \begin{bmatrix} r(1) \\ r(2) \end{bmatrix} \quad\Rightarrow\quad \begin{bmatrix} a_1 \\ a_2 \end{bmatrix} = \begin{bmatrix} 1.33 \\ -0.64 \end{bmatrix}$$
+      using the sunspot correlations \(r(1) = 0.81\), \(r(2) = 0.43\).</li>
+    <li><strong>The correlations obey the same recursion as the data.</strong> For \(j &gt; p\) the same equation says \(r(j)\) is built from earlier correlations with the <em>same weights</em>. So the
+      correlogram of a pelted pendulum is itself a damped oscillation at the pendulum's period. That gave a direct test of the model:</li>
+  </ul>
+  <figure>
+    <div class="frame"><img src="linear_prediction/fig/06_walker_correlogram.png?v=2" alt="Measured correlogram of sunspot numbers compared with the correlograms predicted by two-year and nine-year models" loading="lazy"></div>
+    <figcaption><b>Figure 8.</b> Walker's test on the sunspot record. Each model is fitted only to the lags under its bracket; everything to the right is predicted by running the recursion forward.
+    The measured correlogram (gold) peaks at 11, 23 and 34 years: the solar cycle shows up as a slow ring in the correlations. The <b>two-year model</b> (blue) matches the lags it was fitted to, but its
+    pole radius \(\rho = \sqrt{-a_2} = 0.80\) makes it lose 20&nbsp;% of its amplitude every year (dotted envelope \(\pm\rho^k\)), so by the first peak it has almost died: the real cycle is more regular than a two-weight pendulum.
+    With <b>nine past years</b> (red, Walker's generalisation) the predicted correlogram keeps ringing with the data for decades, slowly drifting out of phase. More weights capture more structure,
+    the same lesson as the order slider in section 04.</figcaption>
+  </figure>
+
+  <h4>From sunspots to speech: the same model</h4>
+  <div class="card" style="overflow-x:auto;">
+    <table style="border-collapse:collapse;width:100%;font-size:0.9rem;">
+      <thead><tr style="text-align:left;">
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);"></th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Yule &amp; Walker (sunspots, 1927&ndash;31)</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Speech (LPC, 1966&ndash;)</th></tr></thead>
+      <tbody>
+        <tr><td style="padding:6px 8px;"><strong>time step</strong></td><td style="padding:6px 8px;">one year</td><td style="padding:6px 8px;">one sample (\(1/16000\) s)</td></tr>
+        <tr><td style="padding:6px 8px;"><strong>the thing that rings</strong></td><td style="padding:6px 8px;">a damped &ldquo;pendulum&rdquo; (the solar cycle)</td><td style="padding:6px 8px;">the vocal tract</td></tr>
+        <tr><td style="padding:6px 8px;"><strong>the random knocks</strong></td><td style="padding:6px 8px;">peas \(\varepsilon_t\)</td><td style="padding:6px 8px;">glottal pulses and turbulence \(e[n]\)</td></tr>
+        <tr><td style="padding:6px 8px;"><strong>the model</strong></td><td style="padding:6px 8px;" colspan="2">\(x_t = \sum_k a_k x_{t-k} + \varepsilon_t\): identical</td></tr>
+        <tr><td style="padding:6px 8px;"><strong>how the weights are found</strong></td><td style="padding:6px 8px;" colspan="2">correlations → Yule&ndash;Walker (normal) equations → least squares: identical</td></tr>
+        <tr><td style="padding:6px 8px;"><strong>what the weights reveal</strong></td><td style="padding:6px 8px;">one resonance: period 10.6 years</td><td style="padding:6px 8px;">several resonances: the formants</td></tr>
+        <tr><td style="padding:6px 8px;"><strong>typical order</strong></td><td style="padding:6px 8px;">2 (Yule), more (Walker)</td><td style="padding:6px 8px;">10&ndash;18</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="margin-top:14px;">
+    When Itakura, Saito and Atal applied this to speech in the late 1960s, the pendulum had become a vocal tract and the peas had become glottal pulses, but the mathematics was Yule's and Walker's, unchanged.
+  </p>
+</section>
+
+<!-- ============================================================ 7. LEFTOVER -->
+<section id="leftover">
+  <div class="kicker">07 &middot; What can't be predicted</div>
+  <h2>The leftover is the source.</h2>
+  <p>
+    Here is linear prediction run on real speech. Look at what is left after the predictor has done its best:
+  </p>
+  <figure>
+    <div class="frame"><img src="linear_prediction/fig/03_prediction_error_teaser.png?v=3" alt="A spoken vowel /ɑ/, its 14th-order prediction, and the prediction error with spikes once per pitch period" loading="lazy"></div>
+    <figcaption><b>Figure 9.</b> 60&nbsp;ms of /ɑ/ in the exclamation &ldquo;Ah&rdquo; (CMU ARCTIC speaker ksp, lightly pre-emphasised), predicted from the previous 14 samples. The prediction (blue) follows the speech closely. The error (red, same scale)
+    is about 13&nbsp;dB weaker and almost flat, except for <strong>a burst once every pitch period</strong> (every 7.25&nbsp;ms here). (The gain here, 13&nbsp;dB, is lower than the ~24&nbsp;dB in the demo above because the speech was pre-emphasised first. That removes the easy, slowly varying part, leaving the predictor the harder job of modelling the resonances, which is what we want for analysis.)</figcaption>
+  </figure>
+  <p>
+    Remember the source&ndash;filter picture: each period, a glottal <em>kick</em> starts a <em>ringing</em>. The ringing follows smoothly from what came before, so the predictor
+    learns it and removes it. The kick arrives out of nowhere, so it can't be predicted, and it stays in the error. <strong>Prediction splits speech back into its two parts:</strong>
+  </p>
+  <div class="grid2">
+    <div class="card" style="border-top:3px solid var(--accent);"><h4>What was predictable → the filter</h4><p style="font-size:0.9rem;margin:0;">The weights \(a_1,\dots,a_p\) describe the vocal tract's ringing: its resonances, its formants.</p></div>
+    <div class="card" style="border-top:3px solid var(--accent-2);"><h4>What wasn't → the source</h4><p style="font-size:0.9rem;margin:0;">The error \(e[n]\) is close to the impulse train of glottal kicks (or the noise, for /s/).</p></div>
+  </div>
+  <p style="margin-top:16px;">Rearranging the definition of the error gives the model that ties it all together:</p>
+  <div class="eq">$$x[n] = \underbrace{\sum_{k=1}^{p} a_k\,x[n-k]}_{\text{predictable ringing}} + \underbrace{e[n]}_{\text{unpredictable kick}}$$</div>
+  <div class="card" style="margin-top:14px;border-left:3px solid var(--teal);">
+    <h4>Next: <a href="ar_model.html">module 5 · the AR model of the vocal tract</a></h4>
+    <p style="font-size:0.9rem;margin:0;">
+      Read that equation as a <em>filter</em> driven by \(e[n]\) and it is the source&ndash;filter model: an <strong>autoregressive (all-pole)</strong> filter. Next we'll see how its weights become
+      <strong>poles</strong>, each pair of poles one formant; how its frequency response draws the smooth envelope over a real spectrum; and how to pick the order. Then we close the loop with the tubes:
+      the same weights can be turned into the reflection coefficients of a concatenated-tube vocal tract.
+    </p>
+  </div>
+
+  <h3>Check your understanding</h3>
+  <details><summary>1. Why is \(r(1)\) so close to 1 for a vowel sampled at 16 kHz, and what would happen at 48 kHz?</summary>
+    <p style="font-size:0.93rem;">Between two samples only \(1/16000\) s passes, while the dominant ringing (\(F_1 \approx 700\) Hz) takes over 1 ms per cycle, so consecutive samples barely change. At 48 kHz they would be even closer, so \(r(1)\) even nearer 1. High sampling rates make speech <em>more</em> predictable sample-to-sample.</p></details>
+  <details><summary>2. The best one-weight predictor for /s/ had a negative weight. What does that mean physically?</summary>
+    <p style="font-size:0.93rem;">Its energy is concentrated at high frequencies, around a quarter of the sampling rate or more, so the waveform tends to flip sign from one sample to the next. &ldquo;Guess the opposite of the last sample&rdquo; is the best one-step strategy.</p></details>
+  <details><summary>3. Why does adding more weights beyond \(p \approx 18\) barely improve the prediction of a vowel?</summary>
+    <p style="font-size:0.93rem;">The predictable part (the ringing of a few resonances) is already captured. What remains is mostly the glottal kicks, which are new information each period. A predictor reaching back over a whole pitch period (~100&ndash;150 samples for a male voice at 16&nbsp;kHz; 116 for our /ɑ/) could exploit that too: this is the <em>long-term</em> (pitch) predictor used in CELP codecs.</p></details>
+  <details><summary>4. Would linear prediction help compress music? A recording of rain?</summary>
+    <p style="font-size:0.93rem;">Music: yes, tonal music is highly predictable (lossless codecs such as FLAC use linear prediction). Rain: hardly. It is noise-like, so like white noise or /s/ the gain would be small; only its spectral shape could be captured.</p></details>
+</section>
+
+<footer>
+  Speech and Audio Processing &middot; Module 4 &middot; figures and the embedded excerpts are generated by <code>linear_prediction/make_figures.py</code>.
+  Speech: CMU ARCTIC speaker ksp (Indian English), Carnegie Mellon University (J. Kominek &amp; A. W. Black), used under the CMU ARCTIC licence; excerpts trimmed and peak-normalised for this site.
+  <ul class="refs" style="margin-top:12px;">
+    <li>B. S. Atal &amp; S. L. Hanauer, &ldquo;Speech analysis and synthesis by linear prediction of the speech wave,&rdquo; <em>JASA</em> 50, 1971.</li>
+    <li>F. Itakura &amp; S. Saito, &ldquo;Analysis synthesis telephony based on the maximum likelihood method,&rdquo; <em>Proc. 6th Int. Congress on Acoustics</em>, 1968.</li>
+    <li>J. Makhoul, &ldquo;Linear prediction: a tutorial review,&rdquo; <em>Proc. IEEE</em> 63(4), 1975.</li>
+    <li>G. U. Yule, &ldquo;On a method of investigating periodicities in disturbed series, with special reference to Wolfer's sunspot numbers,&rdquo; <em>Phil. Trans. R. Soc. A</em> 226, 1927.</li>
+    <li>G. Walker, &ldquo;On periodicity in series of related terms,&rdquo; <em>Proc. R. Soc. A</em> 131, 1931.</li>
+    <li>Yearly sunspot numbers: the classic Wolf/Wolfer series as distributed with <code>statsmodels</code> (NOAA NGDC). The current, recalibrated series is maintained by SILSO, Royal Observatory of Belgium.</li>
+    <li>G. U. Yule, &ldquo;Why do we sometimes get nonsense-correlations between time-series?&rdquo; <em>J. R. Stat. Soc.</em> 89, 1926.</li>
+    <li>N. Wiener, <em>Extrapolation, Interpolation, and Smoothing of Stationary Time Series</em>, MIT Press, 1949; N. Levinson, &ldquo;The Wiener RMS error criterion in filter design and prediction,&rdquo; <em>J. Math. Phys.</em> 25, 1947.</li>
+    <li>M. R. Schroeder &amp; B. S. Atal, &ldquo;Code-excited linear prediction (CELP): high-quality speech at very low bit rates,&rdquo; <em>ICASSP</em>, 1985.</li>
+    <li>J. Kominek &amp; A. W. Black, &ldquo;The CMU Arctic speech databases,&rdquo; <em>5th ISCA Speech Synthesis Workshop</em>, 2004 (speaker ksp: the speech excerpts on this page).</li>
+    <li>L. Rabiner &amp; R. Schafer, <em>Theory and Applications of Digital Speech Processing</em>, Pearson, 2011, ch. 9.</li>
+  </ul>
+</footer>
+
+<script src="linear_prediction/signals.js?v=3"></script>
+<script src="linear_prediction/page.js?v=3"></script>
+
+<!--ai:foot--><footer class="ai-foot"><a href="../index.html">Speech and Audio Processing</a> &middot; Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati &middot; <a href="../index.html#credits">data credits</a></footer><!--/ai:foot-->
+</body>
+</html>

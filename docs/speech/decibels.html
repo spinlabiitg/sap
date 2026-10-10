@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Decibels?</title>
+<meta name="description" content="Why audio people measure almost everything in decibels: the ear's loudness sense, spectra and the source-filter model, and errors, SNR and gains, with listening demos and common pitfalls.">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, { delimiters: [ { left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false } ], throwOnError: false });"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #F5F7FA; --bg-grid: #E7ECF2; --surface: #FFFFFF; --surface-2: #EAF0F7;
+    --ink: #10233F; --ink-soft: #24344F; --muted: #5C6B80; --line: #D7DEE8; --line-strong: #AEB9CB;
+    --accent: #14508C; --accent-2: #C1272D; --accent-3: #C9971B; --accent-4: #5B7083; --teal: #1D7A8C;
+    --shadow: 0 1px 0 rgba(16,35,63,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+      --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+      --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+      --shadow: 0 1px 0 rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+    --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+    --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+    --shadow: 0 1px 0 rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background:
+      repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      var(--bg);
+    color: var(--ink-soft);
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: 17px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: #fff; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1, h2, h3, h4 { font-family: "Poppins", ui-sans-serif, system-ui, sans-serif; color: var(--ink); font-weight: 600; }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.3rem); line-height: 1.08; margin: 0 0 0.35em; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; margin: 0 0 0.5em; }
+  h3 { font-size: 1.22rem; margin: 2em 0 0.3em; }
+  h4 { font-size: 1rem; margin: 0.2em 0 0.3em; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.88em; }
+
+  header.hero, section, footer { max-width: 900px; margin: 0 auto; padding: 56px 20px; }
+  section { border-top: 1px solid var(--line); }
+  header.hero { padding-top: 72px; }
+  .kicker { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.74rem; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+  .lede { font-size: 1.12rem; }
+  .meta-line { font-size: 0.85rem; color: var(--muted); margin-top: 18px; }
+
+  .roadmap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-top: 26px; font-size: 0.92rem; }
+  .roadmap ol { margin: 6px 0 0; padding-left: 20px; }
+  .roadmap li { margin: 3px 0; }
+  .roadmap .later { color: var(--muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  .intuition { border-left: 3px solid var(--accent-3); background: var(--surface-2); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 0.97rem; }
+  .keyidea { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .keyidea::before { content: "Key idea"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .try { border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 16px; margin: 16px 0; font-size: 0.93rem; }
+  .try::before { content: "Try this yourself"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-bottom: 2px; }
+  .eq { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.95rem; background: var(--surface); border: 1px solid var(--line);
+        border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; overflow-x: auto; color: var(--ink); line-height: 2; }
+
+  figure { margin: 22px 0 26px; }
+  figure .frame { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 0.86rem; color: var(--muted); margin-top: 8px; line-height: 1.55; }
+  figcaption b { color: var(--ink-soft); }
+
+  button { font-family: inherit; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--line-strong);
+           background: var(--surface); color: var(--ink-soft); padding: 6px 12px; transition: all 0.15s ease; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .ctlrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 10px 0; font-size: 0.85rem; color: var(--muted); }
+  .valpill { font-family: "JetBrains Mono", monospace; color: var(--accent); font-weight: 600; }
+  input[type=range] { accent-color: var(--accent); }
+  canvas.plot { width: 100%; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .plotlabel { font-size: 0.75rem; color: var(--muted); margin: 8px 0 3px; }
+
+  /* slab rack */
+  .rack { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .rack { grid-template-columns: repeat(2, 1fr); } }
+  .slab { background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 6px 6px 10px; cursor: pointer; text-align: center; transition: border-color 0.15s; font: inherit; color: inherit; }
+  .slab:hover, .slab.sel { border-color: var(--accent); }
+  .slab svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .slab .name { font-weight: 600; color: var(--ink); font-size: 0.92rem; }
+  .slab .hint { font-size: 0.72rem; color: var(--muted); }
+  .mallet { transform-origin: 150px 12px; transform: rotate(22deg); transition: transform 0.12s ease-in; }
+  .slab.hit .mallet { transform: rotate(0deg); transition: transform 0.07s ease-in; }
+  .slab.ring .body { animation: shake 0.35s linear; }
+  @keyframes shake { 0%,100% { transform: translateY(0); } 20% { transform: translateY(1.6px); } 40% { transform: translateY(-1.2px); } 60% { transform: translateY(0.8px); } 80% { transform: translateY(-0.4px); } }
+  @media (prefers-reduced-motion: reduce) { .slab.ring .body { animation: none; } .mallet { transition: none; } }
+
+  .examples { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .examples { grid-template-columns: 1fr; } }
+  .examples .card p { font-size: 0.88rem; margin: 0; }
+  .examples .emoji { font-size: 1.5rem; line-height: 1; }
+  .examples audio { width: 100%; height: 32px; margin-top: 8px; }
+
+  /* voice grid */
+  .vgrid { display: grid; grid-template-columns: 120px repeat(4, 1fr); gap: 6px; align-items: stretch; font-size: 0.85rem; }
+  .vgrid .hdr { font-weight: 600; color: var(--ink); text-align: center; padding: 6px 2px; font-size: 0.8rem; }
+  .vgrid .rowh { font-weight: 600; color: var(--ink); display: flex; align-items: center; font-size: 0.8rem; }
+  .vgrid button { padding: 10px 4px; }
+  @media (max-width: 600px) { .vgrid { grid-template-columns: 78px repeat(4, 1fr); } .vgrid button { font-size: 0.72rem; } }
+
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram text { font-family: "Inter", sans-serif; }
+  .players { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 10px 0; }
+  .player { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+  .player audio { height: 34px; max-width: 250px; width: 100%; }
+  ul.refs li { font-size: 0.9rem; margin-bottom: 5px; }
+  footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); }
+  .scatterwrap { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 700px) { .scatterwrap { grid-template-columns: 1fr; } }
+  .bigr { font-family: "JetBrains Mono", monospace; font-size: 1.5rem; font-weight: 600; color: var(--ink); }
+  .timeline { position: relative; margin: 10px 0 0 8px; padding-left: 26px; border-left: 2px solid var(--line-strong); }
+  .timeline .ev { position: relative; margin: 0 0 16px; }
+  .timeline .ev::before { content: ""; position: absolute; left: -33px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--accent); }
+  .timeline .ev.speech::before { border-color: var(--accent-2); }
+  .timeline .yr { font-family: "JetBrains Mono", monospace; font-weight: 600; color: var(--accent); font-size: 0.9rem; }
+  .timeline .ev.speech .yr { color: var(--accent-2); }
+  .timeline p { margin: 2px 0 0; font-size: 0.92rem; }
+  .score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .score div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; font-size: 0.78rem; color: var(--muted); }
+  .score b { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.95rem; color: var(--ink); }
+  .readout { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .readout div { background: var(--surface-2); border-radius: 8px; padding: 6px 10px; font-size: 0.75rem; color: var(--muted); }
+  .eq { font-family: inherit; white-space: normal; line-height: 1.5; }
+  .eq .katex-display { margin: 0.4em 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+  .eq .note, .note { display: block; font-family: "Inter", sans-serif; font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .card .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+  .budget { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 58px; padding: 6px 8px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; }
+  .budget small { font-weight: 400; font-size: 0.7rem; color: var(--muted); }
+  .budget.f { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border: 1px solid var(--accent); color: var(--accent); }
+  .budget.f::after { content: "2 weights"; font-size: 0.66rem; font-weight: 400; color: var(--ink-soft); }
+  .budget.t { background: color-mix(in srgb, var(--accent-3) 18%, var(--surface)); border: 1px solid var(--accent-3); color: var(--ink); }
+  .budget.t::after { content: "2 weights"; font-size: 0.66rem; font-weight: 400; color: var(--ink-soft); }
+  .readout b { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.95rem; color: var(--ink); }
+  table.budget { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+  table.budget td, table.budget th { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+  table.budget th { color: var(--ink); }
+  table.budget td.n { text-align: right; font-family: "JetBrains Mono", monospace; white-space: nowrap; }
+  .persp { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+  .persp .card h4 { margin: 0 0 4px; }
+  .persp .card p { font-size: 0.88rem; margin: 0; color: var(--ink-soft); }
+  .persp .card .big { font-size: 1.6rem; line-height: 1; margin-bottom: 6px; }
+  .demo label.lbl { display: block; font-size: 0.8rem; color: var(--muted); margin: 8px 0 3px; }
+  .demo input[type=range] { width: 100%; }
+  .bigval { font-family: "JetBrains Mono", monospace; font-size: 1.5rem; font-weight: 600; color: var(--ink); }
+  .warn { font-size: 0.82rem; color: var(--muted); }
+</style>
+<!--ai:head--><link rel="stylesheet" href="../assets/site.css?v=3bd065aa"><!--/ai:head-->
+</head>
+<body>
+<!--ai:nav--><nav class="ai-nav" aria-label="Course navigation"><div class="ai-nav-in"><a class="ai-brand" href="../index.html" title="Speech and Audio Processing"><span class="ai-logo" aria-hidden="true">◖◗</span><span class="ai-brand-full">Speech and Audio Processing</span><span class="ai-brand-short">SAP</span></a><span class="ai-where">Toolbox &middot; Why does audio live in decibels?</span><details class="ai-menu"><summary>All pages</summary><ul><li><a href="spectrogram.html">1. Seeing sound: the spectrogram</a></li><li><a href="sounds_language.html">2. The sounds of language: from sound to phoneme</a></li><li><a href="phoneme_inventories.html">2. Phoneme inventories: India and the world</a></li><li><a href="source_filter.html">3. A buzz and a tube</a></li><li><a href="vocal_tract.html">3. Vocal tract, live</a></li><li><a href="linear_prediction.html">4. Guessing the next sample</a></li><li><a href="ar_model.html">5. The all-pole vocal tract</a></li><li><a href="codecs.html">6. Squeezing speech</a></li><li><a href="decibels.html" aria-current="page">Why does audio live in decibels?</a></li><li><a href="../convolution/index.html">Convolution, animated</a></li></ul></details><a class="ai-step ai-prev" href="codecs.html" title="Squeezing speech">← prev</a><a class="ai-step ai-next" href="../convolution/index.html" title="Convolution, animated">next →</a></div></nav><!--/ai:nav-->
+
+<header class="hero">
+  <div class="kicker">Speech and Audio Processing &middot; Toolbox</div>
+  <h1>Why does audio live in decibels?</h1>
+  <p class="lede">
+    Open any audio tool and you see decibels: on a mixer's faders, on a spectrogram's colour bar, in a codec's SNR, in a phone's &ldquo;prediction gain&rdquo;. The decibel is not a unit of
+    anything. It is a <strong>way of writing ratios</strong>, a logarithmic ruler. This page explains why that ruler fits audio so well, from three points of view: the
+    <strong>ear</strong> (loudness), the <strong>spectrum</strong> (seeing quiet detail next to loud peaks), and the <strong>engineer</strong> (errors, gains and budgets). It ends
+    with the traps that catch everybody once.
+  </p>
+  <div class="roadmap">
+    <strong style="color:var(--ink);">The path through this page</strong>
+    <ol>
+      <li><a href="#what">What a decibel is</a>: a ratio on a log scale, and the 10-vs-20 puzzle</li>
+      <li><a href="#ear">The ear's view</a>: a million-to-one range of pressures, and loudness that grows in ratios (listening demo)</li>
+      <li><a href="#spectrum">The spectrum's view</a>: quiet formants next to loud harmonics, and products that become sums (live explorer)</li>
+      <li><a href="#errors">The engineer's view</a>: SNR, bits, prediction gain, and gains that simply add (listening demo)</li>
+      <li><a href="#pitfalls">Traps</a>: &ldquo;relative to what?&rdquo;, adding sounds, averaging decibels, and log of zero</li>
+    </ol>
+  </div>
+  <div class="meta-line">Toolbox page for the modules: <a href="source_filter.html">3 · A buzz and a tube</a> &middot; <a href="linear_prediction.html">4 · Guessing the next sample</a> &middot; <a href="ar_model.html">5 · The all-pole vocal tract</a> &middot; <a href="codecs.html">6 · Squeezing speech</a> &middot; speech: the same Indian-English recording as module 6 &middot; set a comfortable volume before the listening demos</div>
+</header>
+
+<!-- ============================================================ 1. WHAT -->
+<section id="what">
+  <div class="kicker">01 &middot; What a decibel is</div>
+  <h2>A ruler for ratios.</h2>
+  <p>
+    Ask &ldquo;how much louder is a rock concert than a whisper?&rdquo; and the honest answer is a ratio: the concert's sound pressure is about 10&nbsp;000 times larger, and its power about
+    100 million times larger. Ratios like these are awkward to write, compare and add. The decibel takes the logarithm of the ratio, so that <strong>multiplying becomes adding</strong>:
+  </p>
+  <div class="eq">$$L = 10\log_{10}\frac{P}{P_0}\ \text{dB} \qquad\text{(for powers or energies)}$$
+    <span class="note">\(P_0\) is a reference. A decibel value always means &ldquo;this many dB relative to something&rdquo;. One <em>bel</em> (after Alexander Graham Bell) is a factor of 10 in power, which proved too coarse, so engineers used tenths of a bel.</span></div>
+
+  <h3>The 10-versus-20 puzzle</h3>
+  <p>
+    Audio signals are usually amplitudes (a pressure, a voltage, a sample value), not powers. Power grows with the <em>square</em> of amplitude, \(P \propto A^2\), so the same ratio written with amplitudes needs a 20:
+  </p>
+  <div class="eq">$$L = 10\log_{10}\frac{A^2}{A_0^2} = 20\log_{10}\frac{A}{A_0}\ \text{dB}$$
+    <span class="note">Both formulas give the same number of decibels for the same physical change. Use 10 with powers and energies (\(|X|^2\), \(\sum x^2\), intensity), and 20 with amplitudes (\(|X|\), \(x\), pressure, voltage).</span></div>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>change</th><th>power ratio</th><th>amplitude ratio</th></tr>
+      <tr><td class="n">+3 dB</td><td>\(\times 2\)</td><td>\(\times 1.41\)</td></tr>
+      <tr><td class="n">+6 dB</td><td>\(\times 4\)</td><td>\(\times 2\)</td></tr>
+      <tr><td class="n">+10 dB</td><td>\(\times 10\)</td><td>\(\times 3.16\)</td></tr>
+      <tr><td class="n">+20 dB</td><td>\(\times 100\)</td><td>\(\times 10\)</td></tr>
+      <tr><td class="n">+60 dB</td><td>\(\times 1\,000\,000\)</td><td>\(\times 1000\)</td></tr>
+      <tr><td class="n">0 dB</td><td>\(\times 1\) (no change)</td><td>\(\times 1\)</td></tr>
+      <tr><td class="n">−6 dB</td><td>\(\times \tfrac14\)</td><td>\(\times \tfrac12\)</td></tr>
+    </table>
+  </div>
+  <p style="margin-top:14px;">Three properties make this ruler useful, and each of the next three sections leans on one of them:</p>
+  <div class="persp">
+    <div class="card"><div class="big">📏</div><h4>Huge ranges, small numbers</h4><p>A factor of a trillion in power is just 120&nbsp;dB. Tiny and enormous values fit on one axis.</p></div>
+    <div class="card"><div class="big">➕</div><h4>Products become sums</h4><p>\(\log(ab) = \log a + \log b\). Gains in a chain, and source \(\times\) filter, simply add.</p></div>
+    <div class="card"><div class="big">⚖️</div><h4>Equal steps are equal ratios</h4><p>Going from 1 to 2 and from 100 to 200 are both +3&nbsp;dB (in power). That matches how we perceive change.</p></div>
+  </div>
+
+  <div class="card demo" id="convDemo">
+    <h4 style="margin:0 0 6px;">Converter: drag the decibels</h4>
+    <label class="lbl" for="cvDb">change in level: <span class="valpill" id="cvDbV"></span></label>
+    <input type="range" id="cvDb" min="-60" max="60" step="1" value="6">
+    <div class="readout" id="cvRead"></div>
+    <canvas id="cvBars" class="plot" height="90"></canvas>
+    <div class="plotlabel">Amplitude drawn to scale: grey = reference, blue = after the change (clipped at the right edge when it is too big to draw).</div>
+  </div>
+</section>
+
+<!-- ============================================================ 2. EAR -->
+<section id="ear">
+  <div class="kicker">02 &middot; The ear's view</div>
+  <h2>A million-to-one range, heard in ratios.</h2>
+  <p>
+    The quietest sound a young listener can hear at 1&nbsp;kHz has a pressure of about \(20\ \mu\text{Pa}\), a fluctuation of two ten-billionths of atmospheric pressure. The threshold of pain is
+    around \(20\ \text{Pa}\). That is a <strong>factor of a million</strong> in pressure (a million million in power), and the ear handles all of it. On a linear axis almost every
+    everyday sound is crushed against zero:
+  </p>
+  <figure>
+    <div class="frame"><img src="decibels/fig/01_levels_linear_vs_db.png?v=2" alt="Everyday sound levels on a linear pressure axis and on a decibel axis" loading="lazy"></div>
+    <figcaption><b>Figure 1.</b> Typical levels of everyday sounds (rounded, commonly quoted values). <b>Top:</b> sound pressure on a linear axis; everything quieter than a rock concert is a dot near zero. <b>Bottom:</b> the
+    same sounds in dB SPL, \(L_p = 20\log_{10}(p / 20\,\mu\text{Pa})\). Every factor of 10 in pressure is the same 20&nbsp;dB step, and the sounds spread out evenly.</figcaption>
+  </figure>
+
+  <h3>We hear ratios, not differences</h3>
+  <p>
+    In the 1830s Ernst Weber noticed that the smallest change in a stimulus that people can detect is a fixed <em>fraction</em> of the stimulus, not a fixed amount. Gustav Fechner turned
+    this into a law: if every just-noticeable step is the same ratio, then perceived magnitude grows with the <em>logarithm</em> of the stimulus. For sound intensity, the just-noticeable
+    change is roughly <strong>1&nbsp;dB</strong> (about 0.5&ndash;1&nbsp;dB for broadband sounds at comfortable levels) whether the sound is quiet or loud. A decibel scale therefore makes
+    equal steps on paper close to equal steps for the ear.
+  </p>
+  <p>
+    Later, Stanley Smith Stevens measured loudness directly by asking listeners to judge &ldquo;twice as loud&rdquo;. He found loudness grows roughly as a power law of intensity,
+    \(N \propto I^{0.3}\). In decibels that has a neat consequence:
+  </p>
+  <div class="eq">$$+10\ \text{dB} \;\Rightarrow\; I \times 10 \;\Rightarrow\; N \times 10^{0.3} \approx N \times 2$$
+    <span class="note">the rule of thumb &ldquo;+10&nbsp;dB sounds about twice as loud&rdquo; (it holds roughly, at moderate levels around 1&nbsp;kHz). Ten times the power is needed to sound twice as loud, which is why a 100-watt amplifier is not ten times louder than a 10-watt one.</span></div>
+
+  <div class="card demo" id="earDemo">
+    <h4 style="margin:0 0 6px;">Listen: the same phrase at different levels</h4>
+    <p class="warn" style="margin:0 0 8px;">Start with your volume low and raise it until the 0&nbsp;dB version is comfortable. All the other buttons are quieter.</p>
+    <div class="ctlrow" id="earBtns"></div>
+    <h4 style="margin:16px 0 6px;">Two staircases: equal steps in amplitude vs equal steps in decibels</h4>
+    <p style="font-size:0.9rem;margin:0 0 6px;">
+      Each staircase plays five short bursts of the phrase, getting louder. <b>Linear</b> adds the same amount of amplitude each time (0.2, 0.4, 0.6, 0.8, 1.0); <b>decibel</b> multiplies by
+      the same factor each time (+6&nbsp;dB, so each burst is twice the amplitude of the last). Which one sounds like an even climb?
+    </p>
+    <div class="ctlrow"><button id="stairLin">▶ linear staircase</button><button id="stairDb">▶ decibel staircase</button></div>
+    <canvas id="stairCv" class="plot" height="150"></canvas>
+    <div class="plotlabel">Bar height = amplitude of each burst. The numbers above the bars are the step from the previous burst, in dB.</div>
+  </div>
+  <p>
+    The linear staircase makes a big jump at the start (+6&nbsp;dB) and then almost stalls (+1.9&nbsp;dB at the end), while the decibel staircase climbs evenly. This is the practical reason why
+    every volume knob, fader and gain control in audio is marked in dB, and why loudness is quoted on a decibel scale.
+  </p>
+
+  <h3>Many references, one idea</h3>
+  <p>A decibel value needs a reference. In audio you will meet several, and the suffix tells you which:</p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>written</th><th>reference (0&nbsp;dB)</th><th>where you see it</th></tr>
+      <tr><td><b>dB SPL</b></td><td>\(20\ \mu\text{Pa}\) sound pressure, roughly the threshold of hearing</td><td>acoustics, noise regulations, hearing safety</td></tr>
+      <tr><td><b>dB(A)</b></td><td>dB SPL after an &ldquo;A-weighting&rdquo; filter that reduces low and very high frequencies, as the ear does at moderate levels</td><td>noise meters, workplace and traffic limits</td></tr>
+      <tr><td><b>dB HL</b></td><td>the average normal hearing threshold at each frequency</td><td>audiograms (hearing tests)</td></tr>
+      <tr><td><b>dBFS</b></td><td>digital full scale: the largest value the samples can hold</td><td>recording software, codecs; always \(\le 0\) for a clean signal</td></tr>
+      <tr><td><b>dB</b> (plain)</td><td>another signal: the input, the noise, the original</td><td>gain, attenuation, SNR, prediction gain</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ 3. SPECTRUM -->
+<section id="spectrum">
+  <div class="kicker">03 &middot; The spectrum's view</div>
+  <h2>Seeing the quiet next to the loud.</h2>
+  <p>
+    A voiced speech spectrum has strong low harmonics and weak high formants. The difference is easily 40&ndash;60&nbsp;dB, a factor of 100&ndash;1000 in amplitude. On a linear axis the weak parts
+    are invisible, even though the ear hears them clearly and they carry much of the information (F2 and F3 tell vowels apart, and fricatives live up there).
+  </p>
+  <figure>
+    <div class="frame"><img src="decibels/fig/02_spectrum_three_views.png?v=2" alt="A vowel and a fricative spectrum shown as linear magnitude, linear power and decibels" loading="lazy"></div>
+    <figcaption><b>Figure 2.</b> One 32&nbsp;ms frame of a vowel and one of a fricative from our recording, drawn three ways. On the linear magnitude and power axes the vowel looks like
+    &ldquo;three spikes below 600&nbsp;Hz&rdquo;: in this frame only 3.8% of the power lies above 1&nbsp;kHz. In decibels the formant peaks at 2&ndash;4&nbsp;kHz appear,
+    and so does the fricative's broad hiss above 4&nbsp;kHz.</figcaption>
+  </figure>
+  <p>The same applies to a spectrogram, which is just many spectra side by side. Every spectrogram you have seen in this course was drawn in dB:</p>
+  <figure>
+    <div class="frame"><img src="decibels/fig/03_spectrogram_linear_vs_db.png?v=2" alt="Spectrogram of the recording on a linear scale and in decibels" loading="lazy"></div>
+    <figcaption><b>Figure 3.</b> The whole recording. <b>Top:</b> linear magnitude (even with the colour scale saturating at half the maximum). <b>Bottom:</b> decibels with an 80&nbsp;dB range. The
+    formant tracks, the fricative bands, the stop bursts and the background noise all become visible. The colour range (here 80&nbsp;dB) is a choice: a smaller range hides quiet detail, a larger one shows the noise floor.</figcaption>
+  </figure>
+
+  <div class="card demo" id="specDemo">
+    <h4 style="margin:0 0 6px;">Live explorer: pick a moment, choose the scale</h4>
+    <div class="ctlrow">
+      <span>scale:</span>
+      <button data-sc="lin">\(|X|\) linear</button><button data-sc="pow">\(|X|^2\) linear</button><button data-sc="db" class="on">dB</button>
+      <span style="margin-left:10px;">jump to:</span><button id="spV">a vowel</button><button id="spF">a fricative</button><button id="spPlay">▶ play 0.3 s here</button>
+    </div>
+    <div class="plotlabel">Click on the waveform to choose the 32&nbsp;ms frame (red line).</div>
+    <canvas id="spWave" class="plot" height="80" style="cursor:crosshair;"></canvas>
+    <canvas id="spSpec" class="plot" height="220"></canvas>
+    <label class="lbl" for="spRange">dB range shown (only for the dB scale): <span class="valpill" id="spRangeV"></span></label>
+    <input type="range" id="spRange" min="20" max="100" step="5" value="70">
+  </div>
+
+  <h3>Products become sums: the source&ndash;filter model in dB</h3>
+  <p>
+    In <a href="source_filter.html">module 3</a> speech was a source passed through a filter, and in the frequency domain a filter <em>multiplies</em>: \(X(f) = G(f)\,H(f)\). Take
+    \(20\log_{10}\) of the magnitudes and the multiplication becomes an addition:
+  </p>
+  <div class="eq">$$20\log_{10}|X(f)| = \underbrace{20\log_{10}|G(f)|}_{\text{source}} + \underbrace{20\log_{10}|H(f)|}_{\text{filter}}$$</div>
+  <figure>
+    <div class="frame"><img src="decibels/fig/04_source_plus_filter_db.png?v=2" alt="The source spectrum plus the LPC envelope equals the speech spectrum, in dB" loading="lazy"></div>
+    <figcaption><b>Figure 4.</b> The vowel frame of Figure 2, split with an 18th-order LPC fit (<a href="ar_model.html">module 5</a>). <b>Left:</b> the spectrum of the prediction error, a flat-ish comb of harmonics.
+    <b>Middle:</b> the all-pole envelope, the formants. <b>Right:</b> their sum is exactly the speech spectrum (to within a ten-thousandth of a dB). In dB the vocal tract simply <em>adds a shape</em> to the source.</figcaption>
+  </figure>
+  <p>This additive picture is behind several things you have met or will meet:</p>
+  <ul>
+    <li><strong>Spectral tilt is a straight line.</strong> The glottal source falls by about 12&nbsp;dB per octave, and radiation from the lips adds about +6&nbsp;dB per octave, so voiced speech falls by roughly 6&nbsp;dB per octave. Pre-emphasis (<a href="ar_model.html">module 5</a>) adds +6&nbsp;dB per octave back. Slopes are only straight lines in dB versus log-frequency.</li>
+    <li><strong>Removing the filter is a subtraction.</strong> Subtracting the envelope from the log spectrum leaves the source, the idea behind the cepstrum and many pitch and formant trackers.</li>
+    <li><strong>Machine-learning features are log spectra.</strong> Speech recognisers and audio classifiers feed networks with log (dB) spectrogram features, because the log compresses the huge range and turns channel effects (a microphone's colouring, a telephone line) into an additive offset that is easy to remove.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ 4. ERRORS -->
+<section id="errors">
+  <div class="kicker">04 &middot; The engineer's view</div>
+  <h2>Errors, bits and budgets.</h2>
+  <p>
+    When a signal passes through a microphone, an amplifier, a codec and a network, every stage adds a little noise and scales the signal up or down. Engineers describe both with decibels.
+  </p>
+
+  <h3>Signal-to-noise ratio</h3>
+  <div class="eq">$$\text{SNR} = 10\log_{10}\frac{\sum_n x[n]^2}{\sum_n \bigl(y[n]-x[n]\bigr)^2}\ \text{dB}$$
+    <span class="note">\(x\) is the clean signal and \(y\) the received or decoded one. The same form gives the quantisation SNR, the codec page's segmental SNR and the <a href="linear_prediction.html#gain">prediction gain</a> (with the prediction error as the &ldquo;noise&rdquo;).</span></div>
+  <p>Reading it from the error's point of view: an SNR of \(S\) dB means the error's amplitude is \(10^{-S/20}\) of the signal's.</p>
+  <figure>
+    <div class="frame"><img src="decibels/fig/05_snr_ladder.png?v=2" alt="300 ms of speech with white noise at 30, 20, 10 and 0 dB SNR" loading="lazy"></div>
+    <figcaption><b>Figure 5.</b> 300&nbsp;ms of our recording (blue) with white noise added (red) at four SNRs. Each 10&nbsp;dB step multiplies the noise amplitude by about 3.2. At 30&nbsp;dB the noise is invisible
+    in the waveform but still audible in pauses; at 0&nbsp;dB it is as strong as the speech.</figcaption>
+  </figure>
+  <div class="card demo" id="snrDemo">
+    <h4 style="margin:0 0 6px;">Listen: the same recording at different SNRs</h4>
+    <p class="warn" style="margin:0 0 8px;">White noise is added over the whole recording, scaled so that \(10\log_{10}(\text{total speech energy} / \text{total noise energy})\) equals the chosen SNR. The noise is louder than it sounds on paper: start with your volume low.</p>
+    <div class="ctlrow" id="snrBtns"></div>
+    <div class="readout" id="snrRead"></div>
+  </div>
+
+  <h3>Why &ldquo;6 dB per bit&rdquo; and &ldquo;bits saved = gain / 6&rdquo; are so simple</h3>
+  <p>
+    One more bit per sample doubles the number of quantiser levels, which halves the step and so halves the error amplitude. Halving an amplitude is always
+    \(20\log_{10}2 = 6.02\) dB, whatever the signal level, so every bit is worth the same 6&nbsp;dB of SNR (<a href="codecs.html#knobs">module 6</a>). For the same reason a predictor
+    with gain \(G_p\) dB makes the values to be coded \(G_p\) dB smaller, which saves about \(G_p/6\) bits. In dB, both statements are simple additions; written as ratios they would be powers of 2 and 10.
+  </p>
+
+  <h3>Chains of gains just add</h3>
+  <p>A typical recording chain, as ratios and in dB:</p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>stage</th><th>amplitude ratio</th><th>in dB</th></tr>
+      <tr><td>microphone preamplifier</td><td>\(\times 100\)</td><td class="n">+40 dB</td></tr>
+      <tr><td>long cable</td><td>\(\times 0.89\)</td><td class="n">−1 dB</td></tr>
+      <tr><td>anti-aliasing filter (pass-band)</td><td>\(\times 0.71\)</td><td class="n">−3 dB</td></tr>
+      <tr><td>digital gain</td><td>\(\times 2\)</td><td class="n">+6 dB</td></tr>
+      <tr><td><b>total</b></td><td>\(100 \times 0.89 \times 0.71 \times 2 \approx 126\)</td><td class="n"><b>+42 dB</b></td></tr>
+    </table>
+  </div>
+  <p style="margin-top:14px;">Mental arithmetic in the right-hand column, a calculator in the middle one. This is why loss and gain specifications, filter responses (&ldquo;−3&nbsp;dB cut-off&rdquo;, &ldquo;60&nbsp;dB stop-band attenuation&rdquo;) and link budgets are all written in dB.</p>
+
+  <h3>A whole recording, one number, many local SNRs</h3>
+  <p>
+    Speech is loud in vowels and near silent in pauses, so the same steady noise is far below the speech in some places and above it in others. A single global SNR hides that, which is why
+    <a href="codecs.html">module 6</a> reported the <em>segmental</em> SNR, the average of per-frame SNRs in dB:
+  </p>
+  <figure>
+    <div class="frame"><img src="decibels/fig/06_global_vs_segmental_snr.png?v=2" alt="Frame-by-frame SNR of the recording with noise at a global SNR of 20 dB" loading="lazy"></div>
+    <figcaption><b>Figure 6.</b> White noise at a global SNR of 20.0&nbsp;dB. Frame SNRs range from about 29.2&nbsp;dB in the loudest vowels down to -9.6&nbsp;dB in the pauses.
+    The segmental SNR (13.8&nbsp;dB) averages the dB values, so quiet frames count as much as loud ones, closer to what a listener notices. The global SNR is dominated by the loud vowels.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 5. PITFALLS -->
+<section id="pitfalls">
+  <div class="kicker">05 &middot; Traps</div>
+  <h2>Four ways to get decibels wrong.</h2>
+
+  <h3>1. &ldquo;The level is 60 dB&rdquo;: relative to what?</h3>
+  <p>A bare decibel number is a ratio with its reference missing. 60&nbsp;dB SPL is conversation; 60&nbsp;dB of SNR is a very clean recording; −60&nbsp;dBFS is a very quiet digital signal. Always say, or ask, what the reference is.</p>
+
+  <h3>2. Adding two sounds does not add their decibels</h3>
+  <p>Two people each talking at 60&nbsp;dB SPL do not make 120&nbsp;dB. Decibels are logarithms, so you must convert back, add, and convert again. For two independent (uncorrelated) sounds the <em>powers</em> add:</p>
+  <div class="eq">$$L_{\text{total}} = 10\log_{10}\!\left(10^{L_1/10} + 10^{L_2/10}\right) \qquad 60 \oplus 60 = 63\ \text{dB}$$
+    <span class="note">two equal sounds are +3&nbsp;dB (double the power). Two identical, in-phase copies add <em>amplitudes</em> instead, giving +6&nbsp;dB, and two opposite-phase copies cancel completely: the principle of noise-cancelling headphones.</span></div>
+  <div class="card demo" id="addDemo">
+    <h4 style="margin:0 0 6px;">Calculator: two sources together</h4>
+    <div class="grid2" style="gap:14px;">
+      <div><label class="lbl" for="adA">source A: <span class="valpill" id="adAV"></span></label><input type="range" id="adA" min="30" max="100" value="60"></div>
+      <div><label class="lbl" for="adB">source B: <span class="valpill" id="adBV"></span></label><input type="range" id="adB" min="30" max="100" value="60"></div>
+    </div>
+    <div class="readout" id="adRead"></div>
+  </div>
+  <p>A useful consequence: a source 10&nbsp;dB weaker than another raises the total by only 0.4&nbsp;dB, and one 20&nbsp;dB weaker by only 0.04&nbsp;dB. The loudest source dominates, which is why reducing a weak noise source when a strong one is present achieves almost nothing.</p>
+
+  <h3>3. The average of decibels is not the decibels of the average</h3>
+  <p>
+    Averaging dB values gives the log of the <em>geometric</em> mean, not of the arithmetic mean. Take two frames with the same noise power \(N\), one with SNR 40&nbsp;dB (signal \(10^4 N\)) and one with 0&nbsp;dB (signal \(N\)):
+  </p>
+  <div class="eq">$$\underbrace{\tfrac12(40 + 0) = 20\ \text{dB}}_{\text{mean of dB (segmental)}} \qquad\text{vs}\qquad \underbrace{10\log_{10}\frac{10^4 N + N}{2N} \approx 37\ \text{dB}}_{\text{dB of total energies (global)}}$$</div>
+  <p>Neither is wrong: they answer different questions (Figure 6). But you must say which you computed, and never average decibels when you meant to average power.</p>
+
+  <h3>4. Zero has no logarithm</h3>
+  <p>
+    \(\log_{10} 0 = -\infty\). Digital silence, an empty FFT bin or a perfect prediction gives \(-\infty\)&nbsp;dB, which breaks plots and averages. Code therefore always adds a floor, for example
+    <code>20*log10(abs(X) + 1e-10)</code>, or clips at a chosen range (the &ldquo;80&nbsp;dB&rdquo; of Figure 3). Similarly, there is no decibel of a negative number: take the magnitude or the energy first.
+  </p>
+
+  <div class="keyidea">
+    Decibels fit audio for three separate reasons. The <strong>ear</strong> perceives ratios over a million-to-one range. <strong>Spectra</strong> hold quiet detail next to loud peaks, and filters multiply, which the log turns into addition.
+    <strong>Engineering</strong> chains multiply gains and compare errors with signals, which the log turns into simple sums. One ruler, three good reasons, as long as you remember the reference and add powers, not decibels.
+  </div>
+
+  <h3>Check your understanding</h3>
+  <details><summary>1. A spectrum peak is at −12 dB relative to another. What is the ratio of their amplitudes, and of their powers?</summary>
+    <p style="font-size:0.93rem;">Amplitude: \(10^{-12/20} \approx 0.25\) (a quarter). Power: \(10^{-12/10} \approx 0.063\) (a sixteenth). Same physical change, same 12&nbsp;dB.</p></details>
+  <details><summary>2. A recording peaks at −18 dBFS. How many bits of a 16-bit converter are effectively unused at the top?</summary>
+    <p style="font-size:0.93rem;">−18&nbsp;dB is about three halvings of amplitude (\(3 \times 6.02\)&nbsp;dB), so the top 3 bits are never used: the recording behaves like a 13-bit one, about 18&nbsp;dB worse SNR than it could have had.</p></details>
+  <details><summary>3. A fan makes 50 dB(A) in a room. You add a second identical fan. What is the new level, and does it sound twice as loud?</summary>
+    <p style="font-size:0.93rem;">53&nbsp;dB(A) (independent sources: powers add, +3&nbsp;dB). By the &ldquo;+10&nbsp;dB \(\approx\) twice as loud&rdquo; rule, +3&nbsp;dB is a clearly noticeable but modest increase, not a doubling of loudness.</p></details>
+  <details><summary>4. Why is the LPC envelope usually drawn on top of a dB spectrum, and not a linear one?</summary>
+    <p style="font-size:0.93rem;">Because in dB the speech spectrum is the source spectrum <em>plus</em> the envelope (Figure 4), so the envelope's shape can be read off directly. On a linear axis the higher formants of the envelope would be invisible, as in Figure 2.</p></details>
+  <details><summary>5. A codec has a segmental SNR of 15 dB and a global SNR of 22 dB on the same file. What does the gap tell you?</summary>
+    <p style="font-size:0.93rem;">The loud frames are coded much more accurately (relative to their level) than the quiet ones. The global figure is dominated by the loud vowels; the segmental figure gives the quiet frames an equal vote and exposes their poorer SNR.</p></details>
+</section>
+
+<footer>
+  Speech and Audio Processing &middot; Toolbox &middot; figures from <code>decibels/make_figures.py</code>; live demos in <code>decibels/page.js</code>, using the Indian-English recording <code>data/real_sample_speech.wav</code> resampled to 16&nbsp;kHz (shared with module 6 via <code>codecs/speech16k.js</code>). Everyday sound levels are typical, rounded values.
+  <ul class="refs" style="margin-top:12px;">
+    <li>G. T. Fechner, <em>Elemente der Psychophysik</em>, 1860 (Weber's and Fechner's laws).</li>
+    <li>S. S. Stevens, &ldquo;The measurement of loudness,&rdquo; <em>J. Acoust. Soc. Am.</em> 27(5), 1955.</li>
+    <li>W. H. Martin, &ldquo;DeciBel: the name for the transmission unit,&rdquo; <em>Bell Syst. Tech. J.</em> 8(1), 1929.</li>
+    <li>B. C. J. Moore, <em>An Introduction to the Psychology of Hearing</em>, 6th ed., Brill, 2012 (intensity discrimination, loudness).</li>
+    <li>ISO 226:2023, <em>Acoustics: normal equal-loudness-level contours</em>; IEC 61672-1 (A-weighting).</li>
+  </ul>
+</footer>
+
+<script src="codecs/speech16k.js?v=2"></script>
+<script src="decibels/page.js?v=1"></script>
+
+<!--ai:foot--><footer class="ai-foot"><a href="../index.html">Speech and Audio Processing</a> &middot; Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati &middot; <a href="../index.html#credits">data credits</a></footer><!--/ai:foot-->
+</body>
+</html>

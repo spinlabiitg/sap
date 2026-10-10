@@ -1,0 +1,184 @@
+{
+  "title": "Speech and Audio Processing",
+  "abbr": "SAP",
+  "tagline": "Speech and audio, from the physics of a sound to the models that understand it.",
+  "course": "IIT Guwahati",
+  "intro": "Interactive notes built for the classroom. Each page starts from intuition and everyday analogies, then adds the maths, figures, listening examples and live demos that run in your browser. New modules are added as the course grows.",
+  "status_legend": {
+    "live": "ready",
+    "update": "being revised",
+    "planned": "coming soon"
+  },
+  "modules": [
+    {
+      "id": "spectrogram",
+      "n": 1,
+      "title": "Seeing sound: the spectrogram",
+      "summary": "How a spectrogram is computed and inverted (STFT, windows, overlap-add), wideband vs narrowband views, why decibels and colour maps matter, and how to read harmonics, formants and noise bursts as phonemes.",
+      "short": "STFT, windows and resolution; reading harmonics, formants and noise in real speech.",
+      "pages": [
+        {
+          "title": "Seeing sound: the spectrogram",
+          "file": "speech/spectrogram.html",
+          "status": "live"
+        }
+      ],
+      "learn": [
+        "How the STFT turns a waveform into a picture, and back again",
+        "Wideband vs narrowband, decibels and colour maps",
+        "Reading vowels, fricatives, stops and nasals"
+      ]
+    },
+    {
+      "id": "phonemes",
+      "n": 2,
+      "title": "The sounds of language",
+      "summary": "From sound to phoneme: phones, minimal pairs and allophones (with real Indian-English recordings), how consonants and vowels are classified, the IPA and distinctive features, and how English and Hindi differ. Then phoneme inventories of the world and of India from PHOIBLE 2.0 and Glottolog, with a live explorer.",
+      "short": "Phonemes, minimal pairs and allophones; how speech sounds are classified, and the IPA.",
+      "pages": [
+        {
+          "title": "The sounds of language: from sound to phoneme",
+          "file": "speech/sounds_language.html",
+          "status": "live"
+        },
+        {
+          "title": "Phoneme inventories: India and the world",
+          "file": "speech/phoneme_inventories.html",
+          "status": "live",
+          "home": false
+        }
+      ],
+      "learn": [
+        "From sound to phoneme: minimal pairs and allophones",
+        "Classifying sounds: place, manner, voicing; vowel height and backness",
+        "How India's inventories compare with the world's, explored live"
+      ]
+    },
+    {
+      "id": "source-filter",
+      "n": 3,
+      "title": "A buzz and a tube: the source–filter model",
+      "summary": "Speech production built up from analogies: struck slabs and impulse responses, a spring–mass resonator, tubes and their resonances, formants, vocal-tract length, and the vowel space.",
+      "short": "How speech is made: a vocal-fold source shaped by the resonances of the vocal tract.",
+      "pages": [
+        {
+          "title": "A buzz and a tube",
+          "file": "speech/source_filter.html",
+          "status": "live"
+        },
+        {
+          "title": "Vocal tract, live",
+          "file": "speech/vocal_tract.html",
+          "status": "live"
+        }
+      ],
+      "learn": [
+        "Impulse responses and resonance from everyday analogies",
+        "Tubes, formants and vocal-tract length",
+        "Glottal pulses, harmonics and the vowel space"
+      ]
+    },
+    {
+      "id": "ar-model",
+      "n": 4,
+      "title": "Guessing the next sample: correlation, prediction and AR models",
+      "summary": "From the scatter of neighbouring samples to linear prediction; estimating the coefficients; the residual; and how Yule and Walker invented the method on sunspot records, retold with their data and with real speech.",
+      "short": "Correlation, linear prediction and AR models, from sunspots to speech.",
+      "pages": [
+        {
+          "title": "Guessing the next sample",
+          "file": "speech/linear_prediction.html",
+          "status": "live"
+        }
+      ],
+      "learn": [
+        "Correlation between neighbouring samples",
+        "Least squares, Yule–Walker and Levinson–Durbin",
+        "How sunspot records led to linear prediction"
+      ]
+    },
+    {
+      "id": "lpc",
+      "n": 5,
+      "title": "Linear prediction for speech",
+      "summary": "The predictor as an all-pole vocal tract: poles and formants, the LPC envelope, analysis and resynthesis, and modifying pitch and voice with playback demos.",
+      "short": "The all-pole vocal tract: formants, LPC envelopes, analysis and resynthesis.",
+      "pages": [
+        {
+          "title": "The all-pole vocal tract",
+          "file": "speech/ar_model.html",
+          "status": "live"
+        }
+      ],
+      "learn": [
+        "Poles as formants: the all-pole vocal tract",
+        "LPC envelopes and choosing the order",
+        "Resynthesis, pitch change and whisper"
+      ]
+    },
+    {
+      "id": "codecs",
+      "n": 6,
+      "title": "Speech codecs",
+      "summary": "Squeezing speech through a wire: quantisation and sampling, μ-law, predictive coding (ADPCM) and the LPC vocoder, with listening examples at real bit rates.",
+      "short": "Squeezing speech into bits: quantisation, μ-law, ADPCM and the LPC vocoder.",
+      "pages": [
+        {
+          "title": "Squeezing speech",
+          "file": "speech/codecs.html",
+          "status": "live"
+        }
+      ],
+      "learn": [
+        "Bits, sampling rate and μ-law",
+        "Predictive coding: send only the surprise (ADPCM)",
+        "The LPC vocoder: send the model, not the waveform"
+      ]
+    }
+  ],
+  "extras": {
+    "title": "Toolbox",
+    "summary": "Background ideas that the modules lean on.",
+    "show_on_home": false,
+    "pages": [
+      {
+        "title": "Why does audio live in decibels?",
+        "file": "speech/decibels.html",
+        "status": "live",
+        "blurb": "Why audio is measured in dB: the ear, spectra and errors."
+      },
+      {
+        "title": "Convolution, animated",
+        "file": "convolution/index.html",
+        "status": "live",
+        "blurb": "Convolution animated, and room reverberation as a convolution."
+      }
+    ]
+  },
+  "credits": [
+    "CMU ARCTIC speech database, speaker ksp (Indian English): Carnegie Mellon University, Language Technologies Institute; J. Kominek and A. W. Black, 2003. Used under its permissive licence; excerpts are resampled and trimmed.",
+    "PHOIBLE 2.0: S. Moran and D. McCloy (eds.), Max Planck Institute for the Science of Human History, Jena, 2019. Data licensed CC BY 4.0.",
+    "Glottolog: H. Hammarström, R. Forkel, M. Haspelmath and S. Bank, Max Planck Institute for Evolutionary Anthropology. Data licensed CC BY 4.0.",
+    "TIMIT (LDC93S1) is used only for aggregate statistics such as average vowel formants; no TIMIT audio is published on this site."
+  ],
+  "updates": [
+    {
+      "date": "2026-10-08",
+      "text": "Module 2 now opens with phonemes, minimal pairs, allophones and distinctive features."
+    },
+    {
+      "date": "2026-10-08",
+      "text": "Site launched: modules 1–6 and the toolbox. New page on the spectrogram. All speech examples use the CMU ARCTIC ksp voice (Indian English) and an Indian-English recording."
+    }
+  ],
+  "instructor": {
+    "name": "Neeraj Kumar Sharma",
+    "affiliation": "IIT Guwahati",
+    "url": "https://spinlabiitg.github.io/"
+  },
+  "howto": [
+    "Use headphones: most pages have listening examples.",
+    "A laptop or desktop works best for the live demos; everything also reads on a phone.",
+    "Each page follows the same rhythm: intuition, then maths, figures and demos, then questions to check yourself."
+  ]
+}

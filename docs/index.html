@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speech and Audio Processing</title>
+<meta name="description" content="Speech and audio, from the physics of a sound to the models that understand it.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css?v=3bd065aa">
+</head>
+<body class="ai-home">
+<main>
+  <header>
+    <h1>Speech and Audio Processing <span class="ai-abbr">(SAP)</span></h1>
+    <p class="ai-lede">Speech and audio, from the physics of a sound to the models that understand it.</p>
+    <p class="ai-instr">Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati</p>
+  </header>
+  <h2 id="modules">Modules</h2>
+  <ul class="ai-panel"><li class="ai-row"><span class="ai-num">01</span><div><h3><a href="speech/spectrogram.html">Seeing sound: the spectrogram</a></h3><p>STFT, windows and resolution; reading harmonics, formants and noise in real speech.</p></div></li><li class="ai-row"><span class="ai-num">02</span><div><h3><a href="speech/sounds_language.html">The sounds of language</a></h3><p>Phonemes, minimal pairs and allophones; how speech sounds are classified, and the IPA.</p></div></li><li class="ai-row"><span class="ai-num">03</span><div><h3><a href="speech/source_filter.html">A buzz and a tube: the source–filter model</a></h3><p>How speech is made: a vocal-fold source shaped by the resonances of the vocal tract.</p><p class="ai-row-pages"><a href="speech/source_filter.html">A buzz and a tube</a> &middot; <a href="speech/vocal_tract.html">Vocal tract, live</a></p></div></li><li class="ai-row"><span class="ai-num">04</span><div><h3><a href="speech/linear_prediction.html">Guessing the next sample: correlation, prediction and AR models</a></h3><p>Correlation, linear prediction and AR models, from sunspots to speech.</p></div></li><li class="ai-row"><span class="ai-num">05</span><div><h3><a href="speech/ar_model.html">Linear prediction for speech</a></h3><p>The all-pole vocal tract: formants, LPC envelopes, analysis and resynthesis.</p></div></li><li class="ai-row"><span class="ai-num">06</span><div><h3><a href="speech/codecs.html">Speech codecs</a></h3><p>Squeezing speech into bits: quantisation, μ-law, ADPCM and the LPC vocoder.</p></div></li></ul>
+  
+  <h2 id="updates">Updates</h2>
+  <ul class="ai-updates"><li><time>2026-10-08</time> Module 2 now opens with phonemes, minimal pairs, allophones and distinctive features.</li><li><time>2026-10-08</time> Site launched: modules 1–6 and the toolbox. New page on the spectrogram. All speech examples use the CMU ARCTIC ksp voice (Indian English) and an Indian-English recording.</li></ul>
+  <details class="ai-credits-box" id="credits"><summary>Data and credits</summary><ul class="ai-credits"><li>CMU ARCTIC speech database, speaker ksp (Indian English): Carnegie Mellon University, Language Technologies Institute; J. Kominek and A. W. Black, 2003. Used under its permissive licence; excerpts are resampled and trimmed.</li><li>PHOIBLE 2.0: S. Moran and D. McCloy (eds.), Max Planck Institute for the Science of Human History, Jena, 2019. Data licensed CC BY 4.0.</li><li>Glottolog: H. Hammarström, R. Forkel, M. Haspelmath and S. Bank, Max Planck Institute for Evolutionary Anthropology. Data licensed CC BY 4.0.</li><li>TIMIT (LDC93S1) is used only for aggregate statistics such as average vowel formants; no TIMIT audio is published on this site.</li></ul></details>
+</main>
+<footer class="ai-foot">Speech and Audio Processing &middot; IIT Guwahati &middot; <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a></footer>
+<script>/* open the credits panel when arriving via #credits (pages link to it) */
+(function () { function o() { if (location.hash === '#credits') document.getElementById('credits').open = true; } o(); window.addEventListener('hashchange', o); })();</script>
+</body>
+</html>

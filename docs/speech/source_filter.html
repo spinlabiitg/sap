@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Buzz and a Tube</title>
+<meta name="description" content="Speech production modelling and the source–filter paradigm, built up from an everyday analogy: strike an object and listen.">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, { delimiters: [ { left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false } ], throwOnError: false });"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #F5F7FA; --bg-grid: #E7ECF2; --surface: #FFFFFF; --surface-2: #EAF0F7;
+    --ink: #10233F; --ink-soft: #24344F; --muted: #5C6B80; --line: #D7DEE8; --line-strong: #AEB9CB;
+    --accent: #14508C; --accent-2: #C1272D; --accent-3: #C9971B; --accent-4: #5B7083; --teal: #1D7A8C;
+    --shadow: 0 1px 0 rgba(16,35,63,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+      --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+      --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+      --shadow: 0 1px 0 rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+    --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+    --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+    --shadow: 0 1px 0 rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background:
+      repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      var(--bg);
+    color: var(--ink-soft);
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: 17px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: #fff; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1, h2, h3, h4 { font-family: "Poppins", ui-sans-serif, system-ui, sans-serif; color: var(--ink); font-weight: 600; }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.3rem); line-height: 1.08; margin: 0 0 0.35em; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; margin: 0 0 0.5em; }
+  h3 { font-size: 1.22rem; margin: 2em 0 0.3em; }
+  h4 { font-size: 1rem; margin: 0.2em 0 0.3em; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.88em; }
+
+  header.hero, section, footer { max-width: 900px; margin: 0 auto; padding: 56px 20px; }
+  section { border-top: 1px solid var(--line); }
+  header.hero { padding-top: 72px; }
+  .kicker { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.74rem; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+  .lede { font-size: 1.12rem; }
+  .meta-line { font-size: 0.85rem; color: var(--muted); margin-top: 18px; }
+
+  .roadmap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-top: 26px; font-size: 0.92rem; }
+  .roadmap ol { margin: 6px 0 0; padding-left: 20px; }
+  .roadmap li { margin: 3px 0; }
+  .roadmap .later { color: var(--muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  .intuition { border-left: 3px solid var(--accent-3); background: var(--surface-2); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 0.97rem; }
+  .keyidea { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .keyidea::before { content: "Key idea"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .try { border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 16px; margin: 16px 0; font-size: 0.93rem; }
+  .try::before { content: "Try this yourself"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-bottom: 2px; }
+  .eq { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.95rem; background: var(--surface); border: 1px solid var(--line);
+        border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; overflow-x: auto; color: var(--ink); line-height: 2; }
+
+  figure { margin: 22px 0 26px; }
+  figure .frame { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 0.86rem; color: var(--muted); margin-top: 8px; line-height: 1.55; }
+  figcaption b { color: var(--ink-soft); }
+
+  button { font-family: inherit; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--line-strong);
+           background: var(--surface); color: var(--ink-soft); padding: 6px 12px; transition: all 0.15s ease; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .ctlrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 10px 0; font-size: 0.85rem; color: var(--muted); }
+  .valpill { font-family: "JetBrains Mono", monospace; color: var(--accent); font-weight: 600; }
+  input[type=range] { accent-color: var(--accent); }
+  canvas.plot { width: 100%; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .plotlabel { font-size: 0.75rem; color: var(--muted); margin: 8px 0 3px; }
+
+  /* slab rack */
+  .rack { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .rack { grid-template-columns: repeat(2, 1fr); } }
+  .slab { background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 6px 6px 10px; cursor: pointer; text-align: center; transition: border-color 0.15s; font: inherit; color: inherit; }
+  .slab:hover, .slab.sel { border-color: var(--accent); }
+  .slab svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .slab .name { font-weight: 600; color: var(--ink); font-size: 0.92rem; }
+  .slab .hint { font-size: 0.72rem; color: var(--muted); }
+  .mallet { transform-origin: 150px 12px; transform: rotate(22deg); transition: transform 0.12s ease-in; }
+  .slab.hit .mallet { transform: rotate(0deg); transition: transform 0.07s ease-in; }
+  .slab.ring .body { animation: shake 0.35s linear; }
+  @keyframes shake { 0%,100% { transform: translateY(0); } 20% { transform: translateY(1.6px); } 40% { transform: translateY(-1.2px); } 60% { transform: translateY(0.8px); } 80% { transform: translateY(-0.4px); } }
+  @media (prefers-reduced-motion: reduce) { .slab.ring .body { animation: none; } .mallet { transition: none; } }
+
+  .examples { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .examples { grid-template-columns: 1fr; } }
+  .examples .card p { font-size: 0.88rem; margin: 0; }
+  .examples .emoji { font-size: 1.5rem; line-height: 1; }
+  .examples audio { width: 100%; height: 32px; margin-top: 8px; }
+
+  /* voice grid */
+  .vgrid { display: grid; grid-template-columns: 120px repeat(4, 1fr); gap: 6px; align-items: stretch; font-size: 0.85rem; }
+  .vgrid .hdr { font-weight: 600; color: var(--ink); text-align: center; padding: 6px 2px; font-size: 0.8rem; }
+  .vgrid .rowh { font-weight: 600; color: var(--ink); display: flex; align-items: center; font-size: 0.8rem; }
+  .vgrid button { padding: 10px 4px; }
+  @media (max-width: 600px) { .vgrid { grid-template-columns: 78px repeat(4, 1fr); } .vgrid button { font-size: 0.72rem; } }
+
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram text { font-family: "Inter", sans-serif; }
+  .players { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 10px 0; }
+  .player { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+  .player audio { height: 34px; max-width: 250px; width: 100%; }
+  ul.refs li { font-size: 0.9rem; margin-bottom: 5px; }
+  footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); }
+
+  /* vowel gallery */
+  .vgal { display: grid; grid-template-columns: 96px repeat(4, minmax(170px, 1fr)); gap: 8px 10px; min-width: 780px; align-items: start; }
+  .vgal .vhead { text-align: center; font-size: 0.85rem; color: var(--muted); }
+  .vgal .ipa-big { font-family: "JetBrains Mono", monospace; font-size: 1.5rem; font-weight: 600; }
+  .vgal .vrow { font-size: 0.8rem; font-weight: 600; color: var(--ink); padding-top: 18px; }
+  .vgal .vrow span { font-weight: 400; color: var(--muted); }
+  .vgal .vcell { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+  .vgal .vcell img { display: block; width: 100%; height: auto; background: #fff; border-radius: 4px; }
+  .vgal .vcell p { font-size: 0.78rem; margin: 4px 2px; color: var(--ink-soft); line-height: 1.35; }
+  .vgal .vcell p.mono { color: var(--ink); font-size: 0.8rem; }
+  .vgal .vcell audio { width: 100%; height: 30px; margin-top: 4px; }
+</style>
+<!--ai:head--><link rel="stylesheet" href="../assets/site.css?v=3bd065aa"><!--/ai:head-->
+</head>
+<body>
+<!--ai:nav--><nav class="ai-nav" aria-label="Course navigation"><div class="ai-nav-in"><a class="ai-brand" href="../index.html" title="Speech and Audio Processing"><span class="ai-logo" aria-hidden="true">◖◗</span><span class="ai-brand-full">Speech and Audio Processing</span><span class="ai-brand-short">SAP</span></a><span class="ai-where">Module 3 &middot; A buzz and a tube: the source–filter model</span><details class="ai-menu"><summary>All pages</summary><ul><li><a href="spectrogram.html">1. Seeing sound: the spectrogram</a></li><li><a href="sounds_language.html">2. The sounds of language: from sound to phoneme</a></li><li><a href="phoneme_inventories.html">2. Phoneme inventories: India and the world</a></li><li><a href="source_filter.html" aria-current="page">3. A buzz and a tube</a></li><li><a href="vocal_tract.html">3. Vocal tract, live</a></li><li><a href="linear_prediction.html">4. Guessing the next sample</a></li><li><a href="ar_model.html">5. The all-pole vocal tract</a></li><li><a href="codecs.html">6. Squeezing speech</a></li><li><a href="decibels.html">Why does audio live in decibels?</a></li><li><a href="../convolution/index.html">Convolution, animated</a></li></ul></details><a class="ai-step ai-prev" href="phoneme_inventories.html" title="Phoneme inventories: India and the world">← prev</a><a class="ai-step ai-next" href="vocal_tract.html" title="Vocal tract, live">next →</a></div></nav><!--/ai:nav-->
+
+<header class="hero">
+  <div class="kicker">Speech and Audio Processing &middot; Module 3</div>
+  <h1>A buzz and a tube.</h1>
+  <p class="lede">
+    Every vowel you have ever spoken was made the same way: a <strong>source</strong> of sound (your vocal folds,
+    tapping the air in your throat a hundred-odd times a second) shaped by a <strong>filter</strong> (the air-filled
+    tube of your throat and mouth, which rings at its own preferred frequencies). This <em>source&ndash;filter model</em>
+    is the foundation of almost all speech processing: pitch tracking, formant analysis, linear prediction, codecs,
+    synthesis. Before any equations, let's build the intuition from something you already understand: hitting things and listening.
+  </p>
+  <div class="roadmap">
+    <strong style="color:var(--ink);">The path through this page</strong>
+    <ol>
+      <li><a href="#strike">Strike it and listen</a>: every object has a sonic fingerprint, its impulse response</li>
+      <li><a href="#taps">Tap faster</a>: when taps turn into a tone</li>
+      <li><a href="#voice">Your voice does exactly this</a>: the analogy applied to speech</li>
+      <li><a href="#model">The source&ndash;filter model</a>: one diagram, one equation, one real-speech check</li>
+      <li><a href="#source">The source up close</a>: vocal folds as an impulse train, and noise</li>
+      <li><a href="#filter">The filter</a>: resonance, from a mass on a spring to the formants of the vocal tract</li>
+      <li><a href="linear_prediction.html">Module 4 → Guessing the next sample</a>: linear prediction, from correlation to the AR (all-pole) model</li>
+      <li><a href="ar_model.html">Module 5 → Turning the predictor into a vocal tract</a>: poles, formants, LPC envelopes and an LPC vocoder</li>
+      <li><a href="codecs.html">Module 6 → Squeezing speech through a wire</a>: speech coding, from PCM and \(\mu\)-law to ADPCM and the LPC vocoder</li>
+      <li class="later">Real phonemes and a measured vowel chart</li>
+    </ol>
+  </div>
+  <div class="meta-line">Companion to <a href="vocal_tract.html">Vocal tract, live</a> &middot; turn your sound on: most demos play audio</div>
+</header>
+
+<!-- ============================================================ 1. STRIKE -->
+<section id="strike">
+  <div class="kicker">01 &middot; An analogy</div>
+  <h2>Strike it, and listen.</h2>
+  <p>
+    Close your eyes. Someone knocks on a wooden table, then a steel pipe, then a glass window. You name each one instantly,
+    even though the <em>knock</em> was the same each time: the same knuckle, the same force, the same brief instant of contact.
+    The knock only lasted a few milliseconds. Everything you heard afterwards, the dull thud or the long bright ring, came from
+    the <strong>object</strong> answering the knock in its own way.
+  </p>
+  <p>Try it. Click a slab to strike it, then change what you strike it with.</p>
+
+  <div class="card">
+    <div class="rack" id="rack"></div>
+    <div class="ctlrow" style="margin-top:14px;">
+      <span>Strike with:</span>
+      <span class="seg" id="striker">
+        <button data-s="hard" class="on">steel hammer (hard, sharp)</button>
+        <button data-s="soft">felt mallet (soft, slow)</button>
+      </span>
+    </div>
+    <div class="grid2" style="gap:12px;">
+      <div><div class="plotlabel">What you heard: the first 0.4 s of the sound</div><canvas class="plot" id="strikeWave" height="150"></canvas></div>
+      <div><div class="plotlabel">Its spectrum: the object's resonances (0&ndash;8 kHz)</div><canvas class="plot" id="strikeSpec" height="150"></canvas></div>
+    </div>
+    <p id="strikeNote" style="font-size:0.88rem;color:var(--muted);margin:10px 0 0;">Click any slab above.</p>
+  </div>
+
+  <h3>What makes them sound different?</h3>
+  <p>
+    A struck object vibrates in a handful of <strong>natural modes</strong>, each a pattern of motion with its own frequency, and
+    each dying away at its own rate. The spectra above show them as peaks. Two physical properties set almost everything:
+  </p>
+  <div class="grid2">
+    <div class="card"><h4>Where the peaks are: stiffness, density, shape</h4>
+      <p style="font-size:0.9rem;margin:0;">Stiff, light materials vibrate fast (high modes). Heavy, floppy ones vibrate slowly. Steel and glass carry sound at
+      roughly 5,000&ndash;6,000&nbsp;m/s, wood at roughly 3,000&ndash;5,000&nbsp;m/s along the grain. Size and shape matter as much as material: a longer bar of the
+      same steel rings lower. The mode frequencies are usually <em>not</em> whole-number multiples of each other, which is why a struck plank has no clear musical pitch.</p></div>
+    <div class="card"><h4>How long they ring: internal friction (damping)</h4>
+      <p style="font-size:0.9rem;margin:0;">Every cycle, a little vibration energy turns into heat. Metal loses very little per cycle and rings for seconds.
+      Wood, with its fibres rubbing against each other, loses most of its energy in a few tens of milliseconds: a <em>thud</em>.
+      Stone is heavier still and even more damped. In the spectrum, fast decay shows up as <em>broad</em> peaks, long ringing as <em>sharp</em> ones.</p></div>
+  </div>
+  <p>
+    And the striker? The hard hammer touches for a fraction of a millisecond, delivering an almost perfect instantaneous
+    kick that excites every mode, low and high. The soft mallet stays in contact for a few milliseconds, which is too slow
+    to shake the high modes, so you hear the same object, darker. Notice what did <em>not</em> change when you switched
+    strikers: the <em>positions</em> of the peaks. They belong to the object. The striker only decides how strongly each one gets excited.
+  </p>
+
+  <div class="keyidea">
+    Hit a system with a perfectly sharp, instantaneous kick (an <strong>impulse</strong>) and whatever comes out is its
+    <strong>impulse response</strong>, \(h(t)\). For linear, time-invariant systems it is a complete fingerprint: if you
+    know \(h(t)\), you can predict the output for <em>any</em> input \(x(t)\) by convolution,
+    \(y(t) = x(t) \ast h(t)\). Equivalently, in frequency, \(Y(f) = X(f)\,H(f)\): the input's spectrum,
+    reshaped by the system's resonances. (See <a href="../convolution/index.html">the convolution tutorial</a> for why.)
+  </div>
+  <p>
+    That last formula already contains the whole of this page. The striker is \(X(f)\), the <em>source</em>.
+    The slab is \(H(f)\), the <em>filter</em>. What you hear is their product, and your ear is remarkably good at
+    telling the two factors apart.
+  </p>
+
+  <h3>Impulse responses are everywhere</h3>
+  <p>Once you look for it, &ldquo;excite it briefly, then listen to how it answers&rdquo; is one of the most common ways people and machines probe the world.</p>
+  <div class="examples">
+    <div class="card"><div class="emoji" aria-hidden="true">👏</div><h4>A clap in a room</h4>
+      <p>Clap once in a bathroom, a classroom and a cathedral. The clap is the impulse; the reverb tail is the <em>room's</em> impulse response. The same sentence convolved with a small-room and a large-hall response (from the reverb notebook):</p>
+      <audio controls preload="none" src="../convolution/reverb_small.wav" aria-label="small room"></audio>
+      <audio controls preload="none" src="../convolution/reverb_large.wav" aria-label="large hall"></audio></div>
+    <div class="card"><div class="emoji" aria-hidden="true">🚂</div><h4>The wheel-tapper</h4>
+      <p>Railway workers once walked along stationary trains tapping every wheel with a long hammer. A sound wheel rings clearly; a cracked one gives a dull, short note. Its impulse response changed because its damping changed.</p></div>
+    <div class="card"><div class="emoji" aria-hidden="true">🩺</div><h4>A doctor's chest percussion</h4>
+      <p>Tap two fingers on the chest: air-filled lung sounds hollow and resonant, fluid or a solid mass sounds dull and flat. The same logic tells you whether a watermelon is ripe, or finds the stud behind a plaster wall.</p></div>
+    <div class="card"><div class="emoji" aria-hidden="true">🎸</div><h4>A guitar body</h4>
+      <p>Tap the top of an acoustic guitar and you hear its body resonances directly. When the strings play, those same resonances colour every note. Luthiers tune them by tapping and listening as they carve.</p></div>
+    <div class="card"><div class="emoji" aria-hidden="true">🔔</div><h4>A bell</h4>
+      <p>A bell is an object designed so that its modes line up almost harmonically. Bell founders shave metal from the inside until the tap sounds right.</p></div>
+    <div class="card"><div class="emoji" aria-hidden="true">🗣️</div><h4>Your own mouth</h4>
+      <p>Open your mouth into an &ldquo;ah&rdquo; shape and flick your cheek or tap your throat gently. You hear a faint hollow &ldquo;tok&rdquo; whose pitch changes as you shape different vowels. That is your vocal tract's impulse response.</p></div>
+  </div>
+</section>
+
+<!-- ============================================================ 2. TAPS -->
+<section id="taps">
+  <div class="kicker">02 &middot; From a tap to a tone</div>
+  <h2>Now tap faster.</h2>
+  <p>
+    One strike gives one ring. What if you strike the same slab again and again, at a steady rate? At two taps a second you
+    hear a rhythm: tap, tap, tap. Speed up. Somewhere around <strong>20 taps per second</strong> something remarkable happens:
+    your ear stops hearing separate events and hears a single continuous <em>buzz</em> with a <em>pitch</em>. The pitch is the tapping rate.
+  </p>
+  <div class="card">
+    <div class="ctlrow">
+      <span>Slab:</span>
+      <span class="seg" id="tapMat"></span>
+    </div>
+    <div class="ctlrow">
+      <label for="tapRate">Taps per second: <span class="valpill" id="tapRateV"></span></label>
+      <input type="range" id="tapRate" min="0" max="100" value="12" style="flex:1;min-width:180px;">
+      <button id="tapPlay" class="on">&#9654; Play 1.5 s</button>
+    </div>
+    <div class="plotlabel">Time: taps (blue ticks) and the sound they produce, first 0.25 s</div>
+    <canvas class="plot" id="tapWave" height="130"></canvas>
+    <div class="plotlabel">Spectrum: <span style="color:var(--accent)">&#9632;</span> the sound &nbsp;&nbsp;<span style="color:var(--accent-2)">&#9632;</span> the slab's own resonances (its single-tap spectrum)</div>
+    <canvas class="plot" id="tapSpec" height="170"></canvas>
+    <p id="tapNote" style="font-size:0.88rem;color:var(--muted);margin:10px 0 0;"></p>
+  </div>
+  <p>Look at the spectrum as you raise the rate. This picture is the heart of the source&ndash;filter model, so it deserves a slow read:</p>
+  <ul>
+    <li><strong>The taps set the pitch.</strong> A tap train repeating every \(T\) seconds is periodic, so its sound can only contain
+      frequencies at whole-number multiples of \(1/T\): the <em>harmonics</em>. The spectrum turns into a comb of lines, spaced exactly
+      at the tap rate. Double the rate and the lines spread twice as far apart; the pitch goes up an octave.</li>
+    <li><strong>The slab sets the colour.</strong> The heights of those lines follow the slab's resonance curve (red). Lines that fall near a
+      resonance are loud; lines between resonances are weak. Swap wood for steel at the same rate and the pitch stays the same while the timbre changes completely.</li>
+    <li><strong>The two are independent.</strong> The tapper knows nothing about the slab, and the slab doesn't care how often it is tapped. What you hear is
+      simply <em>comb &times; resonance curve</em>.</li>
+  </ul>
+  <div class="keyidea">
+    A periodic train of impulses, pushed through a resonant object, produces a <strong>harmonic spectrum</strong> (lines at multiples of the
+    tap rate) whose <strong>envelope</strong> is the object's resonance curve. Pitch comes from the excitation; timbre comes from the resonator.
+  </div>
+</section>
+
+<!-- ============================================================ 3. VOICE -->
+<section id="voice">
+  <div class="kicker">03 &middot; The analogy, applied to speech</div>
+  <h2>Your voice does exactly this.</h2>
+  <p>Map the pieces across, one to one:</p>
+  <div class="grid3">
+    <div class="card" style="border-top:3px solid var(--accent);"><h4>The tapper &rarr; vocal folds</h4>
+      <p style="font-size:0.9rem;margin:0;">Air from the lungs pushes the vocal folds apart; they snap shut again, over and over. Each <em>closure</em> sends a sharp pressure kick into the air above:
+      a tap. Men's folds typically tap about 85&ndash;155 times a second, women's about 165&ndash;255. That rate is the <strong>fundamental frequency, \(F_0\)</strong>, the pitch of the voice.</p></div>
+    <div class="card" style="border-top:3px solid var(--accent-2);"><h4>The slab &rarr; vocal tract</h4>
+      <p style="font-size:0.9rem;margin:0;">The throat, mouth and (sometimes) nose form an air-filled tube about 17&nbsp;cm long in an adult male. Like any object it has natural resonances.
+      For a tube these are called <strong>formants</strong> (\(F_1, F_2, F_3, \dots\)), and they are what make an &ldquo;ee&rdquo; sound different from an &ldquo;ah&rdquo;.</p></div>
+    <div class="card" style="border-top:3px solid var(--accent-3);"><h4>Swapping slabs &rarr; moving your tongue</h4>
+      <p style="font-size:0.9rem;margin:0;">Unlike a wooden plank, your vocal tract is reshapeable. Every time you move your tongue, jaw or lips you are, in effect, swapping in a new
+      &ldquo;slab&rdquo; with different resonances, several times a second, while the folds keep tapping away underneath.</p></div>
+  </div>
+  <p style="margin-top:18px;">
+    Musicians know this arrangement too. In a trumpet, the player's lips buzz (source) and the brass tube resonates (filter). The player changes
+    the note by changing the buzz (with the tube's strong resonances helping to lock the lips onto one of its notes); the instrument's character comes from the tube. In speech we mostly do the opposite: we keep the buzz roughly
+    steady and change the <em>tube</em>, and that is what spells out vowels.
+  </p>
+
+  <div class="try">
+    Hum a steady note and slowly glide from &ldquo;eeee&rdquo; to &ldquo;aaah&rdquo; to &ldquo;oooo&rdquo;. The pitch doesn't move (the source is unchanged) but the vowel does (the filter is changing).
+    Now <em>whisper</em> the same three vowels. There is no pitch at all, because your folds have stopped tapping and the sound source is now turbulent
+    air hissing through a narrow gap. Yet the vowels are still perfectly recognisable, because the tube is shaping the hiss exactly as it shaped the buzz.
+  </div>
+
+  <p>The grid below does the same experiment with a computer. Each row is a <strong>source</strong>, each column a <strong>filter</strong> (a vowel-shaped tube, or none at all). Click any cell.</p>
+  <div class="card">
+    <div class="vgrid" id="vgrid"></div>
+    <div class="plotlabel" style="margin-top:14px;">Spectrum of what you heard <span style="color:var(--accent)">&#9632;</span> with the filter's resonance curve <span style="color:var(--accent-2)">&#9632;</span> (0&ndash;4 kHz)</div>
+    <canvas class="plot" id="vSpec" height="180"></canvas>
+    <p id="vNote" style="font-size:0.88rem;color:var(--muted);margin:10px 0 0;">Click a cell to hear it.</p>
+  </div>
+  <p>
+    Listen to the first column: the raw source on its own is a harsh, featureless buzz (or a plain hiss). It isn't any vowel. All the
+    &ldquo;vowel-ness&rdquo; is added by the filter. Along a column the vowel stays the same while the voice changes; along a row the voice
+    stays the same while the vowel changes. Two knobs, independent, just like the tapper and the slab.
+  </p>
+</section>
+
+<!-- ============================================================ 4. MODEL -->
+<section id="model">
+  <div class="kicker">04 &middot; The model</div>
+  <h2>The source&ndash;filter model in one picture.</h2>
+  <p>
+    Formalised by Gunnar Fant in 1960 (<em>Acoustic Theory of Speech Production</em>), the model says that a speech signal can be
+    treated as the output of a filter (the vocal tract) driven by a source (the vocal folds, or turbulent noise), with the two
+    varying independently:
+  </p>
+  <figure>
+    <div class="card diagram" style="padding:12px;">
+      <svg viewBox="0 0 860 250" role="img" aria-label="Block diagram: lungs supply air; the source is a switch between an impulse train for voiced sounds and random noise for unvoiced sounds; it drives the vocal tract filter H(f), then radiation at the lips, producing speech">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+        </defs>
+        <!-- lungs -->
+        <rect x="10" y="95" width="90" height="60" rx="10" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+        <text x="55" y="121" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Lungs</text>
+        <text x="55" y="139" text-anchor="middle" font-size="11" fill="var(--muted)">air pressure</text>
+        <line x1="100" y1="125" x2="135" y2="125" stroke="var(--muted)" stroke-width="1.6" marker-end="url(#arr)"/>
+        <!-- source box -->
+        <rect x="140" y="20" width="250" height="210" rx="12" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="5 4"/>
+        <foreignObject x="85" y="24.45" width="360" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;line-height:26px;text-align:center;color:var(--accent);font-weight:700;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">SOURCE &middot; \(e[n]\)</div></foreignObject>
+        <!-- voiced -->
+        <rect x="155" y="58" width="165" height="68" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+        <text x="237" y="76" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)">voiced: impulse train</text>
+        <g stroke="var(--accent)" stroke-width="2">
+          <line x1="175" y1="112" x2="175" y2="88"/><line x1="203" y1="112" x2="203" y2="88"/><line x1="231" y1="112" x2="231" y2="88"/>
+          <line x1="259" y1="112" x2="259" y2="88"/><line x1="287" y1="112" x2="287" y2="88"/>
+        </g>
+        <line x1="168" y1="112" x2="305" y2="112" stroke="var(--line-strong)"/>
+        <foreignObject x="9" y="110.175" width="360" height="19"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:9.5px;line-height:19px;text-align:center;color:var(--muted);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(T_0 = 1/F_0\)</div></foreignObject>
+        <!-- unvoiced -->
+        <rect x="155" y="142" width="165" height="68" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/>
+        <text x="237" y="160" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)">unvoiced: random noise</text>
+        <polyline fill="none" stroke="var(--accent-4)" stroke-width="1.3"
+          points="168,187 173,180 177,194 181,176 185,191 189,183 193,197 197,178 201,189 205,184 209,195 213,175 217,190 221,182 225,196 229,179 233,188 237,184 241,198 245,177 249,191 253,183 257,194 261,180 265,189 269,185 273,196 277,178 281,190 285,184 289,193 293,181 297,188 301,186 305,187"/>
+        <!-- switch -->
+        <line x1="320" y1="92" x2="345" y2="92" stroke="var(--muted)" stroke-width="1.4"/>
+        <line x1="320" y1="176" x2="345" y2="176" stroke="var(--muted)" stroke-width="1.4"/>
+        <circle cx="345" cy="92" r="3" fill="var(--muted)"/><circle cx="345" cy="176" r="3" fill="var(--muted)"/>
+        <line x1="372" y1="125" x2="347" y2="95" stroke="var(--ink)" stroke-width="2"/>
+        <circle cx="372" cy="125" r="3.5" fill="var(--ink)"/>
+        <text x="362" y="222" text-anchor="middle" font-size="10" fill="var(--muted)">voicing switch</text>
+        <line x1="376" y1="125" x2="425" y2="125" stroke="var(--muted)" stroke-width="1.6" marker-end="url(#arr)"/>
+        <foreignObject x="228" y="102.5" width="360" height="20"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:10px;line-height:20px;text-align:center;color:var(--muted);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(\times\) gain</div></foreignObject>
+        <!-- filter -->
+        <rect x="430" y="60" width="200" height="130" rx="12" fill="var(--surface)" stroke="var(--accent-2)" stroke-width="1.8"/>
+        <foreignObject x="350" y="64.45" width="360" height="26"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;line-height:26px;text-align:center;color:var(--accent-2);font-weight:700;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">FILTER &middot; \(H(f)\)</div></foreignObject>
+        <text x="530" y="99" text-anchor="middle" font-size="11" fill="var(--muted)">vocal tract resonances</text>
+        <path d="M445,172 C465,172 470,118 482,118 C494,118 498,160 515,158 C532,156 534,128 546,128 C558,128 562,162 578,160 C592,158 596,140 604,140 C612,140 614,168 618,172" fill="none" stroke="var(--accent-2)" stroke-width="2"/>
+        <foreignObject x="302" y="102.5" width="360" height="20"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:10px;line-height:20px;text-align:center;color:var(--accent-2);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(F_1\)</div></foreignObject>
+        <foreignObject x="366" y="109.5" width="360" height="20"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:10px;line-height:20px;text-align:center;color:var(--accent-2);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(F_2\)</div></foreignObject>
+        <foreignObject x="424" y="121.5" width="360" height="20"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:10px;line-height:20px;text-align:center;color:var(--accent-2);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(F_3\)</div></foreignObject>
+        <line x1="630" y1="125" x2="665" y2="125" stroke="var(--muted)" stroke-width="1.6" marker-end="url(#arr)"/>
+        <!-- radiation -->
+        <rect x="670" y="90" width="80" height="70" rx="10" fill="var(--surface-2)" stroke="var(--line-strong)"/>
+        <text x="710" y="119" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">Lips</text>
+        <text x="710" y="136" text-anchor="middle" font-size="10" fill="var(--muted)">radiation</text>
+        <line x1="750" y1="125" x2="785" y2="125" stroke="var(--muted)" stroke-width="1.6" marker-end="url(#arr)"/>
+        <!-- speech -->
+        <polyline fill="none" stroke="var(--ink)" stroke-width="1.4" points="790,125 794,108 797,138 800,116 803,131 806,121 809,126 812,110 815,140 818,114 821,133 824,120 827,127 830,111 833,139 836,115 839,132 842,121 845,126"/>
+        <foreignObject x="638" y="143.8" width="360" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;line-height:24px;text-align:center;color:var(--ink);font-weight:600;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">speech \(s[n]\)</div></foreignObject>
+      </svg>
+    </div>
+    <figcaption><b>Figure 1.</b> The source&ndash;filter model. For voiced sounds (vowels, /m/, /l/, &hellip;) the source is a train of pulses, one per vocal-fold closure, spaced
+    \(T_0 = 1/F_0\) apart. For unvoiced sounds (/s/, /f/, whispering) it is random noise from turbulent airflow. Either way, the same vocal-tract filter shapes it.
+    Voiced fricatives such as /z/ and /v/ use both sources at once.</figcaption>
+  </figure>
+
+  <p>In symbols, this is the same statement as the slab: the output is the source convolved with the tract's impulse response, or equivalently the source spectrum multiplied by the tract's frequency response.</p>
+  <div class="eq">
+    $$\begin{aligned} \text{time:}\quad & s[n] = e[n] \ast h[n] \\ \text{frequency:}\quad & S(f) = E(f)\,H(f) \\ \text{log-spectrum:}\quad & \log|S(f)| = \log|E(f)| + \log|H(f)| \end{aligned}$$
+    <span style="font-family:Inter,sans-serif;font-size:0.82rem;color:var(--muted);">← the fine harmonic comb plus the smooth envelope</span>
+  </div>
+  <p>
+    The last line is why the model is so useful: on a log (dB) scale, the source and the filter <em>add</em>. The source contributes fast
+    ripples across frequency (the harmonics, one every \(F_0\)&nbsp;Hz). The filter contributes a slow, smooth envelope (the formant peaks). Different speeds of
+    variation means they can be pulled apart again, and much of speech analysis is ways of doing exactly that.
+  </p>
+
+  <h3>Does real speech really look like this?</h3>
+  <p>
+    Here is one speaker, <em>ksp</em>, an Indian-English male speaker from the CMU ARCTIC corpus, saying the vowels /i/ and /ɑ/ in different
+    sentences. Like everyone, he does not speak on a monotone: his pitch drifts up and down, so we can pick each vowel once where his pitch was lower
+    and once where it was higher. For each we show a 40&nbsp;ms spectrum from the middle of the vowel, with its smooth envelope drawn on top.
+  </p>
+  <figure>
+    <div class="frame"><img src="source_filter/fig/01_source_vs_filter.png?v=3" alt="Four spectra from one speaker: vowels i and a, each at a lower and a higher pitch, showing harmonic spacing set by the pitch and envelope shape set by the vowel" loading="lazy"></div>
+    <figcaption><b>Figure 2.</b> Real speech, 2&nbsp;&times;&nbsp;2, one speaker. <b>Read down a column</b> (same vowel, different pitch): the harmonic lines spread further apart
+    when his pitch is higher (/i/: \(F_0 \approx 111 \to 173\)&nbsp;Hz; /ɑ/: \(\approx 121 \to 159\)&nbsp;Hz), while the envelope keeps its shape. That is the <em>source</em> changing.
+    <b>Read along a row</b> (similar pitch, different vowel): the harmonic spacing barely moves, but the envelope changes shape completely. /i/ has a low first peak near 300&nbsp;Hz and a
+    strong second one above 2&nbsp;kHz; /ɑ/ has its first two peaks much closer together, near 700 and 1,300&nbsp;Hz. That is the <em>filter</em> changing. (How the smooth envelope is computed comes later on this page.)</figcaption>
+  </figure>
+  <div class="players">
+    <div class="player">&ldquo;me&rdquo; (lower pitch)<audio controls preload="none" src="source_filter/audio/ksp_me.wav?v=3"></audio></div>
+    <div class="player">&ldquo;dark&rdquo; (lower pitch)<audio controls preload="none" src="source_filter/audio/ksp_dark.wav?v=3"></audio></div>
+    <div class="player">&ldquo;see&rdquo; (higher pitch)<audio controls preload="none" src="source_filter/audio/ksp_see.wav?v=3"></audio></div>
+    <div class="player">&ldquo;far&rdquo; (higher pitch)<audio controls preload="none" src="source_filter/audio/ksp_far.wav?v=3"></audio></div>
+  </div>
+  <p>
+    Compare the two /i/ spectra: with harmonics every 173&nbsp;Hz instead of every 111&nbsp;Hz, the same envelope is <em>sampled</em> more sparsely, so its shape
+    is harder to see. Most women's voices (roughly 165&ndash;255&nbsp;Hz) and children's voices (higher still) make this worse. This is a real, practical difficulty
+    (formant estimation is harder for high-pitched voices), and a direct consequence of &ldquo;comb &times; envelope&rdquo;; Figure&nbsp;8 below shows it for a 220&nbsp;Hz voice.
+  </p>
+
+  <div class="card" style="margin-top:26px;">
+    <h4>A caveat, stated once</h4>
+    <p style="font-size:0.9rem;margin:0;">
+      The model is an approximation. The vocal folds and the tract are not perfectly independent: the tract's air loads the folds (source&ndash;tract interaction),
+      the nose adds anti-resonances in nasals, and the tract changes shape <em>during</em> each pitch period. For most purposes, and for everything on this page,
+      treating source and filter as separate works remarkably well. That is why the model has been the backbone of speech technology for sixty years.
+    </p>
+  </div>
+
+  <p style="margin-top:18px;">Now let's open up the two boxes, starting with the source.</p>
+</section>
+
+<!-- ============================================================ 5. THE SOURCE -->
+<section id="source">
+  <div class="kicker">05 &middot; The source up close</div>
+  <h2>The vocal folds: a tapper made of muscle.</h2>
+  <p>
+    Inside your larynx (the &ldquo;Adam's apple&rdquo;), two small folds of tissue stretch across the airway from front to back:
+    about 1.5&ndash;2&nbsp;cm long in adult men, 1.2&ndash;1.5&nbsp;cm in women. The gap between them is the <strong>glottis</strong>.
+    When you breathe, the folds are held wide apart. When you speak a voiced sound, muscles bring them together, and the air from your
+    lungs does the rest.
+  </p>
+  <figure>
+    <div class="frame" style="max-width:640px;margin:0 auto;"><img src="source_filter/fig/vocal_tract_sketch.svg?v=2" alt="Side view of the head and neck. The vocal tract, the air space from the vocal folds in the throat up through the pharynx and mouth to the lips, is shaded blue; the nasal cavity above the palate is outlined with a dashed line; tongue, lips and vocal folds are labelled" loading="lazy" style="width:100%;display:block;"></div>
+    <figcaption><b>Figure 3.</b> Where the source and the filter sit. The <b>vocal folds</b> are low in the throat, at the top of the windpipe. Air from the lungs passes between them.
+    Everything above them, up through the throat and the mouth to the lips, is the <b>vocal tract</b> (shaded blue): the filter. The tongue and lips change its shape; the nasal cavity
+    joins in when the soft palate lowers. The animation below zooms in on the folds, seen from the front.</figcaption>
+  </figure>
+
+  <h3>One cycle, four moments</h3>
+  <div class="grid2" style="grid-template-columns:repeat(4,1fr);">
+    <div class="card"><h4>① Closed</h4><p style="font-size:0.86rem;margin:0;">The folds touch. Air from the lungs can't get through, so pressure builds up underneath them.</p></div>
+    <div class="card"><h4>② Blown open</h4><p style="font-size:0.86rem;margin:0;">The pressure pushes the folds apart, bottom edge first. A puff of air squeezes through the gap.</p></div>
+    <div class="card"><h4>③ Sucked shut</h4><p style="font-size:0.86rem;margin:0;">Fast air in a narrow gap has low pressure (Bernoulli), and the stretched tissue springs back. The folds snap together.</p></div>
+    <div class="card"><h4>④ The tap</h4><p style="font-size:0.86rem;margin:0;">The airflow is cut off abruptly. That sudden stop sends a sharp pressure kick up into the vocal tract, which rings. Back to ①.</p></div>
+  </div>
+  <style>@media (max-width: 760px) { #source .grid2[style] { grid-template-columns: 1fr 1fr !important; } }</style>
+  <p style="margin-top:16px;">
+    Nothing in your brain fires once per cycle. Muscles set the folds' tension and position, and the oscillation then runs itself on air pressure and elasticity,
+    the same way a flag flaps in the wind or your lips buzz when you blow a raspberry (or play a trumpet). This is the <em>myoelastic&ndash;aerodynamic</em> theory of voicing.
+    Tighter, thinner folds vibrate faster, giving a higher pitch.
+  </p>
+
+  <div class="card" style="margin-top:18px;">
+    <canvas id="vfCanvas" class="plot" height="340" aria-label="Animated cross-section of the vocal folds with synchronised plots of glottal airflow, its derivative and the idealised impulse train"></canvas>
+    <div class="ctlrow" style="margin-top:10px;">
+      <label for="vfF0">Real pitch \(F_0\): <span class="valpill" id="vfF0v"></span></label>
+      <input type="range" id="vfF0" min="70" max="300" value="120" style="flex:1;min-width:160px;">
+      <button id="vfPause">❚❚ Pause</button>
+    </div>
+    <div class="ctlrow">
+      <span id="vfSlow" style="flex:1;"></span>
+      <button id="vfHearRaw">▶ Hear this source (real speed)</button>
+      <button id="vfHearA">▶ Through an /ɑ/ tract</button>
+    </div>
+  </div>
+  <p style="font-size:0.9rem;color:var(--muted);">
+    The animation is slowed down more than a hundred times. Watch the three traces on the right. The <span style="color:var(--accent)">airflow</span> rises gently as the folds open
+    but falls off a cliff when they close. Its <span style="color:var(--accent-2)">rate of change</span> is therefore small during opening and a big, sharp negative spike at closure.
+    That spike is the kick that excites the tract, and the <span style="color:var(--accent-3)">impulse train</span> keeps just that: one impulse per closure.
+  </p>
+
+  <div class="keyidea">
+    The vocal tract is excited mainly at the instant of <strong>glottal closure</strong>, once per cycle. So the simplest useful model of voiced excitation is a train of impulses,
+    one every \(T_0 = 1/F_0\) seconds:&nbsp; \(e[n] = \sum_k \delta[n - kP]\), with \(P = f_s/F_0\) samples.
+    Each impulse makes the tract ring with its impulse response, exactly like the tapped slab.
+  </div>
+
+  <h3>Can we see the taps in real speech?</h3>
+  <p>Yes, if we zoom in far enough. Here are 50&nbsp;ms from the middle of the vowel in &ldquo;dark&rdquo; (from &ldquo;Ah, it is growing dark and darker&rdquo;), spoken by ksp.</p>
+  <figure>
+    <div class="frame"><img src="source_filter/fig/02_glottal_pulses.png?v=3" alt="50 ms of the vowel in dark with glottal closure instants marked, and five periods overlaid" loading="lazy"></div>
+    <figcaption><b>Figure 4.</b> <b>Left:</b> the waveform repeats every <b>8.4&nbsp;ms</b> (\(F_0 \approx 119\)&nbsp;Hz). Each period begins with a sharp kick at glottal closure (▼, located automatically,
+    with the method explained in the AR section). <b>Right:</b> cut the signal at each closure and overlay the periods. They nearly coincide: each is the vocal tract's
+    <em>impulse response</em>, a kick followed by decaying ringing, restarted by the next tap before it has fully died away.</figcaption>
+  </figure>
+  <figure>
+    <div class="frame"><img src="source_filter/fig/03_striations.png?v=3" alt="Waveform and wideband spectrogram of the word dark showing vertical striations, one per glottal pulse" loading="lazy"></div>
+    <figcaption><b>Figure 5.</b> The whole word &ldquo;dark&rdquo;, analysed with a very short (4&nbsp;ms) window. The vowel region is a picket fence of <b>vertical stripes</b>, one per glottal
+    closure: each tap briefly lights up all frequencies (an impulse is broadband) and the formant regions ring on longest. Count the stripes: about 17 in the 140&nbsp;ms vowel, i.e. ~120 taps per second.
+    Compare the <b>d</b> and <b>k</b> releases: a single broadband stripe each, one impulse, not a train. (The faint striped band at the bottom during the <b>d</b> closure is voicing that
+    this speaker keeps going while the tongue blocks the airflow, a &ldquo;voice bar&rdquo;; the phone labels are automatic and approximate.)</figcaption>
+  </figure>
+  <div class="players">
+    <div class="player">“dark” (ksp)<audio controls preload="none" src="source_filter/audio/ksp_dark.wav?v=3"></audio></div>
+  </div>
+
+  <h3>An impulse train in time is a comb in frequency</h3>
+  <p>
+    Why does a periodic source produce <em>harmonics</em>? Any signal that repeats every \(T_0\) seconds can be written as a Fourier series, a sum of
+    sinusoids at \(F_0, 2F_0, 3F_0, \dots\) and nothing in between. For an impulse train the answer is especially clean: <em>every</em> harmonic has the <em>same</em> strength,
+  </p>
+  <div class="eq">
+    $$e(t) = \sum_k \delta(t - kT_0) \;\longleftrightarrow\; E(f) = F_0 \sum_k \delta(f - kF_0), \qquad F_0 = 1/T_0$$
+  </div>
+  <p>
+    An impulse train in time is an impulse train in frequency, with reciprocal spacing: pulses <em>far apart</em> in time (low voice) give harmonics <em>close together</em> in frequency,
+    and vice versa. A flat comb is the ideal source for a filter to act on. Every frequency the tract might want to emphasise is available, in equal measure, on the harmonic grid.
+  </p>
+
+  <div class="card">
+    <div class="ctlrow">
+      <label for="itF0">\(F_0\): <span class="valpill" id="itF0v"></span></label>
+      <input type="range" id="itF0" min="60" max="400" value="120" style="flex:1;min-width:160px;">
+      <span class="seg" id="itType"><button data-t="imp" class="on">ideal impulses</button><button data-t="glot">realistic glottal pulses</button></span>
+      <button id="itPlay">▶ Hear it</button>
+    </div>
+    <div class="grid2" style="gap:12px;">
+      <div><div class="plotlabel">Time: first 40 ms</div><canvas class="plot" id="itWave" height="150"></canvas></div>
+      <div><div class="plotlabel">Spectrum, 0&ndash;4 kHz <span id="itGuide" style="display:none;">&nbsp;<span style="color:var(--accent-2)">- - -</span> &minus;12 dB/octave</span></div><canvas class="plot" id="itSpec" height="150"></canvas></div>
+    </div>
+    <p id="itNote" style="font-size:0.88rem;color:var(--muted);margin:10px 0 0;"></p>
+  </div>
+
+  <h4 style="margin-top:22px;">Refinement: real glottal pulses are smooth</h4>
+  <p>
+    Real folds don't produce infinitely sharp impulses. The airflow through the glottis is a smooth, lopsided hump each cycle (switch the explorer to <em>realistic glottal pulses</em>).
+    Its harmonics fall off at about <strong>&minus;12&nbsp;dB per octave</strong>: still a comb at exactly the same frequencies, just tilted. We don't need a new model for this.
+    A smooth pulse train is an impulse train passed through a smoothing filter \(G(f)\):
+  </p>
+  <div class="eq">$$\text{glottal flow} = \text{impulse train} \ast g[n] \quad\Longrightarrow\quad S(f) = E(f)\,G(f)\,V(f)\,R(f)$$
+    <span style="font-family:Inter,sans-serif;font-size:0.82rem;color:var(--muted);">\(E\) = flat comb (pitch) · \(G\) = glottal pulse shape (\(\approx -12\) dB/oct) · \(V\) = vocal tract (formants) · \(R\) = lip radiation (\(\approx +6\) dB/oct)</span></div>
+  <p>
+    Since \(G\), \(V\) and \(R\) are all filters, they can be lumped together into one overall filter driven by a flat impulse train. That keeps the source as
+    simple as possible (just <em>where</em> the impulses are), and it is exactly what the AR model later on will do. The leftover net tilt of about &minus;6&nbsp;dB/octave is why
+    speech is usually <em>pre-emphasised</em> (high frequencies boosted slightly) before AR analysis.
+  </p>
+  <p>
+    Pulse <em>shape</em> also carries voice quality. Folds that close gently and incompletely give smooth pulses and a breathy voice. Folds that slam shut give sharp
+    closures, stronger high harmonics and a pressed, tense voice.
+  </p>
+  <p>
+    And the tapping rate is not constant. \(F_0\) rises and falls through every sentence: that is intonation (a question rises at the end, a statement falls). The model
+    handles this simply by letting \(T_0\) change from one short frame (~20&ndash;30&nbsp;ms) to the next.
+  </p>
+
+  <h3>Not every sound is tapped: noise sources</h3>
+  <p>
+    If the folds are held apart and air is forced through a <em>narrow constriction</em> instead, the flow becomes turbulent: a random, hissing pressure fluctuation with no period at all.
+    That is the second kind of source in the model: <strong>noise</strong>. It can arise at the glottis itself (/h/, whispering) or further forward, where the tongue or lips narrow
+    the tract (/s/, /ʃ/, /f/). Voiced fricatives such as /z/ and /v/ run both sources at once.
+  </p>
+  <figure>
+    <div class="frame"><img src="source_filter/fig/04_source_types.png?v=3" alt="Waveforms and spectra of a voiced vowel in dark, an unvoiced s in place and a voiced z in easily" loading="lazy"></div>
+    <figcaption><b>Figure 6.</b> Three sources, one speaker (ksp). <b>/ɑ/</b> in &ldquo;dark&rdquo;: a periodic waveform and a harmonic comb. <b>/s/</b> in &ldquo;place&rdquo;: random-looking waveform, continuous spectrum with no lines,
+    about 99&nbsp;% of the energy above 3.5&nbsp;kHz (the noise is made near the teeth, so only the short cavity in front of it shapes it). <b>/z/</b> in &ldquo;easily&rdquo;: frication noise riding on a slow voicing ripple.
+    Low-pass it (black trace) and the ~8.5&nbsp;ms periodicity of the folds shows through.</figcaption>
+  </figure>
+  <div class="players">
+    <div class="player">/ɑ/ (voiced)<audio controls preload="none" src="source_filter/audio/ksp_aa_token.wav?v=3"></audio></div>
+    <div class="player">/s/ (unvoiced)<audio controls preload="none" src="source_filter/audio/ksp_s_token.wav?v=3"></audio></div>
+    <div class="player">/z/ (both)<audio controls preload="none" src="source_filter/audio/ksp_z_token.wav?v=3"></audio></div>
+  </div>
+  <p style="font-size:0.85rem;color:var(--muted);">Isolated phone segments cut straight from ksp's sentences at the (automatic) phone boundaries: they sound clipped out of context, which is part of the point. Real speech is continuous.</p>
+
+  <div class="card" style="overflow-x:auto;">
+    <table style="border-collapse:collapse;width:100%;font-size:0.88rem;">
+      <thead><tr style="text-align:left;">
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Sounds</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Source</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Where it is generated</th></tr></thead>
+      <tbody>
+        <tr><td style="padding:6px 8px;">vowels, /m n ŋ/, /l r w j/</td><td style="padding:6px 8px;">periodic (impulse train)</td><td style="padding:6px 8px;">glottis</td></tr>
+        <tr><td style="padding:6px 8px;">/h/, whispered speech</td><td style="padding:6px 8px;">noise (aspiration)</td><td style="padding:6px 8px;">glottis</td></tr>
+        <tr><td style="padding:6px 8px;">/s ʃ f θ/</td><td style="padding:6px 8px;">noise (frication)</td><td style="padding:6px 8px;">a narrow constriction in the mouth</td></tr>
+        <tr><td style="padding:6px 8px;">/z ʒ v ð/</td><td style="padding:6px 8px;">periodic + noise</td><td style="padding:6px 8px;">glottis and constriction together</td></tr>
+        <tr><td style="padding:6px 8px;">/p t k/ (and /b d g/)</td><td style="padding:6px 8px;">silence, then a single burst (one impulse!)</td><td style="padding:6px 8px;">release of a complete closure</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="keyidea">
+    Per short frame, the whole source is described by just <strong>three numbers</strong>: <em>voiced or unvoiced</em>, the <em>pitch period \(T_0\)</em> (if voiced), and a <em>gain</em>.
+    Everything else (the vowel, the consonant place, most of the speaker's timbre) lives in the filter. This split is so economical that the classic LPC-10 vocoder
+    (US standard FS-1015, 1984) sent intelligible speech at 2.4&nbsp;kbit/s by transmitting just these three numbers plus about ten filter coefficients per frame.
+  </div>
+
+  <p style="margin-top:18px;">We know what kicks the tract. Next: why it rings where it does.</p>
+</section>
+
+<!-- ============================================================ 6. THE FILTER: RESONANCE & FORMANTS -->
+<section id="filter">
+  <div class="kicker">06 &middot; The filter: resonance and formants</div>
+  <h2>Why things ring where they ring.</h2>
+  <p>
+    Every slab in section 01 rang at its own set of frequencies, and the vocal tract does too. To see where those frequencies come from,
+    start with the simplest thing that can ring: a weight hanging on a spring.
+  </p>
+
+  <h3>A mass on a spring</h3>
+  <p>
+    Pull the mass down and let go: it bobs up and down at one particular rate, its <strong>natural frequency</strong>. The spring pulls it back, its inertia
+    carries it past the middle, and so on. A stiffer spring pulls harder, so it bobs faster. A heavier mass is more sluggish, so it bobs slower:
+  </p>
+  <div class="eq">$$f_n = \frac{1}{2\pi}\sqrt{\frac{k}{m}}$$<span style="font-family:Inter,sans-serif;font-size:0.82rem;color:var(--muted);">\(k\) = spring stiffness, \(m\) = mass: the same two quantities (stiffness and density) that set the slabs' pitch</span></div>
+  <p>
+    Friction (<strong>damping</strong>) makes the bobbing die away. Now do what a child's swing teaches everyone: instead of one pull, <em>keep pushing</em>
+    it rhythmically, by moving the top of the spring up and down. Try it below. Change how fast you shake it and watch how far the mass swings.
+  </p>
+
+  <div class="card">
+    <canvas id="smCanvas" class="plot" height="300" aria-label="A mass on a spring driven from above, its motion over time, and its resonance curve"></canvas>
+    <div class="ctlrow" style="margin-top:10px;">
+      <label for="smRate">Shaking rate: <span class="valpill" id="smRateV"></span></label>
+      <input type="range" id="smRate" min="20" max="250" value="60" style="flex:1;min-width:160px;">
+    </div>
+    <div class="ctlrow">
+      <span>Damping:</span>
+      <span class="seg" id="smDamp"><button data-z="0.04" class="on">light</button><button data-z="0.12">medium</button><button data-z="0.35">heavy</button></span>
+      <button id="smDrive">Stop shaking</button>
+      <button id="smKick">Kick it once</button>
+    </div>
+    <p id="smNote" style="font-size:0.88rem;color:var(--muted);margin:8px 0 0;"></p>
+  </div>
+
+  <p style="margin-top:18px;">What you should find:</p>
+  <ul>
+    <li><strong>Shake slowly</strong> and the mass just follows your hand. <strong>Shake fast</strong> and it barely moves: it can't keep up.</li>
+    <li><strong>Shake at the natural frequency</strong> and each push arrives exactly in step with the motion, adding to it. The swing grows many times larger
+      than your hand's movement. This is <strong>resonance</strong>. (It is how a singer can shatter a wine glass, and why soldiers break step on bridges.)</li>
+    <li>With <strong>light damping</strong> the resonance peak is tall and narrow: you have to hit the rate precisely, but then the response is huge. With <strong>heavy damping</strong> it is low and broad.</li>
+    <li><strong>Kick it once</strong> (with the shaking stopped) and it rings at its natural frequency, dying away at a rate set by the damping. That decaying ring is its <em>impulse response</em>.</li>
+  </ul>
+
+  <div class="keyidea">
+    A resonator has two equivalent descriptions, a Fourier pair. <strong>In time</strong>, its impulse response is a <em>decaying sinusoid</em> at the natural frequency.
+    <strong>In frequency</strong>, its frequency response (the resonance curve) is a <em>peak</em> at the natural frequency. How fast the ring decays sets how wide the peak is:
+    long ring, sharp peak (steel); short ring, broad peak (wood). The width is called the <strong>bandwidth</strong>, and
+    \(\text{bandwidth} \approx 1/(\pi \tau)\), where \(\tau\) is the time for the ring to decay by a factor of \(e\).
+  </div>
+  <p>
+    Keep that formula in mind for a moment. A typical vocal-tract resonance has a bandwidth of 50&ndash;150&nbsp;Hz, which means it rings for only
+    \(\tau \approx 2\text{--}6\)&nbsp;ms. That is exactly what Figure 4 showed: each glottal kick rings and has largely died away before the next one, about 8&nbsp;ms later.
+  </p>
+
+  <h3>Air is a spring, too</h3>
+  <p>
+    A column of air has both ingredients of a resonator. It has <em>mass</em> (air is light, but not weightless) and it is <em>springy</em> (squeeze it and it pushes back).
+    So an air-filled tube resonates, and that is how every wind instrument works. Blow across the top of a bottle and you hear its resonance. Pour in some
+    water to shorten the air column and the note goes up. Your vocal tract is a bent tube of air about 17&nbsp;cm long, so it has resonances too, and
+    <strong>those resonances are the formants</strong>.
+  </p>
+
+  <h3>The vocal tract as a tube, one step at a time</h3>
+  <p>
+    Why should a 17&nbsp;cm tube ring at 500, 1500 and 2500&nbsp;Hz, and not at any other frequencies? We'll build the answer in small steps, starting from bathtime,
+    and let the formula fall out of a picture at the end.
+  </p>
+
+  <h4>Step 1 · Air in a tube sloshes, like water in a bathtub</h4>
+  <p>
+    Sit in a bathtub and rock back and forth. If you rock at just the right speed, the water sloshes higher and higher, and it slops over the edge. Rock at any
+    other speed and the waves stay small and messy. The tub has its own favourite sloshing rhythm, set by its <em>size</em>: a small basin sloshes quickly, a big tub slowly.
+  </p>
+  <p>
+    The air inside a tube behaves the same way. It can slosh back and forth along the tube, and it has its own favourite rhythms, again set by the tube's size.
+    For a tube the size of your vocal tract, those rhythms are hundreds of times a second: they are audible <em>tones</em>. Blow across a bottle and you hear one
+    of them. <strong>Those favourite rhythms are the resonances, the formants.</strong> The only question is: which rhythms does a tube like best?
+  </p>
+
+  <h4>Step 2 · The two ends set the rules</h4>
+  <p>The answer depends entirely on what happens at the two ends of the tube. Our tube has two very different ends:</p>
+  <div class="grid2">
+    <div class="card"><h4>The glottis end is closed: a wall</h4>
+      <p style="font-size:0.9rem;margin:0;">The vocal folds are shut for part of every cycle, and even when open the gap between them is tiny compared with the tube, so the bottom of the tube acts like a wall. Air pressed against a wall <strong>can't move</strong> back and forth: there is nowhere to go.
+      <br><em>Rule 1: the air right at the glottis stays still.</em></p></div>
+    <div class="card"><h4>The lips end is open: free</h4>
+      <p style="font-size:0.9rem;margin:0;">At the open mouth nothing holds the air back, so it can swing in and out <strong>more freely than anywhere else</strong> in the tube.
+      <br><em>Rule 2: the air at the lips moves the most.</em></p></div>
+  </div>
+  <div class="intuition">
+    Picture a line of children holding hands down a corridor that has a wall at one end and an open door at the other. The child with their back against the wall can't sway
+    at all. The one at the open door can swing the furthest. Everyone in between sways a little more the closer they are to the door. The air in the tube follows the same rules.
+  </div>
+
+  <h4>Step 3 · Which wave shapes obey both rules?</h4>
+  <p>
+    When the air sloshes at a steady rhythm, the amount it swings changes smoothly along the tube in the shape of a wave. So we ask: <strong>what piece of a wave starts at
+    zero (still, at the glottis) and ends at its biggest swing (at the lips)?</strong> Try the simplest pieces one by one. The curve in each tube below shows how far the air swings at each point.
+  </p>
+  <figure>
+    <div class="card diagram" style="padding:12px;">
+      <svg viewBox="0 0 760 380" role="img" aria-label="Which wave patterns fit a tube closed at the glottis and open at the lips: a quarter, three quarters and five quarters of a wave fit; a half and a whole wave do not">
+<text x="10" y="44" font-size="13" font-weight="600" fill="var(--ink)">¼ wave</text>
+<text x="10" y="60" font-size="10.5" fill="var(--muted)">in the tube</text>
+<rect x="150" y="18" width="410" height="44" fill="var(--surface-2)"/>
+<path d="M560,18 L150,18 L150,62 L560,62" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+<polyline points="150.0,40.0 152.1,39.9 154.1,39.7 156.2,39.6 158.2,39.4 160.2,39.3 162.3,39.2 164.3,39.0 166.4,38.9 168.4,38.7 170.5,38.6 172.6,38.4 174.6,38.3 176.7,38.2 178.7,38.0 180.8,37.9 182.8,37.7 184.8,37.6 186.9,37.5 188.9,37.3 191.0,37.2 193.1,37.0 195.1,36.9 197.2,36.8 199.2,36.6 201.2,36.5 203.3,36.3 205.3,36.2 207.4,36.1 209.4,35.9 211.5,35.8 213.6,35.7 215.6,35.5 217.7,35.4 219.7,35.3 221.8,35.1 223.8,35.0 225.8,34.8 227.9,34.7 229.9,34.6 232.0,34.4 234.1,34.3 236.1,34.2 238.2,34.0 240.2,33.9 242.2,33.8 244.3,33.6 246.3,33.5 248.4,33.4 250.4,33.2 252.5,33.1 254.6,33.0 256.6,32.9 258.6,32.7 260.7,32.6 262.8,32.5 264.8,32.3 266.9,32.2 268.9,32.1 270.9,32.0 273.0,31.8 275.1,31.7 277.1,31.6 279.1,31.5 281.2,31.3 283.2,31.2 285.3,31.1 287.4,31.0 289.4,30.8 291.4,30.7 293.5,30.6 295.5,30.5 297.6,30.4 299.6,30.2 301.7,30.1 303.8,30.0 305.8,29.9 307.9,29.8 309.9,29.6 312.0,29.5 314.0,29.4 316.1,29.3 318.1,29.2 320.1,29.1 322.2,29.0 324.2,28.9 326.3,28.7 328.4,28.6 330.4,28.5 332.4,28.4 334.5,28.3 336.6,28.2 338.6,28.1 340.6,28.0 342.7,27.9 344.8,27.8 346.8,27.7 348.9,27.6 350.9,27.5 352.9,27.4 355.0,27.3 357.1,27.2 359.1,27.1 361.1,27.0 363.2,26.9 365.2,26.8 367.3,26.7 369.4,26.6 371.4,26.5 373.5,26.4 375.5,26.3 377.6,26.2 379.6,26.1 381.6,26.0 383.7,26.0 385.8,25.9 387.8,25.8 389.9,25.7 391.9,25.6 393.9,25.5 396.0,25.4 398.0,25.4 400.1,25.3 402.1,25.2 404.2,25.1 406.2,25.0 408.3,25.0 410.4,24.9 412.4,24.8 414.4,24.7 416.5,24.7 418.6,24.6 420.6,24.5 422.7,24.4 424.7,24.4 426.8,24.3 428.8,24.2 430.9,24.2 432.9,24.1 434.9,24.0 437.0,24.0 439.1,23.9 441.1,23.8 443.1,23.8 445.2,23.7 447.2,23.7 449.3,23.6 451.4,23.5 453.4,23.5 455.4,23.4 457.5,23.4 459.6,23.3 461.6,23.3 463.6,23.2 465.7,23.2 467.8,23.1 469.8,23.1 471.9,23.0 473.9,23.0 475.9,22.9 478.0,22.9 480.1,22.8 482.1,22.8 484.1,22.8 486.2,22.7 488.2,22.7 490.3,22.6 492.3,22.6 494.4,22.6 496.4,22.5 498.5,22.5 500.6,22.5 502.6,22.4 504.6,22.4 506.7,22.4 508.8,22.3 510.8,22.3 512.9,22.3 514.9,22.3 517.0,22.2 519.0,22.2 521.0,22.2 523.1,22.2 525.2,22.2 527.2,22.1 529.2,22.1 531.3,22.1 533.4,22.1 535.4,22.1 537.5,22.1 539.5,22.1 541.5,22.0 543.6,22.0 545.6,22.0 547.7,22.0 549.8,22.0 551.8,22.0 553.9,22.0 555.9,22.0 558.0,22.0 560.0,22.0" fill="none" stroke="var(--teal)" stroke-width="2.5"/>
+<circle cx="150" cy="40" r="4" fill="var(--ink)"/>
+<circle cx="560" cy="22.0" r="5" fill="var(--teal)"/>
+<text x="574" y="45" font-size="20" font-weight="700" fill="var(--teal)">✓</text>
+<text x="596" y="41" font-size="11" fill="var(--ink-soft)">air moves most at the open lips</text>
+<text x="596" y="55" font-size="11" fill="var(--teal)" font-weight="600">fits</text>
+<text x="10" y="118" font-size="13" font-weight="600" fill="var(--ink)">½ wave</text>
+<text x="10" y="134" font-size="10.5" fill="var(--muted)">in the tube</text>
+<rect x="150" y="92" width="410" height="44" fill="var(--surface-2)"/>
+<path d="M560,92 L150,92 L150,136 L560,136" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+<polyline points="150.0,114.0 152.1,113.7 154.1,113.4 156.2,113.2 158.2,112.9 160.2,112.6 162.3,112.3 164.3,112.0 166.4,111.7 168.4,111.5 170.5,111.2 172.6,110.9 174.6,110.6 176.7,110.3 178.7,110.1 180.8,109.8 182.8,109.5 184.8,109.3 186.9,109.0 188.9,108.7 191.0,108.4 193.1,108.2 195.1,107.9 197.2,107.6 199.2,107.4 201.2,107.1 203.3,106.9 205.3,106.6 207.4,106.3 209.4,106.1 211.5,105.8 213.6,105.6 215.6,105.3 217.7,105.1 219.7,104.8 221.8,104.6 223.8,104.4 225.8,104.1 227.9,103.9 229.9,103.6 232.0,103.4 234.1,103.2 236.1,103.0 238.2,102.7 240.2,102.5 242.2,102.3 244.3,102.1 246.3,101.9 248.4,101.7 250.4,101.5 252.5,101.3 254.6,101.1 256.6,100.9 258.6,100.7 260.7,100.5 262.8,100.3 264.8,100.1 266.9,100.0 268.9,99.8 270.9,99.6 273.0,99.4 275.1,99.3 277.1,99.1 279.1,99.0 281.2,98.8 283.2,98.7 285.3,98.5 287.4,98.4 289.4,98.2 291.4,98.1 293.5,98.0 295.5,97.8 297.6,97.7 299.6,97.6 301.7,97.5 303.8,97.4 305.8,97.3 307.9,97.2 309.9,97.1 312.0,97.0 314.0,96.9 316.1,96.8 318.1,96.7 320.1,96.6 322.2,96.6 324.2,96.5 326.3,96.4 328.4,96.4 330.4,96.3 332.4,96.3 334.5,96.2 336.6,96.2 338.6,96.1 340.6,96.1 342.7,96.1 344.8,96.1 346.8,96.0 348.9,96.0 350.9,96.0 352.9,96.0 355.0,96.0 357.1,96.0 359.1,96.0 361.1,96.0 363.2,96.0 365.2,96.1 367.3,96.1 369.4,96.1 371.4,96.1 373.5,96.2 375.5,96.2 377.6,96.3 379.6,96.3 381.6,96.4 383.7,96.4 385.8,96.5 387.8,96.6 389.9,96.6 391.9,96.7 393.9,96.8 396.0,96.9 398.0,97.0 400.1,97.1 402.1,97.2 404.2,97.3 406.2,97.4 408.3,97.5 410.4,97.6 412.4,97.7 414.4,97.8 416.5,98.0 418.6,98.1 420.6,98.2 422.7,98.4 424.7,98.5 426.8,98.7 428.8,98.8 430.9,99.0 432.9,99.1 434.9,99.3 437.0,99.4 439.1,99.6 441.1,99.8 443.1,100.0 445.2,100.1 447.2,100.3 449.3,100.5 451.4,100.7 453.4,100.9 455.4,101.1 457.5,101.3 459.6,101.5 461.6,101.7 463.6,101.9 465.7,102.1 467.8,102.3 469.8,102.5 471.9,102.7 473.9,103.0 475.9,103.2 478.0,103.4 480.1,103.6 482.1,103.9 484.1,104.1 486.2,104.4 488.2,104.6 490.3,104.8 492.3,105.1 494.4,105.3 496.4,105.6 498.5,105.8 500.6,106.1 502.6,106.3 504.6,106.6 506.7,106.9 508.8,107.1 510.8,107.4 512.9,107.6 514.9,107.9 517.0,108.2 519.0,108.4 521.0,108.7 523.1,109.0 525.2,109.3 527.2,109.5 529.2,109.8 531.3,110.1 533.4,110.3 535.4,110.6 537.5,110.9 539.5,111.2 541.5,111.5 543.6,111.7 545.6,112.0 547.7,112.3 549.8,112.6 551.8,112.9 553.9,113.2 555.9,113.4 558.0,113.7 560.0,114.0" fill="none" stroke="var(--accent-2)" stroke-width="2.5"/>
+<circle cx="150" cy="114" r="4" fill="var(--ink)"/>
+<circle cx="560" cy="114.0" r="5" fill="var(--accent-2)"/>
+<text x="574" y="119" font-size="20" font-weight="700" fill="var(--accent-2)">✗</text>
+<text x="596" y="115" font-size="11" fill="var(--ink-soft)">air stuck still at the lips</text>
+<text x="596" y="129" font-size="11" fill="var(--accent-2)" font-weight="600">would need closed lips</text>
+<text x="10" y="192" font-size="13" font-weight="600" fill="var(--ink)">¾ wave</text>
+<text x="10" y="208" font-size="10.5" fill="var(--muted)">in the tube</text>
+<rect x="150" y="166" width="410" height="44" fill="var(--surface-2)"/>
+<path d="M560,166 L150,166 L150,210 L560,210" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+<polyline points="150.0,188.0 152.1,187.6 154.1,187.2 156.2,186.7 158.2,186.3 160.2,185.9 162.3,185.5 164.3,185.0 166.4,184.6 168.4,184.2 170.5,183.8 172.6,183.4 174.6,183.0 176.7,182.6 178.7,182.2 180.8,181.8 182.8,181.4 184.8,181.0 186.9,180.6 188.9,180.2 191.0,179.8 193.1,179.5 195.1,179.1 197.2,178.7 199.2,178.4 201.2,178.0 203.3,177.6 205.3,177.3 207.4,177.0 209.4,176.6 211.5,176.3 213.6,176.0 215.6,175.7 217.7,175.4 219.7,175.1 221.8,174.8 223.8,174.5 225.8,174.2 227.9,174.0 229.9,173.7 232.0,173.4 234.1,173.2 236.1,173.0 238.2,172.7 240.2,172.5 242.2,172.3 244.3,172.1 246.3,171.9 248.4,171.7 250.4,171.5 252.5,171.4 254.6,171.2 256.6,171.1 258.6,170.9 260.7,170.8 262.8,170.7 264.8,170.6 266.9,170.5 268.9,170.4 270.9,170.3 273.0,170.2 275.1,170.2 277.1,170.1 279.1,170.1 281.2,170.0 283.2,170.0 285.3,170.0 287.4,170.0 289.4,170.0 291.4,170.0 293.5,170.1 295.5,170.1 297.6,170.1 299.6,170.2 301.7,170.3 303.8,170.3 305.8,170.4 307.9,170.5 309.9,170.6 312.0,170.8 314.0,170.9 316.1,171.0 318.1,171.2 320.1,171.3 322.2,171.5 324.2,171.7 326.3,171.8 328.4,172.0 330.4,172.2 332.4,172.4 334.5,172.7 336.6,172.9 338.6,173.1 340.6,173.4 342.7,173.6 344.8,173.9 346.8,174.1 348.9,174.4 350.9,174.7 352.9,175.0 355.0,175.3 357.1,175.6 359.1,175.9 361.1,176.2 363.2,176.5 365.2,176.9 367.3,177.2 369.4,177.5 371.4,177.9 373.5,178.2 375.5,178.6 377.6,179.0 379.6,179.3 381.6,179.7 383.7,180.1 385.8,180.5 387.8,180.9 389.9,181.2 391.9,181.6 393.9,182.0 396.0,182.4 398.0,182.8 400.1,183.3 402.1,183.7 404.2,184.1 406.2,184.5 408.3,184.9 410.4,185.3 412.4,185.7 414.4,186.2 416.5,186.6 418.6,187.0 420.6,187.4 422.7,187.9 424.7,188.3 426.8,188.7 428.8,189.1 430.9,189.6 432.9,190.0 434.9,190.4 437.0,190.8 439.1,191.2 441.1,191.7 443.1,192.1 445.2,192.5 447.2,192.9 449.3,193.3 451.4,193.7 453.4,194.1 455.4,194.5 457.5,194.9 459.6,195.3 461.6,195.7 463.6,196.0 465.7,196.4 467.8,196.8 469.8,197.2 471.9,197.5 473.9,197.9 475.9,198.2 478.0,198.6 480.1,198.9 482.1,199.3 484.1,199.6 486.2,199.9 488.2,200.2 490.3,200.5 492.3,200.8 494.4,201.1 496.4,201.4 498.5,201.7 500.6,202.0 502.6,202.2 504.6,202.5 506.7,202.7 508.8,203.0 510.8,203.2 512.9,203.4 514.9,203.6 517.0,203.8 519.0,204.0 521.0,204.2 523.1,204.4 525.2,204.6 527.2,204.7 529.2,204.9 531.3,205.0 533.4,205.2 535.4,205.3 537.5,205.4 539.5,205.5 541.5,205.6 543.6,205.7 545.6,205.8 547.7,205.8 549.8,205.9 551.8,205.9 553.9,206.0 555.9,206.0 558.0,206.0 560.0,206.0" fill="none" stroke="var(--teal)" stroke-width="2.5"/>
+<circle cx="150" cy="188" r="4" fill="var(--ink)"/>
+<circle cx="560" cy="206.0" r="5" fill="var(--teal)"/>
+<text x="574" y="193" font-size="20" font-weight="700" fill="var(--teal)">✓</text>
+<text x="596" y="189" font-size="11" fill="var(--ink-soft)">air moves most at the open lips</text>
+<text x="596" y="203" font-size="11" fill="var(--teal)" font-weight="600">fits</text>
+<text x="10" y="266" font-size="13" font-weight="600" fill="var(--ink)">1 whole wave</text>
+<text x="10" y="282" font-size="10.5" fill="var(--muted)">in the tube</text>
+<rect x="150" y="240" width="410" height="44" fill="var(--surface-2)"/>
+<path d="M560,240 L150,240 L150,284 L560,284" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+<polyline points="150.0,262.0 152.1,261.4 154.1,260.9 156.2,260.3 158.2,259.7 160.2,259.2 162.3,258.6 164.3,258.1 166.4,257.5 168.4,257.0 170.5,256.4 172.6,255.9 174.6,255.4 176.7,254.9 178.7,254.3 180.8,253.8 182.8,253.3 184.8,252.8 186.9,252.4 188.9,251.9 191.0,251.4 193.1,251.0 195.1,250.5 197.2,250.1 199.2,249.7 201.2,249.3 203.3,248.9 205.3,248.5 207.4,248.1 209.4,247.8 211.5,247.4 213.6,247.1 215.6,246.8 217.7,246.5 219.7,246.2 221.8,246.0 223.8,245.7 225.8,245.5 227.9,245.3 229.9,245.1 232.0,244.9 234.1,244.7 236.1,244.6 238.2,244.4 240.2,244.3 242.2,244.2 244.3,244.1 246.3,244.1 248.4,244.0 250.4,244.0 252.5,244.0 254.6,244.0 256.6,244.0 258.6,244.1 260.7,244.1 262.8,244.2 264.8,244.3 266.9,244.4 268.9,244.6 270.9,244.7 273.0,244.9 275.1,245.1 277.1,245.3 279.1,245.5 281.2,245.7 283.2,246.0 285.3,246.2 287.4,246.5 289.4,246.8 291.4,247.1 293.5,247.4 295.5,247.8 297.6,248.1 299.6,248.5 301.7,248.9 303.8,249.3 305.8,249.7 307.9,250.1 309.9,250.5 312.0,251.0 314.0,251.4 316.1,251.9 318.1,252.4 320.1,252.8 322.2,253.3 324.2,253.8 326.3,254.3 328.4,254.9 330.4,255.4 332.4,255.9 334.5,256.4 336.6,257.0 338.6,257.5 340.6,258.1 342.7,258.6 344.8,259.2 346.8,259.7 348.9,260.3 350.9,260.9 352.9,261.4 355.0,262.0 357.1,262.6 359.1,263.1 361.1,263.7 363.2,264.3 365.2,264.8 367.3,265.4 369.4,265.9 371.4,266.5 373.5,267.0 375.5,267.6 377.6,268.1 379.6,268.6 381.6,269.1 383.7,269.7 385.8,270.2 387.8,270.7 389.9,271.2 391.9,271.6 393.9,272.1 396.0,272.6 398.0,273.0 400.1,273.5 402.1,273.9 404.2,274.3 406.2,274.7 408.3,275.1 410.4,275.5 412.4,275.9 414.4,276.2 416.5,276.6 418.6,276.9 420.6,277.2 422.7,277.5 424.7,277.8 426.8,278.0 428.8,278.3 430.9,278.5 432.9,278.7 434.9,278.9 437.0,279.1 439.1,279.3 441.1,279.4 443.1,279.6 445.2,279.7 447.2,279.8 449.3,279.9 451.4,279.9 453.4,280.0 455.4,280.0 457.5,280.0 459.6,280.0 461.6,280.0 463.6,279.9 465.7,279.9 467.8,279.8 469.8,279.7 471.9,279.6 473.9,279.4 475.9,279.3 478.0,279.1 480.1,278.9 482.1,278.7 484.1,278.5 486.2,278.3 488.2,278.0 490.3,277.8 492.3,277.5 494.4,277.2 496.4,276.9 498.5,276.6 500.6,276.2 502.6,275.9 504.6,275.5 506.7,275.1 508.8,274.7 510.8,274.3 512.9,273.9 514.9,273.5 517.0,273.0 519.0,272.6 521.0,272.1 523.1,271.6 525.2,271.2 527.2,270.7 529.2,270.2 531.3,269.7 533.4,269.1 535.4,268.6 537.5,268.1 539.5,267.6 541.5,267.0 543.6,266.5 545.6,265.9 547.7,265.4 549.8,264.8 551.8,264.3 553.9,263.7 555.9,263.1 558.0,262.6 560.0,262.0" fill="none" stroke="var(--accent-2)" stroke-width="2.5"/>
+<circle cx="150" cy="262" r="4" fill="var(--ink)"/>
+<circle cx="560" cy="262.0" r="5" fill="var(--accent-2)"/>
+<text x="574" y="267" font-size="20" font-weight="700" fill="var(--accent-2)">✗</text>
+<text x="596" y="263" font-size="11" fill="var(--ink-soft)">air stuck still at the lips</text>
+<text x="596" y="277" font-size="11" fill="var(--accent-2)" font-weight="600">would need closed lips</text>
+<text x="10" y="340" font-size="13" font-weight="600" fill="var(--ink)">1¼ waves</text>
+<text x="10" y="356" font-size="10.5" fill="var(--muted)">in the tube</text>
+<rect x="150" y="314" width="410" height="44" fill="var(--surface-2)"/>
+<path d="M560,314 L150,314 L150,358 L560,358" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+<polyline points="150.0,336.0 152.1,335.3 154.1,334.6 156.2,333.9 158.2,333.2 160.2,332.5 162.3,331.8 164.3,331.1 166.4,330.4 168.4,329.8 170.5,329.1 172.6,328.5 174.6,327.8 176.7,327.2 178.7,326.6 180.8,326.0 182.8,325.4 184.8,324.9 186.9,324.3 188.9,323.8 191.0,323.3 193.1,322.8 195.1,322.3 197.2,321.9 199.2,321.4 201.2,321.0 203.3,320.7 205.3,320.3 207.4,320.0 209.4,319.7 211.5,319.4 213.6,319.1 215.6,318.9 217.7,318.7 219.7,318.5 221.8,318.3 223.8,318.2 225.8,318.1 227.9,318.1 229.9,318.0 232.0,318.0 234.1,318.0 236.1,318.1 238.2,318.1 240.2,318.2 242.2,318.3 244.3,318.5 246.3,318.7 248.4,318.9 250.4,319.1 252.5,319.4 254.6,319.7 256.6,320.0 258.6,320.3 260.7,320.7 262.8,321.0 264.8,321.4 266.9,321.9 268.9,322.3 270.9,322.8 273.0,323.3 275.1,323.8 277.1,324.3 279.1,324.9 281.2,325.4 283.2,326.0 285.3,326.6 287.4,327.2 289.4,327.8 291.4,328.5 293.5,329.1 295.5,329.8 297.6,330.4 299.6,331.1 301.7,331.8 303.8,332.5 305.8,333.2 307.9,333.9 309.9,334.6 312.0,335.3 314.0,336.0 316.1,336.7 318.1,337.4 320.1,338.1 322.2,338.8 324.2,339.5 326.3,340.2 328.4,340.9 330.4,341.6 332.4,342.2 334.5,342.9 336.6,343.5 338.6,344.2 340.6,344.8 342.7,345.4 344.8,346.0 346.8,346.6 348.9,347.1 350.9,347.7 352.9,348.2 355.0,348.7 357.1,349.2 359.1,349.7 361.1,350.1 363.2,350.6 365.2,351.0 367.3,351.3 369.4,351.7 371.4,352.0 373.5,352.3 375.5,352.6 377.6,352.9 379.6,353.1 381.6,353.3 383.7,353.5 385.8,353.7 387.8,353.8 389.9,353.9 391.9,353.9 393.9,354.0 396.0,354.0 398.0,354.0 400.1,353.9 402.1,353.9 404.2,353.8 406.2,353.7 408.3,353.5 410.4,353.3 412.4,353.1 414.4,352.9 416.5,352.6 418.6,352.3 420.6,352.0 422.7,351.7 424.7,351.3 426.8,351.0 428.8,350.6 430.9,350.1 432.9,349.7 434.9,349.2 437.0,348.7 439.1,348.2 441.1,347.7 443.1,347.1 445.2,346.6 447.2,346.0 449.3,345.4 451.4,344.8 453.4,344.2 455.4,343.5 457.5,342.9 459.6,342.2 461.6,341.6 463.6,340.9 465.7,340.2 467.8,339.5 469.8,338.8 471.9,338.1 473.9,337.4 475.9,336.7 478.0,336.0 480.1,335.3 482.1,334.6 484.1,333.9 486.2,333.2 488.2,332.5 490.3,331.8 492.3,331.1 494.4,330.4 496.4,329.8 498.5,329.1 500.6,328.5 502.6,327.8 504.6,327.2 506.7,326.6 508.8,326.0 510.8,325.4 512.9,324.9 514.9,324.3 517.0,323.8 519.0,323.3 521.0,322.8 523.1,322.3 525.2,321.9 527.2,321.4 529.2,321.0 531.3,320.7 533.4,320.3 535.4,320.0 537.5,319.7 539.5,319.4 541.5,319.1 543.6,318.9 545.6,318.7 547.7,318.5 549.8,318.3 551.8,318.2 553.9,318.1 555.9,318.1 558.0,318.0 560.0,318.0" fill="none" stroke="var(--teal)" stroke-width="2.5"/>
+<circle cx="150" cy="336" r="4" fill="var(--ink)"/>
+<circle cx="560" cy="318.0" r="5" fill="var(--teal)"/>
+<text x="574" y="341" font-size="20" font-weight="700" fill="var(--teal)">✓</text>
+<text x="596" y="337" font-size="11" fill="var(--ink-soft)">air moves most at the open lips</text>
+<text x="596" y="351" font-size="11" fill="var(--teal)" font-weight="600">fits</text>
+<text x="150" y="376" font-size="10.5" fill="var(--muted)">glottis (wall): air still ●</text>
+<text x="560" y="376" font-size="10.5" fill="var(--muted)" text-anchor="end">lips (open): air free</text>
+</svg>
+    </div>
+    <figcaption><b>Figure 7.</b> Only odd quarters of a wave fit. A wave goes from zero to its peak in <b>one quarter</b> of its length. After three quarters it is at a peak again
+    (the other way), after five quarters again, and so on. Half a wave or a whole wave ends back at zero: the air would be still at the lips, which only happens if the lips were
+    closed too. (A tube closed at <em>both</em> ends does fit halves and wholes; that's a different instrument.)</figcaption>
+  </figure>
+  <p>So the tube's favourite waves are the ones that fit <strong>\(\tfrac14, \tfrac34, 1\tfrac14, \dots\)</strong> of a wavelength into its length \(L\):</p>
+  <div class="eq">$$L = \tfrac{1}{4}\lambda, \quad L = \tfrac{3}{4}\lambda, \quad L = \tfrac{5}{4}\lambda, \quad \dots$$<span style="font-family:Inter,sans-serif;font-size:0.82rem;color:var(--muted);">\(\lambda\) (lambda) = wavelength, the length of one full wave</span></div>
+
+  <h4>Step 4 · From wavelength to frequency</h4>
+  <p>
+    One more fact: sound travels through warm air at <strong>\(c \approx 350\)&nbsp;m/s</strong>, and for any wave, \(\text{speed} = \text{wavelength} \times \text{frequency}\). So a frequency is just the speed
+    divided by the wavelength, \(F = c/\lambda\). Turn each fitting wave into a frequency:
+  </p>
+  <div class="card" style="overflow-x:auto;">
+    <table style="border-collapse:collapse;width:100%;font-size:0.9rem;">
+      <thead><tr style="text-align:left;">
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">Fits</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">so the wavelength is</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">frequency \(F = c/\lambda\)</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--line);color:var(--ink);">for \(L = 17.5\) cm</th></tr></thead>
+      <tbody>
+        <tr><td style="padding:6px 8px;">\(L = \tfrac14\lambda\)</td><td style="padding:6px 8px;">\(\lambda = 4L = 70\) cm</td><td style="padding:6px 8px;">\(1 \cdot c/4L\)</td><td style="padding:6px 8px;"><strong>\(F_1 = 500\) Hz</strong></td></tr>
+        <tr><td style="padding:6px 8px;">\(L = \tfrac34\lambda\)</td><td style="padding:6px 8px;">\(\lambda = 4L/3 \approx 23\) cm</td><td style="padding:6px 8px;">\(3 \cdot c/4L\)</td><td style="padding:6px 8px;"><strong>\(F_2 = 1500\) Hz</strong></td></tr>
+        <tr><td style="padding:6px 8px;">\(L = \tfrac54\lambda\)</td><td style="padding:6px 8px;">\(\lambda = 4L/5 = 14\) cm</td><td style="padding:6px 8px;">\(5 \cdot c/4L\)</td><td style="padding:6px 8px;"><strong>\(F_3 = 2500\) Hz</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="margin-top:14px;">Every row has the same shape, an odd number times \(c/4L\), so we can write them all at once:</p>
+  <div class="eq">
+    $$F_n = (2n - 1)\,\frac{c}{4L}, \qquad n = 1, 2, 3, \dots \;\to\; 1, 3, 5, \dots \text{ times } c/4L$$
+    <span style="font-family:Inter,sans-serif;font-size:0.82rem;color:var(--muted);">adult male, \(L \approx 17.5\) cm: 500, 1500, 2500, 3500 Hz &nbsp;·&nbsp; adult female, \(L \approx 14.5\) cm: 603, 1810, 3017 Hz &nbsp;·&nbsp; young child, \(L \approx 11\) cm: 795, 2386, 3977 Hz</span>
+  </div>
+  <div class="keyidea">
+    A tube closed at one end and open at the other prefers waves that fit an <em>odd number of quarter-wavelengths</em>, so it resonates at \(c/4L\) and 3, 5, 7&hellip; times that.
+    <strong>Longer tube → longer waves fit → lower formants.</strong> That is why men, women and children have different formants for the same vowel, and why a child's voice sounds
+    &ldquo;small&rdquo; even when it isn't high-pitched.
+  </div>
+
+  <h4>Step 5 · Watch it, and hear it</h4>
+  <p>
+    Below, each dot is a little parcel of air. Pick a resonance and watch: the parcels by the glottis barely move, and those at the lips swing the most. For \(F_2\) and \(F_3\) you'll also
+    see <em>still points</em> inside the tube, where the wave passes through zero. Change the tube length and the formants follow the formula.
+  </p>
+  <div class="card">
+    <canvas id="tubeCanvas" class="plot" height="240" aria-label="Air parcels sloshing in a tube closed at the glottis and open at the lips, for the first three resonances"></canvas>
+    <div class="ctlrow" style="margin-top:10px;">
+      <span>Show resonance:</span>
+      <span class="seg" id="tubeMode"><button data-n="1" class="on">\(F_1\) (¼ wave)</button><button data-n="2">\(F_2\) (¾ wave)</button><button data-n="3">\(F_3\) (1¼ waves)</button></span>
+    </div>
+    <div class="ctlrow">
+      <label for="tubeL">Tract length: <span class="valpill" id="tubeLv"></span></label>
+      <input type="range" id="tubeL" min="100" max="200" value="175" style="flex:1;min-width:160px;">
+      <span class="seg" id="tubePreset"><button data-l="175" class="on">adult male</button><button data-l="145">adult female</button><button data-l="110">young child</button></span>
+    </div>
+    <div class="ctlrow">
+      <span id="tubeF" class="mono" style="flex:1;color:var(--ink);"></span>
+      <button id="tubePlay">▶ Hear this tube</button>
+    </div>
+    <p style="font-size:0.85rem;color:var(--muted);margin:4px 0 0;">What you hear is the <em>neutral vowel</em> /ə/, the &ldquo;uh&rdquo; in &ldquo;about&rdquo;: the sound of a tract that hasn't been shaped at all. Shorter tube, higher formants (and here also a higher pitch, as for a real child).</p>
+  </div>
+
+  <details style="margin-top:18px;">
+    <summary>For the curious: the same answer from echoes (optional)</summary>
+    <p style="font-size:0.93rem;">
+      There is a second way to reach \(c/4L\), by timing an echo instead of fitting waves. It needs one extra fact from acoustics: a pressure pulse bounces off a <em>closed</em> end
+      unchanged, but bounces off an <em>open</em> end <em>inverted</em> (a burst of high pressure comes back as a dip of low pressure, because the air it pushes out of the mouth overshoots
+      into the room). Follow one pulse: out to the lips (inverted), back to the glottis (unchanged), out to the lips (inverted back), back to the glottis. After <strong>four trips</strong>
+      of length \(L\) it is exactly where it started, so the ringing repeats every \(4L/c\) seconds: \(F_1 = c/4L\), the same result. Red is high pressure, blue is low.
+    </p>
+    <canvas id="echoCanvas" class="plot" height="300" aria-label="A pressure pulse bouncing back and forth in a tube, inverting at the open end, with a timeline of what leaks out of the lips"></canvas>
+    <div class="ctlrow" style="margin-top:10px;">
+      <label for="echoL">Tube length: <span class="valpill" id="echoLv"></span></label>
+      <input type="range" id="echoL" min="100" max="200" value="175" style="flex:1;min-width:160px;">
+      <button id="echoRestart">↺ Start again</button>
+    </div>
+    <p id="echoNote" class="mono" style="font-size:0.85rem;color:var(--ink);margin:6px 0 0;"></p>
+  </details>
+  <p style="margin-top:18px;">
+    Does the uniform tube match real speech? A uniform tube is the <em>average</em> tract shape. Every real vowel bends it one way or another, so its formants should sit
+    near the middle of the vowel space. They do:
+  </p>
+  <figure>
+    <div class="frame"><img src="source_filter/aggregate/05_neutral_tube_in_vowel_space.png?v=3" alt="Median vowel formants of male and female TIMIT speakers over a shaded token density, with the uniform-tube prediction in the centre" loading="lazy"></div>
+    <figcaption><b>Figure 8.</b> \(F_1\) and \(F_2\) measured on 8,622 vowels from all 168 speakers of the TIMIT test set (112 men, 56 women), shown only as aggregates: the shading is the density of
+    all measured tokens, the dots are the median of each vowel. The ★ is the uniform-tube prediction, with no fitting at all: 500/1500&nbsp;Hz for
+    a 17.5&nbsp;cm male tract and 603/1810&nbsp;Hz for a 14.5&nbsp;cm female one. It sits in the middle of each speaker group's vowels. The female vowel space is shifted as a whole towards
+    higher frequencies because the tube is shorter. This is why the same vowel has different formant values for different speakers, and why speech recognisers normalise for it.</figcaption>
+  </figure>
+
+  <h3 id="joints">Real tracts aren't uniform: glue tubes together</h3>
+  <p>
+    Your vocal tract is not a straight pipe of constant width. The throat is wide in some places and narrow in others, the tongue bulges into it, and the lips can nearly close.
+    The standard trick for modelling that shape is beautifully simple: <strong>approximate it by a chain of short tubes, each with its own width</strong>, like a pipe built from
+    pieces of different diameters.
+  </p>
+  <p>
+    What happens at a joint between a wide piece and a narrow one? It is a partial wall. Some of the pulse passes through and some <em>echoes back</em>. The bigger the change in
+    width, the stronger the echo:
+  </p>
+  <div class="eq">$$\text{reflection at a joint:}\quad r = \frac{A_1 - A_2}{A_1 + A_2}$$<span style="font-family:Inter,sans-serif;font-size:0.82rem;color:var(--muted);">\(A\) = cross-sectional area; equal widths → \(r = 0\), no echo; a closed wall is the extreme case</span></div>
+  <p>
+    In a uniform tube, sound only bounces off the two ends. Now it also bounces, a little, off every joint, so the sloshing patterns that fit are different. Each vowel's pattern of wide and narrow pieces creates
+    its own resonances. Build some vowels yourself below: <strong>drag each piece up or down</strong> to change its width. The formants are recomputed from the echoes at every joint.
+  </p>
+
+  <div class="card">
+    <canvas id="stackCanvas" class="plot" height="190" style="touch-action:none;cursor:ns-resize;" aria-label="Eight tube sections of adjustable width from glottis to lips; drag a section to change its width"></canvas>
+    <div class="ctlrow" style="margin-top:10px;">
+      <span class="seg" id="stackPreset">
+        <button data-p="uni" class="on">uniform (/ə/)</button>
+        <button data-p="a">/ɑ/: narrow back, wide front</button>
+        <button data-p="i">/i/: wide back, narrow front</button>
+        <button data-p="u">/u/: two constrictions + rounded lips</button>
+      </span>
+    </div>
+    <div class="grid2" style="gap:12px;margin-top:6px;">
+      <div><div class="plotlabel">Frequency response of this chain of tubes (0&ndash;4 kHz)</div><canvas id="stackSpec" class="plot" height="190"></canvas></div>
+      <div>
+        <div class="plotlabel">Formants</div>
+        <p id="stackF" class="mono" style="font-size:0.95rem;color:var(--ink);margin:4px 0 10px;"></p>
+        <p id="stackNote" style="font-size:0.86rem;color:var(--muted);margin:0 0 10px;"></p>
+        <button id="stackPlay" class="on">▶ Hear this shape</button>
+      </div>
+    </div>
+  </div>
+  <p style="margin-top:16px;">
+    Notice how little it takes. Two pieces, a narrow one behind a wide one, already sound like &ldquo;ah&rdquo;; flip them and you are heading towards &ldquo;ee&rdquo;. Linguists and engineers
+    have used these <em>two- and three-tube models</em> since the 1960s (Fant's work) to reason about vowels with pencil and paper. The more pieces you use, the closer you get to a real
+    tract shape. The virtual vocal tract below simply uses 34 thinner slices and lets a &ldquo;tongue&rdquo; shape them for you.
+  </p>
+  <div class="card" style="border-left:3px solid var(--teal);">
+    <p style="font-size:0.9rem;margin:0;">
+      <strong>Keep this picture in mind for the next section.</strong> A chain of tube pieces, with an echo at every joint set by \(r\), turns out to be <em>mathematically the same thing</em>
+      as the AR (all-pole) filter we are about to build. The coefficients that linear prediction estimates from a recording can be converted directly into those reflection coefficients:
+      from sound alone, you get a rough estimate of the tube's shape.
+    </p>
+  </div>
+
+  <h3>Shaping the tube: how vowels are made</h3>
+  <p>
+    When you raise your tongue, drop your jaw or round your lips, the tube is no longer uniform: it gets narrow in some places and wide in others. Its resonances move, and
+    different vowels come out. Three rules of thumb cover most of it:
+  </p>
+  <div class="grid3">
+    <div class="card"><h4>Narrow at the front</h4><p style="font-size:0.88rem;margin:0;">Tongue high and forward, as in /i/ &ldquo;ee&rdquo;. The back cavity gets large, the front one small. <strong>\(F_1\) falls, \(F_2\) rises.</strong></p></div>
+    <div class="card"><h4>Narrow at the back</h4><p style="font-size:0.88rem;margin:0;">Tongue low and pulled back into the throat, as in /ɑ/ &ldquo;ah&rdquo;. <strong>\(F_1\) rises, \(F_2\) falls.</strong> Open vowels have high \(F_1\).</p></div>
+    <div class="card"><h4>Round the lips</h4><p style="font-size:0.88rem;margin:0;">Pouting lengthens the tube and narrows its opening, as in /u/ &ldquo;oo&rdquo;. <strong>All formants fall</strong>, \(F_2\) especially.</p></div>
+  </div>
+  <p style="font-size:0.92rem;margin-top:14px;">
+    (The general principle, from acoustic perturbation theory: narrowing the tube where a resonance's air <em>velocity</em> is greatest lowers that resonance, and narrowing
+    it where the <em>pressure</em> swing is greatest raises it. Each formant has its own pattern of velocity and pressure maxima, which is why one tongue movement can push \(F_1\) and \(F_2\) in opposite directions.)
+  </p>
+  <h3>Four real vowels: mouth shape, waveform, spectrogram</h3>
+  <p>
+    Here are the rules of thumb in action on four vowels spoken by one speaker (ksp, CMU ARCTIC). Each column is one vowel. Read it top to bottom: <strong>how the mouth is shaped</strong>,
+    what the <strong>waveform</strong> looks like (40&nbsp;ms from the middle of the vowel), and where the energy sits in the <strong>spectrogram</strong> of the whole word, with
+    \(F_1\) and \(F_2\) measured and marked. The four vowels sit at the corners of the vowel space, so their shapes and formants differ as much as vowels can.
+  </p>
+  <p class="warn" style="margin-top:6px;">How to read the sketches: the head faces left. <span style="color:#7FB2D9;font-weight:600;">Blue</span> is the air inside the vocal tract, the &ldquo;tube&rdquo; from the vocal folds to the lips; the <span style="color:#B04A4A;font-weight:600;">pink</span> shape is the tongue; the <span style="color:#C1272D;font-weight:600;">red circle</span> marks where the tube is narrowest. The small oval at the top left is the lips seen from the front. The nasal cavity (dashed) is shut off by the raised velum for all four vowels. The sketches are schematic: they show the tongue, jaw and lip positions textbooks give for these vowels, not measurements of this speaker.</p>
+  <div class="scrollx" style="overflow-x:auto;">
+    <div class="vgal">
+      <div></div>
+      <div class="vhead"><span class="ipa-big" style="color:var(--accent);">/i/</span><br>&ldquo;seat&rdquo;</div>
+      <div class="vhead"><span class="ipa-big" style="color:var(--teal);">/æ/</span><br>&ldquo;sad&rdquo;</div>
+      <div class="vhead"><span class="ipa-big" style="color:var(--accent-2);">/ɑ/</span><br>&ldquo;dark&rdquo;</div>
+      <div class="vhead"><span class="ipa-big" style="color:var(--accent-3);">/u/</span><br>&ldquo;two&rdquo;</div>
+
+      <div class="vrow">Mouth shape<br><span>(side view, sketch)</span></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_sketch_i.png?v=1" alt="Side view of the head for /i/: tongue bunched high and forward, close to the hard palate; jaw nearly closed; lips spread" loading="lazy"><p>tongue <b>high &amp; front</b>, lips spread</p></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_sketch_ae.png?v=1" alt="Side view for /æ/: jaw open, tongue low and forward, a wide mouth cavity; lips open and spread" loading="lazy"><p>tongue <b>low &amp; front</b>, jaw open</p></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_sketch_a.png?v=1" alt="Side view for /ɑ/: jaw wide open, tongue low and pulled back so the throat is narrowed; lips wide open" loading="lazy"><p>tongue <b>low &amp; back</b>, jaw wide open</p></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_sketch_u.png?v=1" alt="Side view for /u/: tongue high and back, close to the soft palate; lips rounded and pushed forward" loading="lazy"><p>tongue <b>high &amp; back</b>, lips rounded</p></div>
+
+      <div class="vrow">Waveform<br><span>(40 ms)</span></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_wave_i.png?v=3" alt="Waveform of /i/: slow wave with fast ripples on top" loading="lazy"></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_wave_ae.png?v=3" alt="Waveform of /æ/" loading="lazy"></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_wave_a.png?v=3" alt="Waveform of /ɑ/: strong, fast-decaying ringing each period" loading="lazy"></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_wave_u.png?v=3" alt="Waveform of /u/: smooth and rounded" loading="lazy"></div>
+
+      <div class="vrow">Spectrogram<br><span>(word, 0–4 kHz)</span></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_spec_i.png?v=3" alt="Spectrogram of seat with F1 307 Hz and F2 2290 Hz marked" loading="lazy"></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_spec_ae.png?v=3" alt="Spectrogram of sad with F1 651 Hz and F2 1648 Hz marked" loading="lazy"></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_spec_a.png?v=3" alt="Spectrogram of dark with F1 687 Hz and F2 1326 Hz marked" loading="lazy"></div>
+      <div class="vcell"><img src="source_filter/fig/07_gallery_spec_u.png?v=3" alt="Spectrogram of two with F1 319 Hz and F2 814 Hz marked" loading="lazy"></div>
+
+      <div class="vrow">Formants<br><span>&amp; audio</span></div>
+      <div class="vcell"><p>\(F_1 \approx 310\) · \(F_2 \approx 2290\)</p><p>\(F_1\) <b>low</b>, \(F_2\) <b>high</b>: far apart</p><audio controls preload="none" src="source_filter/audio/gallery_seat.wav?v=3"></audio></div>
+      <div class="vcell"><p>\(F_1 \approx 650\) · \(F_2 \approx 1650\)</p><p>\(F_1\) <b>high</b>, \(F_2\) <b>fairly high</b></p><audio controls preload="none" src="source_filter/audio/gallery_sad.wav?v=3"></audio></div>
+      <div class="vcell"><p>\(F_1 \approx 690\) · \(F_2 \approx 1330\)</p><p>\(F_1\) <b>high</b>, \(F_2\) <b>low</b>: closer together</p><audio controls preload="none" src="source_filter/audio/gallery_dark.wav?v=3"></audio></div>
+      <div class="vcell"><p>\(F_1 \approx 320\) · \(F_2 \approx 810\)</p><p>\(F_1\) <b>low</b>, \(F_2\) <b>low</b></p><audio controls preload="none" src="source_filter/audio/gallery_two.wav?v=3"></audio></div>
+    </div>
+  </div>
+  <p style="font-size:0.86rem;color:var(--muted);margin-top:8px;">
+    Sketches use the same articulatory presets as the <a href="vocal_tract.html">vocal-tract demo</a>. Spectrograms use a short (6&nbsp;ms) window so formants show up as bright bands; thin white
+    vertical lines mark where the vowel starts and ends, the dashed lines show \(F_1\) and \(F_2\), and their values are measured automatically (with the AR method of the next section) at the vowel's middle.
+  </p>
+  <p><strong>What to look for:</strong></p>
+  <ul>
+    <li><strong>Down each column</strong>, one tract shape gives one waveform shape and one pair of formant bands. The shape of the tube is written into the sound.</li>
+    <li><strong>Tongue height ↔ \(F_1\).</strong> The high-tongue vowels /i/ and /u/ both have a low \(F_1\) (about 310&ndash;320&nbsp;Hz). The low-tongue, open-jaw vowels /æ/ and /ɑ/ have a high \(F_1\) (650&ndash;690&nbsp;Hz).
+      In the waveforms, /ɑ/'s strong, fast \(F_1\) ringing is obvious, while /i/ is a slow wave with fine high-frequency ripples on top (its high \(F_2\)).</li>
+    <li><strong>Tongue front/back ↔ \(F_2\).</strong> The front vowels /i/ and /æ/ have a high \(F_2\) (about 1650&ndash;2290&nbsp;Hz), and the back vowels /ɑ/ and /u/ a low one (810&ndash;1330&nbsp;Hz).
+      In the spectrograms you can see \(F_1\) and \(F_2\) far apart for /i/ and much closer together for /ɑ/ and /u/.</li>
+    <li><strong>Formants move.</strong> Look at the edges of the vowels in &ldquo;sad&rdquo; and &ldquo;dark&rdquo;: the bands bend into and out of the vowel as the tongue travels from and to the consonants.
+      Those glides (<em>formant transitions</em>) are how listeners hear which consonant is next to the vowel.</li>
+  </ul>
+  <p style="font-size:0.88rem;color:var(--muted);">
+    A note on accents: this speaker's /u/ in &ldquo;two&rdquo; has \(F_2 \approx 810\)&nbsp;Hz, right at the textbook back-vowel value (~870&nbsp;Hz for Peterson &amp; Barney's men). Many American English speakers
+    pronounce the same vowel with the tongue further forward after /t/ and /s/ (&ldquo;/u/-fronting&rdquo;), with \(F_2\) well above 1,000&nbsp;Hz. Formant values are properties of a speaker and an accent,
+    not of the vowel symbol, and the phone labels used here come from an automatic aligner with an American-English pronunciation dictionary.
+  </p>
+
+  <p>Try it below. It is the same chain-of-tubes model, now with 34 thin slices shaped for you by a &ldquo;tongue&rdquo; and the lips. The formants are <em>computed</em> from the shape, not looked up.</p>
+
+  <div class="card">
+    <div class="plotlabel">The tube, glottis (left) to lips (right). Height = cross-sectional area.</div>
+    <canvas id="vtShape" class="plot" height="150" aria-label="Area function of the virtual vocal tract"></canvas>
+    <div class="ctlrow" style="margin-top:10px;">
+      <label for="vtPos">Tongue constriction at: <span class="valpill" id="vtPosV"></span></label>
+      <input type="range" id="vtPos" min="20" max="150" value="80" style="flex:1;min-width:140px;">
+    </div>
+    <div class="ctlrow">
+      <label for="vtDeg">Constriction: <span class="valpill" id="vtDegV"></span></label>
+      <input type="range" id="vtDeg" min="0" max="93" value="0" style="flex:1;min-width:140px;">
+      <label for="vtRound">Lip rounding: <span class="valpill" id="vtRoundV"></span></label>
+      <input type="range" id="vtRound" min="0" max="100" value="0" style="flex:1;min-width:120px;">
+    </div>
+    <div class="ctlrow">
+      <span class="seg" id="vtPreset"><button data-p="neutral" class="on">neutral /ə/</button><button data-p="i">/i/ “ee”</button><button data-p="a">/ɑ/ “ah”</button><button data-p="u">/u/ “oo”</button></span>
+      <button id="vtPlay" class="on">▶ Hear it</button>
+    </div>
+    <div class="grid2" style="gap:12px;margin-top:6px;">
+      <div><div class="plotlabel">Frequency response of the tube (0&ndash;4 kHz) with its formants</div><canvas id="vtSpec" class="plot" height="220"></canvas></div>
+      <div><div class="plotlabel">Where that puts you on the vowel chart (reference: average male vowels)</div><canvas id="vtChart" class="plot" height="220"></canvas></div>
+    </div>
+    <p id="vtNote" style="font-size:0.88rem;color:var(--muted);margin:10px 0 0;"></p>
+  </div>
+  <p style="font-size:0.88rem;color:var(--muted);">
+    Model details, for the curious: a chain of 34 lossless cylindrical sections (each with its own area) with the glottis end closed and the lip end open, solved exactly in the frequency
+    domain with a small uniform loss so that the peaks have realistic bandwidths (~70&nbsp;Hz). Moving the tongue also bunches it, widening the cavity on the opposite side, and pulling it back also opens the mouth (as the jaw drops for &ldquo;ah&rdquo;). The sound is
+    synthesised by weighting each harmonic of a 120&nbsp;Hz source by the tube's response at that frequency. For the articulatory side of the same story, see the
+    <a href="vocal_tract.html">vocal-tract demo</a>.
+  </p>
+
+  <h3>Formants are not harmonics</h3>
+  <p>
+    A very common confusion, worth heading off explicitly. <strong>Harmonics</strong> belong to the <em>source</em>: they sit at exact multiples of \(F_0\) and move whenever the pitch changes.
+    <strong>Formants</strong> belong to the <em>filter</em>: they are the peaks of the smooth envelope and move only when the tract changes shape. The harmonics are
+    the only frequencies actually present in the sound, so they <em>sample</em> the envelope. A formant can sit between two harmonics and still be heard in their relative loudness.
+  </p>
+  <figure>
+    <div class="frame"><img src="source_filter/fig/06_formants_vs_harmonics.png?v=3" alt="Left: spectrum of a real /ɑ/ with harmonics numbered and formants marked. Right: a synthetic spectrum with the same envelope at a pitch of 220 Hz" loading="lazy"></div>
+    <figcaption><b>Figure 9.</b> One envelope, two pitches. <b>Left, real:</b> /ɑ/ in &ldquo;dark&rdquo; (ksp, \(F_0 \approx 121\)&nbsp;Hz), with the envelope drawn by the AR model of the next section.
+    \(F_1 \approx 700\)&nbsp;Hz falls between the 5th and 6th harmonics, and with a harmonic every 121&nbsp;Hz the envelope is densely sampled. <b>Right, synthetic:</b> the <em>same</em> envelope
+    driven by an impulse train at 220&nbsp;Hz, a typical adult female pitch (computed, not recorded). Now \(F_1\) lands just above the 3rd harmonic, and there are only about half as many
+    harmonics to trace the shape. At the high pitches of children and sopranos this gets extreme: some formants fall in a gap between harmonics, which is why trained singers learn to
+    &ldquo;tune&rdquo; a formant onto a harmonic.</figcaption>
+  </figure>
+
+  <div class="keyidea">
+    The filter of any vowel is well described by its first three or four <strong>formants</strong>: a <em>frequency</em> for each (where the resonance is) and a <em>bandwidth</em>
+    (how sharp it is, i.e. how fast it rings down). Each formant is one resonance, a damped oscillator exactly like the mass on a spring. The whole vocal tract behaves like a few such resonators in a row.
+  </div>
+  <div class="card" id="bandwidth" style="margin-top:14px;">
+    <h4>What &ldquo;how fast it rings down&rdquo; means</h4>
+    <p style="font-size:0.92rem;">
+      Tap a single resonance with centre frequency \(F\) and bandwidth \(B\) and it answers with a decaying sinusoid:
+    </p>
+    <div class="eq">$$h(t) = e^{-\pi B t}\,\cos(2\pi F t)$$</div>
+    <p style="font-size:0.92rem;">
+      The cosine is the ringing, at the formant frequency \(F\). The factor \(e^{-\pi B t}\) is the envelope that shrinks it, and the bandwidth sets how fast: the envelope drops by a
+      factor of \(e\) every \(\tau = 1/(\pi B)\) seconds (the same relation as in the resonance key idea of <a href="#filter">section 06</a>), and by 60&nbsp;dB, a thousandfold, after about \(6.9\,\tau \approx 2.2/B\).
+    </p>
+    <div style="overflow-x:auto;">
+      <table class="budget" style="font-size:0.9rem;">
+        <tr><th>bandwidth \(B\)</th><th>falls by \(e\) every \(\tau\)</th><th>down 60&nbsp;dB after</th><th>peak in the spectrum</th></tr>
+        <tr><td>60&nbsp;Hz</td><td>5.3&nbsp;ms</td><td>&asymp;&nbsp;37&nbsp;ms</td><td>narrow, sharp</td></tr>
+        <tr><td>100&nbsp;Hz</td><td>3.2&nbsp;ms</td><td>&asymp;&nbsp;22&nbsp;ms</td><td></td></tr>
+        <tr><td>250&nbsp;Hz</td><td>1.3&nbsp;ms</td><td>&asymp;&nbsp;9&nbsp;ms</td><td>wide, blunt</td></tr>
+      </table>
+    </div>
+    <p style="font-size:0.92rem;margin-bottom:0;">
+      So a <strong>narrow</strong> bandwidth means a sharp peak and a long ring (the steel slab); a <strong>wide</strong> bandwidth means a blunt peak and a ring that dies quickly
+      (the wood slab). Vowel formants are fairly well damped, with \(B\) roughly 50&ndash;150&nbsp;Hz for \(F_1\) and \(F_2\): the soft walls of the tract, the glottis and the
+      sound escaping at the lips all soak up energy. That is why each glottal kick has mostly faded before the next one arrives, as the overlaid periods in Figure 4 show.
+    </p>
+  </div>
+
+  <div class="card" style="margin-top:14px;border-left:3px solid var(--teal);">
+    <h4>Coming next: the AR model</h4>
+    <p style="font-size:0.9rem;margin:0;">
+      How do we capture &ldquo;a few resonators in a row&rdquo; with numbers a computer can estimate from a recording? In discrete time, each resonance becomes a <strong>pair of poles</strong>,
+      and a filter made only of poles is an <strong>autoregressive (AR)</strong> model: each speech sample is predicted from the previous few. We'll build it one resonator at a time,
+      then fit it to real speech. Its prediction error turns out to be the impulse train from section 05.
+    </p>
+  </div>
+</section>
+
+<footer>
+  Speech and Audio Processing &middot; Module 3 &middot; Real-speech figures and clips generated by <code>source_filter/make_figures.py</code>; all other sounds are synthesised live in your browser.
+  <br>Speech: CMU ARCTIC speaker ksp (Indian English), Carnegie Mellon University (J. Kominek &amp; A. W. Black); excerpts trimmed for this site. Phone labels are automatic and were not hand-corrected.
+  <br>Figure 8 uses the TIMIT corpus (LDC) for aggregate statistics only (token density and per-vowel medians, via <code>source_filter/aggregate/make_vowel_space.py</code>); no TIMIT audio or per-utterance data is published here.
+  <ul class="refs" style="margin-top:12px;">
+    <li>G. Fant, <em>Acoustic Theory of Speech Production</em>, Mouton, 1960.</li>
+    <li>K. N. Stevens, <em>Acoustic Phonetics</em>, MIT Press, 1998.</li>
+    <li>L. Rabiner &amp; R. Schafer, <em>Theory and Applications of Digital Speech Processing</em>, Pearson, 2011, ch. 5.</li>
+    <li>G. E. Peterson &amp; H. L. Barney, &ldquo;Control methods used in a study of the vowels,&rdquo; <em>JASA</em> 24, 1952. (vowel formant values used in the demo)</li>
+    <li>J. Kominek &amp; A. W. Black, &ldquo;The CMU Arctic speech databases,&rdquo; <em>5th ISCA Speech Synthesis Workshop</em>, 2004.</li>
+    <li>J. S. Garofolo et al., <em>TIMIT Acoustic-Phonetic Continuous Speech Corpus</em>, LDC93S1, Linguistic Data Consortium, 1993. (aggregate statistics in Figure 8 only)</li>
+  </ul>
+</footer>
+
+<script>
+(() => {
+  const SR = 22050;
+  const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  // set HTML containing \( \) maths and typeset it (if KaTeX is not loaded yet, the page-wide auto-render pass picks it up)
+  const setTex = (el, h) => { el.innerHTML = h; if (window.renderMathInElement) renderMathInElement(el, { delimiters: [{ left: '\\(', right: '\\)', display: false }], throwOnError: false }); };
+  let actx = null, current = null;
+  function play(y) {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+      if (current) { try { current.stop(); } catch (e) {} }
+      let m = 1e-9; for (let i = 0; i < y.length; i++) m = Math.max(m, Math.abs(y[i]));
+      const buf = actx.createBuffer(1, y.length, SR), ch = buf.getChannelData(0);
+      const fade = 220;
+      for (let i = 0; i < y.length; i++) ch[i] = 0.6 * y[i] / m * Math.min(1, (y.length - i) / fade);
+      const src = actx.createBufferSource(); src.buffer = buf; src.connect(actx.destination); src.start(); current = src;
+    } catch (e) { console.warn(e); }
+  }
+
+  // ---------------- FFT + drawing helpers ----------------
+  function fft(re, im) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit;
+      if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; } }
+    for (let len = 2; len <= n; len <<= 1) {
+      const a = -2 * Math.PI / len, wr = Math.cos(a), wi = Math.sin(a);
+      for (let i = 0; i < n; i += len) { let cr = 1, ci = 0;
+        for (let k = 0; k < len / 2; k++) {
+          const p = i + k, q = p + len / 2, br = re[q] * cr - im[q] * ci, bi = re[q] * ci + im[q] * cr;
+          re[q] = re[p] - br; im[q] = im[p] - bi; re[p] += br; im[p] += bi;
+          const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t; } } }
+  }
+  function spectrumDb(y, start, N) {
+    const re = new Float64Array(N), im = new Float64Array(N);
+    for (let i = 0; i < N; i++) { const v = y[start + i] || 0; re[i] = v * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1))); }
+    fft(re, im);
+    const out = new Float64Array(N / 2); let mx = 1e-20;
+    for (let k = 0; k < N / 2; k++) { out[k] = re[k] * re[k] + im[k] * im[k]; mx = Math.max(mx, out[k]); }
+    for (let k = 0; k < N / 2; k++) out[k] = 10 * Math.log10(out[k] / mx + 1e-12);
+    return out;
+  }
+  function setupCanvas(cv) {
+    if (!cv.dataset.h) { cv.dataset.h = cv.getAttribute('height'); cv.style.height = cv.dataset.h + 'px'; }
+    const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = +cv.dataset.h;
+    cv.width = W * dpr; cv.height = H * dpr; const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
+    return { c, W, H };
+  }
+  function drawSpec(cv, curves, fmax, floor = -70, ticks = 1000) {
+    const { c, W, H } = setupCanvas(cv);
+    const pl = 34, pr = 8, pt = 8, pb = 20, pw = W - pl - pr, ph = H - pt - pb;
+    c.font = '10px Inter, sans-serif'; c.fillStyle = css('--muted'); c.strokeStyle = css('--line'); c.lineWidth = 1;
+    for (let f = 0; f <= fmax; f += ticks) { const x = pl + f / fmax * pw; c.beginPath(); c.moveTo(x, pt); c.lineTo(x, pt + ph); c.stroke(); c.fillText(f >= 1000 ? (f / 1000) + 'k' : f, x - 6, H - 5); }
+    for (let d = 0; d >= floor; d -= 20) { const yv = pt + (-d / -floor) * ph; c.beginPath(); c.moveTo(pl, yv); c.lineTo(pl + pw, yv); c.stroke(); c.fillText(d, 4, yv + 3); }
+    for (const cu of curves) {
+      c.strokeStyle = cu.color; c.lineWidth = cu.width || 1.2; c.beginPath();
+      const n = cu.db.length;
+      for (let k = 0; k < n; k++) {
+        const f = k * cu.df; if (f > fmax) break;
+        const x = pl + f / fmax * pw, yv = pt + Math.min(1, Math.max(0, -(cu.db[k] + (cu.offset || 0)) / -floor)) * ph;
+        k ? c.lineTo(x, yv) : c.moveTo(x, yv);
+      }
+      c.stroke();
+    }
+  }
+  function drawWave(cv, y, n, ticks) {
+    const { c, W, H } = setupCanvas(cv);
+    let m = 1e-9; for (let i = 0; i < n; i++) m = Math.max(m, Math.abs(y[i] || 0));
+    c.strokeStyle = css('--line'); c.beginPath(); c.moveTo(0, H / 2); c.lineTo(W, H / 2); c.stroke();
+    if (ticks) { c.strokeStyle = css('--accent'); c.lineWidth = 1.5; for (const t of ticks) { if (t >= n) break; const x = t / n * W; c.beginPath(); c.moveTo(x, H - 4); c.lineTo(x, H - 16); c.stroke(); } }
+    c.strokeStyle = css('--accent-4'); c.lineWidth = 1; c.beginPath();
+    const step = Math.max(1, Math.floor(n / (W * 2)));
+    for (let i = 0; i < n; i += step) { const x = i / n * W, yv = H / 2 - (y[i] || 0) / m * (H / 2 - 20) + (ticks ? -6 : 0); i ? c.lineTo(x, yv) : c.moveTo(x, yv); }
+    c.stroke();
+  }
+
+  // ---------------- modal synthesis of struck slabs ----------------
+  // Free–free bar mode ratios (Euler–Bernoulli): 1, 2.756, 5.404, 8.933, 13.34
+  const MATERIALS = {
+    wood:  { name: 'Wood',  hint: 'oak plank', f1: 310, ratios: [1, 2.756, 5.404, 8.933, 13.34], t60: [0.22, 0.09, 0.05, 0.03, 0.02], amp: [1, 0.7, 0.45, 0.3, 0.2],
+             note: 'Wood: the modes die within ~0.1–0.2 s. Broad, low peaks, heard as a warm, short “tok”.' },
+    steel: { name: 'Steel', hint: 'metal bar',  f1: 523, ratios: [1, 2.756, 5.404, 8.933, 13.34], t60: [3.2, 2.4, 1.7, 1.2, 0.8], amp: [1, 0.8, 0.6, 0.45, 0.3],
+             note: 'Steel: very little internal friction, so the modes ring for seconds. Very sharp peaks at inharmonic ratios 1 : 2.76 : 5.40 : 8.93.' },
+    glass: { name: 'Glass', hint: 'glass pane', f1: 1180, ratios: [1, 2.32, 4.25, 6.63], t60: [1.1, 0.7, 0.45, 0.3], amp: [1, 0.7, 0.5, 0.35],
+             note: 'Glass: stiff and light, so the lowest mode sits high (~1.2 kHz here). Bright, medium-long ring.' },
+    stone: { name: 'Stone', hint: 'granite tile', f1: 190, ratios: [1, 2.21, 3.63, 5.12, 7.4], t60: [0.07, 0.05, 0.04, 0.03, 0.02], amp: [1, 0.8, 0.6, 0.45, 0.3],
+             note: 'Stone: heavy and highly damped. Everything is gone in ~50 ms, heard as a dull “thud” with barely any pitch.' },
+  };
+  const STRIKER = { hard: 0.00012, soft: 0.0028 };  // contact duration (s)
+
+  // excitation: raised-cosine force pulse of the given contact time, at each tap position
+  function excitation(n, tapTimes, contact) {
+    const x = new Float64Array(n), L = Math.max(1, Math.round(contact * SR));
+    for (const t0 of tapTimes) for (let i = 0; i < L; i++) { const j = t0 + i; if (j < n) x[j] += (0.5 - 0.5 * Math.cos(2 * Math.PI * (i + 0.5) / L)) / L; }
+    return x;
+  }
+  // bank of two-pole resonators, one per mode
+  function resonate(x, mat) {
+    const y = new Float64Array(x.length);
+    mat.ratios.forEach((ratio, k) => {
+      const f = mat.f1 * ratio; if (f > SR / 2 - 200) return;
+      const r = Math.pow(10, -3 / (mat.t60[k] * SR)), th = 2 * Math.PI * f / SR;
+      const a1 = 2 * r * Math.cos(th), a2 = -r * r, g = mat.amp[k] * Math.sin(th) * 30;
+      let y1 = 0, y2 = 0;
+      for (let i = 0; i < x.length; i++) { const v = g * x[i] + a1 * y1 + a2 * y2; y2 = y1; y1 = v; y[i] += v; }
+    });
+    return y;
+  }
+  // analytic resonance curve (sum of mode magnitude responses), in dB
+  function resonanceCurve(mat, N, df) {
+    const out = new Float64Array(N); let mx = 1e-20;
+    for (let k = 0; k < N; k++) {
+      const w = 2 * Math.PI * k * df / SR; let re = 0, im = 0;
+      mat.ratios.forEach((ratio, m) => {
+        const f = mat.f1 * ratio; if (f > SR / 2 - 200) return;
+        const r = Math.pow(10, -3 / (mat.t60[m] * SR)), th = 2 * Math.PI * f / SR;
+        // H(z) = g / (1 - 2r cos th z^-1 + r^2 z^-2)
+        const dr = 1 - 2 * r * Math.cos(th) * Math.cos(w) + r * r * Math.cos(2 * w);
+        const di = 2 * r * Math.cos(th) * Math.sin(w) - r * r * Math.sin(2 * w);
+        const g = mat.amp[m] * Math.sin(th), d2 = dr * dr + di * di;
+        re += g * dr / d2; im += -g * di / d2;
+      });
+      out[k] = re * re + im * im; mx = Math.max(mx, out[k]);
+    }
+    for (let k = 0; k < N; k++) out[k] = 10 * Math.log10(out[k] / mx + 1e-12);
+    return out;
+  }
+
+  // ---------------- slab illustrations ----------------
+  function slabSVG(key) {
+    const body = {
+      wood: `<defs><linearGradient id="gw" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#C08A55"/><stop offset="1" stop-color="#8B5A2B"/></linearGradient></defs>
+             <rect x="20" y="58" width="160" height="22" rx="3" fill="url(#gw)" stroke="#6B4420"/>
+             <path d="M26,64 C60,61 90,67 130,63 S170,66 176,64 M24,70 C58,73 100,68 140,72 S172,69 177,71 M28,75 C70,77 110,74 150,77" fill="none" stroke="#6B4420" stroke-width="0.8" opacity="0.7"/>
+             <ellipse cx="118" cy="68" rx="6" ry="2.4" fill="none" stroke="#6B4420" stroke-width="0.8" opacity="0.8"/>`,
+      steel: `<defs><linearGradient id="gs" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#E8EDF2"/><stop offset="0.45" stop-color="#9AA7B4"/><stop offset="0.55" stop-color="#C9D2DB"/><stop offset="1" stop-color="#6E7B88"/></linearGradient></defs>
+             <rect x="20" y="60" width="160" height="16" rx="2" fill="url(#gs)" stroke="#5B6875"/>
+             <line x1="30" y1="63" x2="170" y2="63" stroke="#fff" stroke-width="1" opacity="0.8"/>`,
+      glass: `<defs><linearGradient id="gg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#CFEFF7" stop-opacity="0.9"/><stop offset="1" stop-color="#7FC4D8" stop-opacity="0.7"/></linearGradient></defs>
+              <rect x="20" y="60" width="160" height="12" rx="2" fill="url(#gg)" stroke="#4E9DB5"/>
+              <line x1="40" y1="62" x2="70" y2="62" stroke="#fff" stroke-width="1.5" opacity="0.9"/><line x1="120" y1="62" x2="135" y2="62" stroke="#fff" stroke-width="1.2" opacity="0.8"/>`,
+      stone: `<defs><linearGradient id="gt" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#A3A09A"/><stop offset="1" stop-color="#6F6C66"/></linearGradient></defs>
+              <rect x="20" y="56" width="160" height="26" rx="4" fill="url(#gt)" stroke="#55524D"/>
+              <g fill="#4A4743" opacity="0.55"><circle cx="40" cy="64" r="1.4"/><circle cx="62" cy="74" r="1.1"/><circle cx="85" cy="62" r="1.6"/><circle cx="104" cy="71" r="1"/><circle cx="131" cy="66" r="1.5"/><circle cx="152" cy="75" r="1.2"/><circle cx="167" cy="62" r="1"/></g>
+              <g fill="#D8D5CF" opacity="0.6"><circle cx="50" cy="70" r="1"/><circle cx="118" cy="60" r="1.2"/><circle cx="142" cy="72" r="0.9"/></g>`,
+    }[key];
+    return `<svg viewBox="0 0 200 110" aria-hidden="true">
+      <polygon points="42,82 52,82 47,100" fill="var(--line-strong)"/><polygon points="148,82 158,82 153,100" fill="var(--line-strong)"/>
+      <line x1="20" y1="100" x2="180" y2="100" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <g class="body">${body}</g>
+      <g class="mallet"><line x1="150" y1="12" x2="104" y2="46" stroke="#8B6B4A" stroke-width="3.2" stroke-linecap="round"/>
+        <rect x="88" y="38" width="22" height="14" rx="4" transform="rotate(-36 99 45)" fill="var(--accent-4)" stroke="var(--ink)" stroke-width="0.8"/></g>
+    </svg>`;
+  }
+
+  // ---------------- section 1: strike ----------------
+  let striker = 'hard';
+  const rack = $('rack');
+  Object.entries(MATERIALS).forEach(([key, m]) => {
+    const b = document.createElement('button');
+    b.className = 'slab'; b.dataset.m = key; b.setAttribute('aria-label', 'Strike the ' + m.name.toLowerCase() + ' slab');
+    b.innerHTML = slabSVG(key) + `<div class="name">${m.name}</div><div class="hint">${m.hint}</div>`;
+    b.addEventListener('click', () => strike(key, b));
+    rack.appendChild(b);
+  });
+  document.querySelectorAll('#striker button').forEach(b => b.addEventListener('click', () => {
+    striker = b.dataset.s; document.querySelectorAll('#striker button').forEach(x => x.classList.toggle('on', x === b));
+    const sel = rack.querySelector('.slab.sel'); if (sel) strike(sel.dataset.m, sel);
+  }));
+  function strike(key, el) {
+    const m = MATERIALS[key], n = Math.round(SR * Math.min(3.5, Math.max(0.6, m.t60[0] + 0.3)));
+    const y = resonate(excitation(n, [Math.round(0.005 * SR)], STRIKER[striker]), m);
+    play(y);
+    rack.querySelectorAll('.slab').forEach(s => s.classList.toggle('sel', s === el));
+    el.classList.remove('hit', 'ring'); void el.offsetWidth; el.classList.add('hit');
+    setTimeout(() => { el.classList.remove('hit'); el.classList.add('ring'); }, 90);
+    drawWave($('strikeWave'), y, Math.round(0.4 * SR));
+    const N = 8192, spec = spectrumDb(y, 0, N);
+    drawSpec($('strikeSpec'), [{ db: spec, df: SR / N, color: css('--accent') }], 8000, -70, 2000);
+    $('strikeNote').textContent = m.note + (striker === 'soft' ? ' With the soft mallet, the upper modes are barely excited: same peaks, less high-frequency energy.' : '');
+  }
+
+  // ---------------- section 2: taps ----------------
+  let tapMat = 'wood';
+  const tapSeg = $('tapMat');
+  Object.entries(MATERIALS).forEach(([key, m]) => {
+    const b = document.createElement('button'); b.textContent = m.name; b.dataset.m = key; if (key === tapMat) b.classList.add('on');
+    b.addEventListener('click', () => { tapMat = key; tapSeg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); tapUpdate(); });
+    tapSeg.appendChild(b);
+  });
+  const rateFromSlider = v => Math.round(Math.pow(10, Math.log10(1) + v / 100 * (Math.log10(300) - Math.log10(1))) * 10) / 10;
+  function tapSignal() {
+    const rate = rateFromSlider(+$('tapRate').value), n = Math.round(1.5 * SR), T = SR / rate, taps = [];
+    for (let t = Math.round(0.01 * SR); t < n; t += T) taps.push(Math.round(t));
+    return { y: resonate(excitation(n, taps, STRIKER.hard), MATERIALS[tapMat]), taps, rate };
+  }
+  function tapUpdate() {
+    const { y, taps, rate } = tapSignal();
+    $('tapRateV').textContent = rate < 10 ? rate.toFixed(1) : Math.round(rate);
+    drawWave($('tapWave'), y, Math.round(0.25 * SR), taps);
+    const N = 16384, spec = spectrumDb(y, Math.round(0.3 * SR), N);
+    const env = resonanceCurve(MATERIALS[tapMat], N / 2, SR / N);
+    drawSpec($('tapSpec'), [{ db: spec, df: SR / N, color: css('--accent'), width: 1 }, { db: env, df: SR / N, color: css('--accent-2'), width: 2, offset: 3 }], 4000, -70, 500);
+    $('tapNote').textContent = rate < 15
+      ? `${rate.toFixed(1)} taps/s: you hear separate taps. A rhythm, not a pitch. The spectrum is just the slab's resonances (one tap's worth).`
+      : rate < 30
+        ? `${Math.round(rate)} taps/s: the fusion zone. The taps start to blur into a rough, buzzy tone. The first lines of a comb appear in the spectrum.`
+        : `${Math.round(rate)} taps/s: a continuous tone with a pitch of ${Math.round(rate)} Hz. The spectrum is a comb of harmonics every ${Math.round(rate)} Hz whose heights follow the slab's resonance curve.`;
+  }
+  $('tapRate').addEventListener('input', tapUpdate);
+  $('tapPlay').addEventListener('click', () => play(tapSignal().y));
+
+  // ---------------- section 3: source × filter grid ----------------
+  // Peterson & Barney (1952) average male formants; bandwidths typical of vowels
+  const VOWELS = {
+    none: { label: 'no filter', sub: 'raw source' },
+    a: { label: '/ɑ/ “ah”', sub: 'father', F: [730, 1090, 2440, 3400], B: [90, 110, 160, 250] },
+    i: { label: '/i/ “ee”', sub: 'heed', F: [270, 2290, 3010, 3700], B: [60, 110, 170, 250] },
+    u: { label: '/u/ “oo”', sub: "who'd", F: [300, 870, 2240, 3300], B: [70, 100, 160, 250] },
+  };
+  const SOURCES = {
+    low: { label: 'buzz 110 Hz', sub: 'low voice', f0: 110 },
+    high: { label: 'buzz 220 Hz', sub: 'high voice', f0: 220 },
+    noise: { label: 'whisper', sub: 'noise, no pitch' },
+  };
+  function makeSource(kind, n) {
+    const x = new Float64Array(n);
+    // Math.imul: a plain * loses low bits above 2^53, and the 'noise' then repeats every 419 samples (a 53 Hz buzz)
+    if (kind === 'noise') { let s = 99; for (let i = 0; i < n; i++) { s = (Math.imul(s, 1103515245) + 12345) >>> 0; x[i] = (s / 4294967296 - 0.5) * 0.6; } }
+    else { const T = SR / SOURCES[kind].f0; for (let t = 0; t < n; t += T) x[Math.round(t)] = 1; }
+    // glottal/aspiration spectral tilt: one-pole low-pass (≈ −6 dB/octave above ~100 Hz incl. lip radiation)
+    let yp = 0; const a = 0.97; for (let i = 0; i < n; i++) { yp = (1 - a) * x[i] + a * yp; x[i] = yp; }
+    return x;
+  }
+  function formantFilter(x, v) {
+    if (!v.F) return x;
+    let y = x;
+    v.F.forEach((F, k) => {
+      const r = Math.exp(-Math.PI * v.B[k] / SR), th = 2 * Math.PI * F / SR, a1 = 2 * r * Math.cos(th), a2 = -r * r, g = 1 - a1 - a2;
+      const out = new Float64Array(y.length); let y1 = 0, y2 = 0;
+      for (let i = 0; i < y.length; i++) { const val = g * y[i] + a1 * y1 + a2 * y2; y2 = y1; y1 = val; out[i] = val; }
+      y = out;
+    });
+    return y;
+  }
+  function formantCurve(v, N, df) {
+    const out = new Float64Array(N); let mx = -1e9;
+    for (let k = 0; k < N; k++) {
+      const w = 2 * Math.PI * k * df / SR; let db = 0;
+      if (v.F) v.F.forEach((F, m) => {
+        const r = Math.exp(-Math.PI * v.B[m] / SR), th = 2 * Math.PI * F / SR, g = 1 - 2 * r * Math.cos(th) + r * r;
+        const dr = 1 - 2 * r * Math.cos(th) * Math.cos(w) + r * r * Math.cos(2 * w), di = 2 * r * Math.cos(th) * Math.sin(w) - r * r * Math.sin(2 * w);
+        db += 20 * Math.log10(g / Math.sqrt(dr * dr + di * di));
+      });
+      db += -20 * Math.log10(Math.sqrt(1 + Math.pow(k * df / 105, 2)));  // source tilt, so the curve matches the heard spectrum
+      out[k] = db; mx = Math.max(mx, db);
+    }
+    for (let k = 0; k < N; k++) out[k] -= mx;
+    return out;
+  }
+  const grid = $('vgrid');
+  grid.insertAdjacentHTML('beforeend', '<div></div>' + Object.values(VOWELS).map(v => `<div class="hdr">${v.label}<br><span style="font-weight:400;color:var(--muted);">${v.sub}</span></div>`).join(''));
+  Object.entries(SOURCES).forEach(([sk, s]) => {
+    grid.insertAdjacentHTML('beforeend', `<div class="rowh">${s.label}</div>`);
+    Object.entries(VOWELS).forEach(([vk, v]) => {
+      const b = document.createElement('button'); b.textContent = '▶'; b.setAttribute('aria-label', `${s.label} through ${v.label}`);
+      b.addEventListener('click', () => {
+        grid.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+        const n = Math.round(1.0 * SR), y = formantFilter(makeSource(sk, n), v);
+        for (let i = 0; i < 400; i++) y[i] *= i / 400;
+        play(y);
+        const N = 8192, spec = spectrumDb(y, Math.round(0.3 * SR), N), curves = [{ db: spec, df: SR / N, color: css('--accent'), width: 1 }];
+        // place the resonance curve on the spectrum: for pulses it should touch the harmonic peaks (max of spectrum − curve);
+        // for noise it should run through the middle of the noisy curve (equal average power). Then shift both so nothing exceeds 0 dB.
+        const env = formantCurve(v, N / 2, SR / N), k0 = Math.round(80 / (SR / N)), k1 = Math.round(3800 / (SR / N));
+        let off;
+        if (sk === 'noise') { let ps = 0, pe = 0; for (let k = k0; k < k1; k++) { ps += Math.pow(10, spec[k] / 10); pe += Math.pow(10, env[k] / 10); } off = 10 * Math.log10(ps / pe); }
+        else { off = -1e9; for (let k = k0; k < k1; k++) off = Math.max(off, spec[k] - env[k]); }
+        const top = Math.max(0, off);  // env peaks at 0 dB, so its top is at `off`
+        curves[0].offset = -top;
+        curves.push({ db: env, df: SR / N, color: css('--accent-2'), width: 2, offset: off - top });
+        drawSpec($('vSpec'), curves, 4000, -70, 500);
+        const vtxt = v.F ? `filter = ${v.label} (formants ≈ ${v.F.slice(0, 3).join(', ')} Hz)` : 'no filter: just the source';
+        const stxt = sk === 'noise' ? 'source = noise: no harmonics, the spectrum is a continuous (noisy) curve that follows the filter shape' : `source = pulses at ${s.f0} Hz: harmonics every ${s.f0} Hz`;
+        $('vNote').textContent = `${stxt}; ${vtxt}.`;
+      });
+      grid.appendChild(b);
+    });
+  });
+
+  window.addEventListener('resize', () => { tapUpdate(); });
+  tapUpdate();
+  drawSpec($('strikeSpec'), [], 8000, -70, 2000); drawWave($('strikeWave'), new Float64Array(10), 10);
+  drawSpec($('vSpec'), [], 4000, -70, 500);
+  // ================================================================ STEP 2: the source
+  // Glottal cycle model (phase φ ∈ [0,1)): opening 0–0.40, closing 0.40–0.58, closed 0.58–1.
+  const OPEN = 0.40, CLOSE = 0.58;
+  const glotArea = ph => ph < OPEN ? 0.5 * (1 - Math.cos(Math.PI * ph / OPEN))
+                      : ph < CLOSE ? Math.cos(0.5 * Math.PI * (ph - OPEN) / (CLOSE - OPEN)) : 0;
+  const glotDeriv = ph => ph < OPEN ? 0.5 * Math.PI / OPEN * Math.sin(Math.PI * ph / OPEN)
+                       : ph < CLOSE ? -0.5 * Math.PI / (CLOSE - OPEN) * Math.sin(0.5 * Math.PI * (ph - OPEN) / (CLOSE - OPEN)) : 0;
+
+  function glottalSignal(f0, n, kind) {   // kind: 'flow' | 'deriv' | 'imp'
+    const y = new Float64Array(n);
+    if (kind === 'imp') { for (let t = 0; t < n; t += SR / f0) y[Math.round(t)] = 1; return y; }
+    for (let i = 0; i < n; i++) { const ph = (i * f0 / SR) % 1; y[i] = kind === 'flow' ? glotArea(ph) : glotDeriv(ph); }
+    return y;
+  }
+
+  // ---------------- vocal-fold animation ----------------
+  const vf = { cv: $('vfCanvas'), phase: 0, running: true, last: null, puffs: [], waves: [], hist: [] };
+  const VIS_RATE = 0.55;  // animated cycles per second
+  function vfF0() { return +$('vfF0').value; }
+  function vfLabels() {
+    const f0 = vfF0();
+    $('vfF0v').textContent = f0 + ' Hz';
+    $('vfSlow').textContent = `Real speed: ${f0} cycles per second (one every ${(1000 / f0).toFixed(1)} ms). Shown about ${Math.round(f0 / VIS_RATE)}× slower.`;
+  }
+  $('vfF0').addEventListener('input', vfLabels);
+  $('vfPause').addEventListener('click', () => { vf.running = !vf.running; $('vfPause').textContent = vf.running ? '❚❚ Pause' : '▶ Resume'; if (vf.running) requestAnimationFrame(vfFrame); });
+  $('vfHearRaw').addEventListener('click', () => play(glottalSignal(vfF0(), SR, 'deriv')));
+  $('vfHearA').addEventListener('click', () => { const y = formantFilter(glottalSignal(vfF0(), SR, 'deriv'), VOWELS.a); for (let i = 0; i < 400; i++) y[i] *= i / 400; play(y); });
+
+  function vfDraw() {
+    const narrow = vf.cv.clientWidth < 560;
+    const want = narrow ? 600 : 340;
+    if (+vf.cv.dataset.h !== want) { vf.cv.dataset.h = want; vf.cv.style.height = want + 'px'; }
+    const { c, W, H } = setupCanvas(vf.cv);
+    const ink = css('--ink'), muted = css('--muted'), line = css('--line-strong'), acc = css('--accent'), acc2 = css('--accent-2'), acc3 = css('--accent-3');
+    const LW = narrow ? W : Math.min(300, W * 0.36), SH = narrow ? 300 : H;   // cross-section region: width LW, height SH
+    const ph = vf.phase % 1, a = glotArea(ph);
+    // ---- cross-section ----
+    const cx = LW / 2, tubeW = Math.min(150, LW * 0.55), wl = cx - tubeW / 2, wr = cx + tubeW / 2;
+    const gy = SH * 0.55, top = 26, bot = SH - 22;
+    // subglottal pressure: builds while closed, released while open
+    const press = ph >= CLOSE ? (ph - CLOSE) / (1 - CLOSE) : Math.max(0, 1 - ph / OPEN);
+    c.fillStyle = acc; c.globalAlpha = 0.06 + 0.22 * press; c.fillRect(wl, gy + 18, tubeW, bot - gy - 18); c.globalAlpha = 1;
+    // tract (above) tinted faintly
+    c.fillStyle = css('--surface-2'); c.fillRect(wl, top, tubeW, gy - 18 - top);
+    // walls
+    c.strokeStyle = line; c.lineWidth = 2.5;
+    c.beginPath(); c.moveTo(wl, top); c.lineTo(wl, bot); c.moveTo(wr, top); c.lineTo(wr, bot); c.stroke();
+    // folds (two rounded wedges); gap = a * maxGap
+    const maxGap = tubeW * 0.34, half = (a * maxGap) / 2 + 0.8;
+    const fold = (sgn) => {
+      const wall = sgn < 0 ? wl : wr, tip = cx + sgn * half;
+      c.beginPath(); c.moveTo(wall, gy - 20);
+      c.bezierCurveTo(wall + sgn * -tubeW * 0.05, gy - 20, tip + sgn * 16, gy - 12, tip, gy);
+      c.bezierCurveTo(tip + sgn * 10, gy + 14, wall - sgn * tubeW * 0.1, gy + 22, wall, gy + 22);
+      c.closePath();
+      c.fillStyle = '#D9868A'; c.fill(); c.strokeStyle = '#9C4A50'; c.lineWidth = 1.4; c.stroke();
+    };
+    fold(-1); fold(1);
+    // puffs: emitted while open, rise and fade
+    if (vf.running && a > 0.05 && Math.random() < a * 0.9) vf.puffs.push({ x: cx + (Math.random() - 0.5) * a * maxGap * 0.8, y: gy - 6, v: 0.6 + 1.6 * a, life: 1 });
+    c.fillStyle = acc;
+    vf.puffs = vf.puffs.filter(p => p.life > 0 && p.y > top);
+    for (const p of vf.puffs) { c.globalAlpha = Math.max(0, p.life) * 0.8; c.beginPath(); c.arc(p.x, p.y, 2.2, 0, 2 * Math.PI); c.fill(); }
+    c.globalAlpha = 1;
+    // pressure waves launched at closure
+    c.strokeStyle = acc2;
+    vf.waves = vf.waves.filter(w => w.r < gy - top);
+    for (const w of vf.waves) { c.globalAlpha = Math.max(0, 1 - w.r / (gy - top)); c.lineWidth = 2; c.beginPath(); c.arc(cx, gy - 4, w.r, Math.PI * 1.12, Math.PI * 1.88); c.stroke(); }
+    c.globalAlpha = 1;
+    const justClosed = ph >= CLOSE && ph < CLOSE + 0.12;
+    c.font = '600 12px Inter, sans-serif'; c.textAlign = 'center';
+    if (justClosed) { c.fillStyle = acc2; c.fillText('TAP! (closure)', cx, gy - 34); }
+    c.font = '11px Inter, sans-serif'; c.fillStyle = muted;
+    c.fillText('↑ to the vocal tract', cx, top - 8);
+    c.fillText('↑ air from the lungs', cx, bot + 14);
+    c.textAlign = 'left'; c.fillStyle = ink; c.font = '600 11px Inter, sans-serif';
+    const stage = ph < OPEN ? '② blown open' : ph < CLOSE ? '③ snapping shut' : '① closed: pressure builds';
+    c.fillText(stage, 4, 14);
+    c.textAlign = 'right'; c.fillStyle = '#9C4A50'; c.font = '10px Inter, sans-serif';
+    c.fillText('vocal folds', wl - 4, gy + 4);
+    c.textAlign = 'left';
+    // ---- traces: to the right (wide) or underneath (narrow) ----
+    const x0 = narrow ? 8 : LW + 30, x1 = W - 10, pw = x1 - x0, cycles = 3;
+    const TY = narrow ? SH + 10 : 0, TH = narrow ? H - SH - 10 : H;
+    const rows = [
+      { lab: 'glottal airflow', f: glotArea, col: acc, lo: 0, hi: 1 },
+      { lab: 'its rate of change', f: glotDeriv, col: acc2, lo: -9, hi: 4.5 },
+      { lab: 'idealised: impulse train', f: null, col: acc3 },
+    ];
+    const rh = (TH - 30) / rows.length;
+    rows.forEach((r, i) => {
+      const y0 = TY + 14 + i * rh, y1 = y0 + rh - 18;
+      c.fillStyle = muted; c.font = '11px Inter, sans-serif'; c.fillText(r.lab, x0, y0 + 2);
+      c.strokeStyle = css('--line'); c.lineWidth = 1; c.beginPath(); c.moveTo(x0, y1); c.lineTo(x1, y1); c.stroke();
+      c.strokeStyle = r.col; c.lineWidth = 2; c.beginPath();
+      if (r.f) {
+        for (let px = 0; px <= pw; px++) {
+          const phAbs = vf.phase - cycles + px / pw * cycles; if (phAbs < 0) continue;
+          const v = r.f(((phAbs % 1) + 1) % 1), yv = y1 - (v - r.lo) / (r.hi - r.lo) * (y1 - y0 - 8);
+          px ? c.lineTo(x0 + px, yv) : c.moveTo(x0 + px, yv);
+        }
+        c.stroke();
+      } else {
+        const start = Math.floor(vf.phase - cycles);
+        for (let k = start; k <= vf.phase; k++) {
+          const phc = k + CLOSE; if (phc > vf.phase || phc < vf.phase - cycles) continue;
+          const x = x0 + (phc - (vf.phase - cycles)) / cycles * pw;
+          c.beginPath(); c.moveTo(x, y1); c.lineTo(x, y0 + 10); c.stroke();
+          c.fillStyle = r.col; c.beginPath(); c.arc(x, y0 + 10, 3, 0, 2 * Math.PI); c.fill();
+        }
+      }
+    });
+    // shaded closure markers + "now" cursor
+    for (let k = Math.floor(vf.phase - cycles); k <= vf.phase; k++) {
+      const phc = k + CLOSE; if (phc > vf.phase || phc < vf.phase - cycles) continue;
+      const x = x0 + (phc - (vf.phase - cycles)) / cycles * pw;
+      c.strokeStyle = acc2; c.globalAlpha = 0.25; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(x, TY + 10); c.lineTo(x, H - 16); c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
+    }
+    c.strokeStyle = ink; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x1, TY + 8); c.lineTo(x1, H - 16); c.stroke();
+    c.fillStyle = muted; c.textAlign = 'right'; c.fillText('now', x1 - 3, H - 4);
+    c.textAlign = 'left'; c.fillText(`← ${cycles} cycles = ${(cycles * 1000 / vfF0()).toFixed(0)} ms of real time`, x0, H - 4);
+  }
+  function vfFrame(ts) {
+    if (!vf.running) { vf.last = null; return; }
+    if (vf.last != null) {
+      const dt = Math.min(0.05, (ts - vf.last) / 1000), prev = vf.phase % 1;
+      vf.phase += dt * VIS_RATE;
+      const now = vf.phase % 1;
+      if ((prev < CLOSE && now >= CLOSE) || (prev > now && CLOSE < now)) vf.waves.push({ r: 4 });
+      vf.puffs.forEach(p => { p.y -= p.v * dt * 60; p.life -= dt * 0.9; });
+      vf.waves.forEach(w => { w.r += dt * 120; });
+    }
+    vf.last = ts;
+    vfDraw();
+    requestAnimationFrame(vfFrame);
+  }
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  vfLabels();
+  if (reduce) { vf.running = false; vf.phase = 2.3; $('vfPause').textContent = '▶ Play'; vfDraw(); }
+  else requestAnimationFrame(vfFrame);
+
+  // ---------------- impulse-train explorer ----------------
+  let itType = 'imp';
+  document.querySelectorAll('#itType button').forEach(b => b.addEventListener('click', () => {
+    itType = b.dataset.t; document.querySelectorAll('#itType button').forEach(x => x.classList.toggle('on', x === b)); itUpdate();
+  }));
+  function itSignal(n) { return glottalSignal(+$('itF0').value, n, itType === 'imp' ? 'imp' : 'flow'); }
+  function itUpdate() {
+    const f0 = +$('itF0').value; $('itF0v').textContent = f0 + ' Hz';
+    const y = itSignal(SR);
+    // time plot (remove DC for the flow so it sits on the axis like the others)
+    const n40 = Math.round(0.04 * SR);
+    if (itType === 'imp') {
+      const { c, W, H } = setupCanvas($('itWave'));
+      c.strokeStyle = css('--line'); c.beginPath(); c.moveTo(0, H - 14); c.lineTo(W, H - 14); c.stroke();
+      c.strokeStyle = css('--accent'); c.fillStyle = css('--accent'); c.lineWidth = 2;
+      for (let t = 0; t < n40; t += SR / f0) { const x = t / n40 * W; c.beginPath(); c.moveTo(x + 2, H - 14); c.lineTo(x + 2, 16); c.stroke(); c.beginPath(); c.arc(x + 2, 16, 3, 0, 2 * Math.PI); c.fill(); }
+      c.fillStyle = css('--muted'); c.font = '10px Inter, sans-serif'; c.fillText(`T₀ = ${(1000 / f0).toFixed(1)} ms`, W - 80, H - 2);
+    } else {
+      drawWave($('itWave'), y, n40);
+    }
+    const N = 8192, spec = spectrumDb(y, 2000, N), curves = [{ db: spec, df: SR / N, color: css('--accent'), width: 1 }];
+    if (itType !== 'imp') {
+      // −12 dB/octave guide anchored at the first harmonic
+      const g = new Float64Array(N / 2);
+      for (let k = 0; k < N / 2; k++) { const f = k * SR / N; g[k] = f < f0 ? 0 : -12 * Math.log2(f / f0); }
+      curves.push({ db: g, df: SR / N, color: css('--accent-2'), width: 1.5, offset: 2 });
+    }
+    drawSpec($('itSpec'), curves, 4000, -70, 1000);
+    $('itGuide').style.display = itType === 'imp' ? 'none' : 'inline';
+    const nh = Math.floor(4000 / f0);
+    $('itNote').textContent = itType === 'imp'
+      ? `Pulses every ${(1000 / f0).toFixed(1)} ms → lines every ${f0} Hz, all the same height (${nh} harmonics below 4 kHz). Halve the spacing in time and the lines spread twice as far apart.`
+      : `Same ${f0} Hz spacing, but the smooth pulses make the harmonics roll off at about −12 dB/octave: a comb multiplied by a gently sloping curve. It sounds much mellower than the raw impulses.`;
+  }
+  $('itF0').addEventListener('input', itUpdate);
+  $('itPlay').addEventListener('click', () => { const y = itSignal(SR); if (itType !== 'imp') { let m = 0; for (const v of y) m += v; m /= y.length; for (let i = 0; i < y.length; i++) y[i] -= m; } play(y); });
+  window.addEventListener('resize', () => { itUpdate(); if (!vf.running) vfDraw(); });
+  itUpdate();
+  // ================================================================ STEP 3: resonance and formants
+  // additive synthesis: harmonics of f0 weighted by a response function (plus a gentle source tilt)
+  function synthFromResponse(respAt, f0, dur = 1.0) {
+    const n = Math.round(dur * SR), y = new Float64Array(n);
+    for (let k = 1; k * f0 < 5000; k++) {
+      const A = respAt(k * f0) / k, w = 2 * Math.PI * k * f0 / SR, ph = (k * k * 0.7) % (2 * Math.PI);
+      for (let i = 0; i < n; i++) y[i] += A * Math.sin(w * i + ph);
+    }
+    for (let i = 0; i < 400; i++) y[i] *= i / 400;
+    return y;
+  }
+
+  // ---------------- driven mass–spring ----------------
+  const sm = { cv: $('smCanvas'), x: 0, v: 0, t: 0, zeta: 0.04, drive: true, last: null, hist: [], peak: 0, peakT: 0, kicked: false };
+  const FN = 0.8;                       // natural frequency of the on-screen spring (Hz, real time)
+  const smRatio = () => +$('smRate').value / 100;
+  const smGain = (r, z) => 1 / Math.sqrt((1 - r * r) ** 2 + (2 * z * r) ** 2);
+  function smDeriv(x, v, t) {
+    const wn = 2 * Math.PI * FN, w = wn * smRatio(), yd = sm.drive ? Math.sin(w * t) : 0;
+    return [v, -2 * sm.zeta * wn * v - wn * wn * (x - yd)];
+  }
+  function smStep(dt) {   // RK4
+    const { x, v, t } = sm;
+    const [a1, b1] = smDeriv(x, v, t), [a2, b2] = smDeriv(x + a1 * dt / 2, v + b1 * dt / 2, t + dt / 2);
+    const [a3, b3] = smDeriv(x + a2 * dt / 2, v + b2 * dt / 2, t + dt / 2), [a4, b4] = smDeriv(x + a3 * dt, v + b3 * dt, t + dt);
+    sm.x += dt / 6 * (a1 + 2 * a2 + 2 * a3 + a4); sm.v += dt / 6 * (b1 + 2 * b2 + 2 * b3 + b4); sm.t += dt;
+  }
+  function smLabels() {
+    const r = smRatio();
+    $('smRateV').textContent = `${r.toFixed(2)} × natural`;
+    const g = smGain(r, sm.zeta);
+    $('smNote').textContent = !sm.drive
+      ? (sm.kicked ? 'Free ringing after one kick: it oscillates at its natural frequency and dies away. This decaying ring is its impulse response.' : 'Shaking stopped: the motion dies away at a rate set by the damping.')
+      : Math.abs(r - 1) < 0.06
+        ? `Resonance! Shaking at the natural frequency: the mass swings about ${g.toFixed(1)}× as far as your hand moves.`
+        : r < 1 ? `Below resonance: the mass roughly follows the hand (steady swing ≈ ${g.toFixed(2)}× the hand's).`
+                : `Above resonance: the mass can't keep up (steady swing ≈ ${g.toFixed(2)}× the hand's) and moves opposite to the hand.`;
+  }
+  $('smRate').addEventListener('input', () => { if (!sm.drive) { sm.drive = true; $('smDrive').textContent = 'Stop shaking'; } sm.kicked = false; smLabels(); });
+  document.querySelectorAll('#smDamp button').forEach(b => b.addEventListener('click', () => {
+    sm.zeta = +b.dataset.z; document.querySelectorAll('#smDamp button').forEach(x => x.classList.toggle('on', x === b)); smLabels(); smDraw();
+  }));
+  $('smDrive').addEventListener('click', () => { sm.drive = !sm.drive; sm.kicked = false; $('smDrive').textContent = sm.drive ? 'Stop shaking' : 'Start shaking'; smLabels(); });
+  $('smKick').addEventListener('click', () => { sm.drive = false; sm.kicked = true; sm.x = 0; sm.v = 2 * Math.PI * FN * 6; $('smDrive').textContent = 'Start shaking'; smLabels(); });
+
+  function smDraw() {
+    const narrow = sm.cv.clientWidth < 620, want = narrow ? 640 : 300;
+    if (+sm.cv.dataset.h !== want) { sm.cv.dataset.h = want; sm.cv.style.height = want + 'px'; }
+    const { c, W, H } = setupCanvas(sm.cv);
+    const ink = css('--ink'), muted = css('--muted'), line = css('--line'), acc = css('--accent'), acc2 = css('--accent-2'), acc3 = css('--accent-3');
+    const scale = 9;                                     // px per unit of hand motion
+    const yd = sm.drive ? Math.sin(2 * Math.PI * FN * smRatio() * sm.t) : 0;
+    // --- spring & mass ---
+    const SW = narrow ? W : 170, SHh = narrow ? 300 : H, cx = SW / 2;
+    const top = 26 + yd * scale, rest = SHh * 0.55, my = rest + Math.max(-rest + 50, Math.min(SHh - rest - 30, sm.x * scale));
+    c.fillStyle = css('--surface-2'); c.fillRect(cx - 50, 10, 100, 8);
+    c.fillStyle = acc3; c.fillRect(cx - 34, top - 6, 68, 10);           // the hand / shaker
+    c.fillStyle = muted; c.font = '10px Inter, sans-serif'; c.textAlign = 'center'; c.fillText('your hand', cx, top - 10 < 12 ? top + 18 : top - 10);
+    c.strokeStyle = ink; c.lineWidth = 1.5; c.beginPath();
+    const coils = 12, sx = cx, s0 = top + 4, s1 = my - 20;
+    c.moveTo(sx, s0);
+    for (let i = 1; i < coils * 2; i++) c.lineTo(sx + (i % 2 ? 14 : -14), s0 + (s1 - s0) * i / (coils * 2));
+    c.lineTo(sx, s1); c.stroke();
+    c.fillStyle = acc; c.fillRect(cx - 24, my - 20, 48, 40);
+    c.fillStyle = '#fff'; c.font = '600 12px Inter, sans-serif'; c.fillText('m', cx, my + 5);
+    c.strokeStyle = line; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(cx - 45, rest); c.lineTo(cx + 45, rest); c.stroke(); c.setLineDash([]);
+    c.textAlign = 'left';
+    // --- trace ---
+    const T0x = narrow ? 8 : SW + 20, TW = narrow ? W - 16 : (W - SW - 40) * 0.55, TY = narrow ? SHh + 10 : 10, TH = narrow ? 150 : H - 30;
+    const mid = TY + TH / 2;
+    c.strokeStyle = line; c.beginPath(); c.moveTo(T0x, mid); c.lineTo(T0x + TW, mid); c.stroke();
+    c.fillStyle = muted; c.font = '10px Inter, sans-serif'; c.fillText('motion over the last 6 s', T0x, TY + 8);
+    const span = 6, sc = Math.min(TH / 2 - 6, 999) / 13;
+    [['hand', acc3, 1], ['mass', acc, 1.8]].forEach(([key, col, lw]) => {
+      c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); let started = false;
+      for (const h of sm.hist) {
+        const x = T0x + TW - (sm.t - h.t) / span * TW; if (x < T0x) continue;
+        const yv = mid - Math.max(-13, Math.min(13, key === 'hand' ? h.yd : h.x)) * sc;
+        started ? c.lineTo(x, yv) : c.moveTo(x, yv); started = true;
+      }
+      c.stroke();
+    });
+    c.fillStyle = acc3; c.fillText('— hand', T0x + TW - 90, TY + 8); c.fillStyle = acc; c.fillText('— mass', T0x + TW - 45, TY + 8);
+    // --- resonance curve ---
+    const R0x = narrow ? 36 : T0x + TW + 40, RW = narrow ? W - 50 : W - R0x - 10, RY = narrow ? TY + TH + 20 : 14, RH = narrow ? H - RY - 28 : H - 40;
+    const gmax = 13;
+    c.strokeStyle = line; c.lineWidth = 1; c.strokeRect(R0x, RY, RW, RH);
+    c.fillStyle = muted; c.font = '10px Inter, sans-serif';
+    c.fillText('swing ÷ hand motion', R0x + 4, RY + 12);
+    [0.5, 1, 1.5, 2, 2.5].forEach(r => { const x = R0x + r / 2.6 * RW; c.fillText(r === 1 ? 'natural' : r.toFixed(1) + '×', x - 10, RY + RH + 12); });
+    [0.04, 0.12, 0.35].forEach(z => {
+      c.strokeStyle = z === sm.zeta ? acc2 : line; c.lineWidth = z === sm.zeta ? 2.2 : 1.2; c.beginPath();
+      for (let i = 0; i <= 200; i++) { const r = 0.02 + i / 200 * 2.58, g = Math.min(gmax, smGain(r, z)), x = R0x + r / 2.6 * RW, yv = RY + RH - g / gmax * RH;
+        i ? c.lineTo(x, yv) : c.moveTo(x, yv); }
+      c.stroke();
+    });
+    if (sm.drive) {
+      const r = smRatio(), g = Math.min(gmax, smGain(r, sm.zeta));
+      c.fillStyle = acc2; c.beginPath(); c.arc(R0x + r / 2.6 * RW, RY + RH - g / gmax * RH, 5, 0, 2 * Math.PI); c.fill();
+    }
+  }
+  function smFrame(ts) {
+    if (sm.last != null) {
+      const dt = Math.min(0.05, (ts - sm.last) / 1000), n = 20;
+      for (let i = 0; i < n; i++) smStep(dt / n);
+      sm.hist.push({ t: sm.t, x: sm.x, yd: sm.drive ? Math.sin(2 * Math.PI * FN * smRatio() * sm.t) : 0 });
+      while (sm.hist.length && sm.t - sm.hist[0].t > 6.2) sm.hist.shift();
+    }
+    sm.last = ts;
+    const r = sm.cv.getBoundingClientRect();
+    if (r.bottom > 0 && r.top < innerHeight) smDraw();
+    requestAnimationFrame(smFrame);
+  }
+  smLabels();
+  if (reduce) smDraw(); else requestAnimationFrame(smFrame);
+
+  // ---------------- quarter-wave tube ----------------
+  const tube = { n: 1, phase: 0, last: null };
+  const C_AIR = 35000;  // cm/s
+  const tubeL = () => +$('tubeL').value / 10;
+  const tubeF = (L, n) => (2 * n - 1) * C_AIR / (4 * L);
+  const tubeF0 = L => Math.round(110 + (17.5 - L) / (17.5 - 11) * (250 - 110));
+  function tubeLabels() {
+    const L = tubeL();
+    $('tubeLv').textContent = L.toFixed(1) + ' cm';
+    setTex($('tubeF'), [1, 2, 3, 4].map(n => `\\(F_${n} = ${Math.round(tubeF(L, n))}\\)&nbsp;Hz`).join('&nbsp;&nbsp;&nbsp;'));
+    document.querySelectorAll('#tubePreset button').forEach(b => b.classList.toggle('on', Math.abs(+b.dataset.l / 10 - L) < 0.05));
+  }
+  function tubeDraw() {
+    const { c, W, H } = setupCanvas($('tubeCanvas'));
+    const L = tubeL(), n = tube.n, maxL = 20, x0 = 60, x1 = x0 + (W - 110) * L / maxL, yc = 70, hh = 40;
+    const ink = css('--ink'), muted = css('--muted'), acc = css('--accent'), acc2 = css('--accent-2'), teal = css('--teal');
+    const env = u => Math.sin((2 * n - 1) * Math.PI * u / 2);          // how far the air swings at position u (0 = glottis, 1 = lips)
+    c.fillStyle = css('--surface-2'); c.fillRect(x0, yc - hh, x1 - x0, 2 * hh);
+    c.strokeStyle = ink; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(x1, yc - hh); c.lineTo(x0, yc - hh); c.lineTo(x0, yc + hh); c.lineTo(x1, yc + hh); c.stroke();
+    // air parcels: rows of dots swinging left–right
+    const cols = Math.max(8, Math.round((x1 - x0) / 16)), rows = 5, swing = Math.min(14, (x1 - x0) / cols * 0.9), ph = Math.cos(tube.phase);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      const u = (i + 0.5) / cols, e = env(u), x = x0 + u * (x1 - x0) + swing * e * ph, y = yc - hh + (j + 0.5) * (2 * hh) / rows;
+      c.fillStyle = acc; c.globalAlpha = 0.35 + 0.65 * Math.abs(e);
+      c.beginPath(); c.arc(x, y, 3.2, 0, 2 * Math.PI); c.fill();
+    }
+    c.globalAlpha = 1;
+    // below: how far the air swings along the tube
+    const by = yc + hh + 76, bh = 30;
+    c.strokeStyle = css('--line'); c.lineWidth = 1; c.beginPath(); c.moveTo(x0, by); c.lineTo(x1, by); c.stroke();
+    c.strokeStyle = teal; c.lineWidth = 2.2; c.beginPath();
+    for (let px = 0; px <= x1 - x0; px++) { const u = px / (x1 - x0), yv = by - Math.abs(env(u)) * bh; px ? c.lineTo(x0 + px, yv) : c.moveTo(x0 + px, yv); }
+    c.stroke();
+    for (let k = 1; k < n; k++) {                                        // still points inside the tube
+      const u = 2 * k / (2 * n - 1), x = x0 + u * (x1 - x0);
+      c.fillStyle = acc2; c.beginPath(); c.arc(x, by, 3.5, 0, 2 * Math.PI); c.fill();
+      c.font = '10px Inter, sans-serif'; c.textAlign = 'center'; c.fillText('still', x, by + 13);
+    }
+    c.font = '11px Inter, sans-serif'; c.fillStyle = ink; c.textAlign = 'center';
+    c.textAlign = 'left'; c.fillText('glottis (wall)', x0 - 4, yc + hh + 15);
+    c.fillStyle = muted; c.fillText('air still', x0 - 4, yc + hh + 28);
+    c.textAlign = 'right'; c.fillStyle = ink; c.fillText('lips (open)', x1 + 8, yc + hh + 15);
+    c.fillStyle = muted; c.fillText('air swings most', x1 + 8, yc + hh + 28);
+    c.textAlign = 'left'; c.fillStyle = muted; c.font = '10px Inter, sans-serif';
+    c.fillText('↑ how far the air swings along the tube', x0, by + 26);
+    c.fillStyle = teal; c.font = '600 12px Inter, sans-serif';
+    const frac = ['¼', '¾', '1¼'][n - 1];
+    c.fillText(`F${n}: ${frac} of a wave fits in ${L.toFixed(1)} cm → ${Math.round(tubeF(L, n))} Hz`, x0, 16);
+  }
+  function tubeFrame(ts) {
+    if (tube.last != null) tube.phase += Math.min(0.05, (ts - tube.last) / 1000) * 2 * Math.PI * 0.9;
+    tube.last = ts;
+    const r = $('tubeCanvas').getBoundingClientRect();
+    if (r.bottom > 0 && r.top < innerHeight) tubeDraw();
+    requestAnimationFrame(tubeFrame);
+  }
+  document.querySelectorAll('#tubeMode button').forEach(b => b.addEventListener('click', () => {
+    tube.n = +b.dataset.n; document.querySelectorAll('#tubeMode button').forEach(x => x.classList.toggle('on', x === b)); tubeDraw();
+  }));
+  document.querySelectorAll('#tubePreset button').forEach(b => b.addEventListener('click', () => { $('tubeL').value = b.dataset.l; tubeLabels(); tubeDraw(); }));
+  $('tubeL').addEventListener('input', () => { tubeLabels(); tubeDraw(); });
+  $('tubePlay').addEventListener('click', () => {
+    const L = tubeL(), F = [1, 2, 3, 4].map(n => tubeF(L, n)), B = [70, 90, 120, 160];
+    const resp = f => F.reduce((acc, Fk, k) => acc / Math.sqrt((1 - (f / Fk) ** 2) ** 2 + (f * B[k] / (Fk * Fk)) ** 2), 1);
+    play(synthFromResponse(resp, tubeF0(L)));
+  });
+  tubeLabels(); tube.phase = 0.4;
+  if (reduce) tubeDraw(); else requestAnimationFrame(tubeFrame);
+
+  // ---------------- virtual vocal tract (chain of tube sections) ----------------
+  const VT = { N: 34, L0: 17.0, A0: 3.0, B: 70 };
+  const REF_VOWELS = [ ['i', 270, 2290], ['ɪ', 390, 1990], ['ɛ', 530, 1840], ['æ', 660, 1720], ['ɑ', 730, 1090], ['ɔ', 570, 840],
+                       ['ʊ', 440, 1020], ['u', 300, 870], ['ʌ', 640, 1190], ['ɝ', 490, 1350], ['ə', 500, 1500] ];   // Peterson & Barney (1952), men; ə = uniform-tube neutral vowel
+  const VT_PRESETS = { neutral: [80, 0, 0], i: [125, 92, 0], a: [40, 93, 0], u: [100, 90, 100] };
+  function vtParams() { return { pos: +$('vtPos').value / 10, deg: +$('vtDeg').value / 100, rnd: +$('vtRound').value / 100 }; }
+  function vtArea({ pos, deg, rnd }) {
+    const L = VT.L0 + 1.5 * rnd, N = VT.N, A = new Float64Array(N);
+    const opp = pos > VT.L0 / 2 ? pos - 7 : pos + 7;
+    for (let i = 0; i < N; i++) {
+      const x = (i + 0.5) * L / N;
+      let a = VT.A0 * (1 - deg * Math.exp(-((x - pos) ** 2) / 8) + 1.2 * deg * Math.exp(-((x - opp) ** 2) / 12.5));
+      if (pos <= VT.L0 / 2) a += VT.A0 * 1.5 * deg * Math.exp(-((x - (L - 1)) ** 2) / 12.5);   // tongue pulled back → jaw and mouth open wide
+      if (x > L - 1.5) a *= 1 - 0.9 * rnd;
+      A[i] = Math.max(0.12, a);
+    }
+    return { A, L };
+  }
+  // |U_lips / U_glottis| for a chain of lossless sections, lips open (P = 0), uniform damping via complex k
+  function vtResponse({ A, L }, f) {
+    const d = L / A.length, kr = 2 * Math.PI * f / C_AIR * d, ki = -Math.PI * VT.B / C_AIR * d;
+    const cr = Math.cos(kr) * Math.cosh(ki), ci = -Math.sin(kr) * Math.sinh(ki);   // cos(kr + j ki)
+    const sr = Math.sin(kr) * Math.cosh(ki), si = Math.cos(kr) * Math.sinh(ki);    // sin(kr + j ki)
+    // running product M = [[m11, m12], [m21, m22]] (complex, stored as [re, im])
+    let m11 = [1, 0], m12 = [0, 0], m21 = [0, 0], m22 = [1, 0];
+    const mul = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]], add = (a, b) => [a[0] + b[0], a[1] + b[1]];
+    for (let i = 0; i < A.length; i++) {
+      const Z = 1 / A[i];
+      const e11 = [cr, ci], e12 = [-Z * si, Z * sr], e21 = [-si / Z, sr / Z], e22 = [cr, ci];   // j·Z·sin, j·sin/Z
+      const n11 = add(mul(m11, e11), mul(m12, e21)), n12 = add(mul(m11, e12), mul(m12, e22));
+      const n21 = add(mul(m21, e11), mul(m22, e21)), n22 = add(mul(m21, e12), mul(m22, e22));
+      m11 = n11; m12 = n12; m21 = n21; m22 = n22;
+    }
+    return 1 / Math.hypot(m22[0], m22[1]);
+  }
+  let vtCache = null;
+  function vtCompute() {
+    const p = vtParams(), geo = vtArea(p), df = 10, K = 450, mag = new Float64Array(K);
+    for (let k = 0; k < K; k++) mag[k] = vtResponse(geo, k * df + 1);
+    const F = [];
+    for (let k = 1; k < K - 1 && F.length < 4; k++) if (mag[k] > mag[k - 1] && mag[k] >= mag[k + 1]) F.push(k * df);
+    let mx = 0; for (const v of mag) mx = Math.max(mx, v);
+    const db = Array.from(mag, v => 20 * Math.log10(v / mx + 1e-9));
+    vtCache = { p, geo, db, df, F };
+    return vtCache;
+  }
+  function vtDrawAll() {
+    const { p, geo, db, df, F } = vtCompute();
+    $('vtPosV').textContent = p.pos.toFixed(1) + ' cm from glottis';
+    $('vtDegV').textContent = Math.round(p.deg * 100) + '%';
+    $('vtRoundV').textContent = Math.round(p.rnd * 100) + '%';
+    const ink = css('--ink'), muted = css('--muted'), acc = css('--accent'), acc2 = css('--accent-2'), line = css('--line');
+    // shape
+    { const { c, W, H } = setupCanvas($('vtShape'));
+      const x0 = 50, x1 = W - 20, yc = H / 2, sc = (H / 2 - 16) / Math.sqrt(VT.A0 * 2.3), Lmax = VT.L0 + 1.5;
+      const X = x => x0 + x / Lmax * (x1 - x0);
+      c.fillStyle = '#E9B7B9'; c.strokeStyle = '#9C4A50'; c.lineWidth = 1.5;
+      c.beginPath();
+      for (let i = 0; i < geo.A.length; i++) { const x = X((i + 0.5) * geo.L / geo.A.length), r = Math.sqrt(geo.A[i]) * sc; i ? c.lineTo(x, yc - r) : c.moveTo(X(0), yc - r); }
+      for (let i = geo.A.length - 1; i >= 0; i--) { const x = X((i + 0.5) * geo.L / geo.A.length), r = Math.sqrt(geo.A[i]) * sc; c.lineTo(i === geo.A.length - 1 ? X(geo.L) : x, yc + r); }
+      c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = ink; c.fillRect(X(0) - 3, yc - 24, 3, 48);
+      c.font = '10px Inter, sans-serif'; c.fillStyle = muted; c.textAlign = 'center';
+      c.fillText('glottis', X(0), H - 3); c.fillText('lips', X(geo.L), H - 3);
+      if (p.deg > 0.05) { c.fillStyle = acc2; c.fillText('▼ tongue', X(p.pos), 11); }
+      for (let cm = 0; cm <= 18; cm += 2) { c.fillStyle = muted; c.fillText(cm, X(cm), yc + sc * 2.9 > H - 14 ? H - 14 : yc + sc * 2.9); }
+      c.textAlign = 'left'; }
+    // spectrum
+    { const { c, W, H } = setupCanvas($('vtSpec'));
+      const pl = 34, pw = W - pl - 8, pt = 16, ph = H - pt - 20, fmax = 4000, floor = -50;
+      c.font = '10px Inter, sans-serif'; c.fillStyle = muted; c.strokeStyle = line;
+      for (let f = 0; f <= fmax; f += 1000) { const x = pl + f / fmax * pw; c.beginPath(); c.moveTo(x, pt); c.lineTo(x, pt + ph); c.stroke(); c.fillText(f / 1000 + 'k', x - 6, H - 5); }
+      for (let d = 0; d >= floor; d -= 10) { const yv = pt + (-d / -floor) * ph; c.beginPath(); c.moveTo(pl, yv); c.lineTo(pl + pw, yv); c.stroke(); if (d % 20 === 0) c.fillText(d, 4, yv + 3); }
+      c.strokeStyle = acc; c.lineWidth = 2; c.beginPath();
+      db.forEach((d, k) => { const f = k * df; if (f > fmax) return; const x = pl + f / fmax * pw, yv = pt + Math.min(1, -d / -floor) * ph; k ? c.lineTo(x, yv) : c.moveTo(x, yv); });
+      c.stroke();
+      F.forEach((f, i) => { if (f > fmax) return; const x = pl + f / fmax * pw, yv = pt + Math.min(1, -db[f / df] / -floor) * ph;
+        c.fillStyle = acc2; c.beginPath(); c.arc(x, yv, 3.5, 0, 2 * Math.PI); c.fill();
+        c.font = '600 10px Inter, sans-serif'; c.textAlign = 'center'; c.fillText(`F${i + 1} ${f}`, x, Math.max(10, yv - 8)); c.textAlign = 'left'; });
+    }
+    // vowel chart (F2 → left, F1 ↓)
+    { const { c, W, H } = setupCanvas($('vtChart'));
+      const pl = 40, pr = 10, pt = 10, pb = 26, pw = W - pl - pr, ph = H - pt - pb;
+      const X = f2 => pl + (2600 - f2) / (2600 - 600) * pw, Y = f1 => pt + (f1 - 180) / (900 - 180) * ph;
+      c.strokeStyle = line; c.strokeRect(pl, pt, pw, ph);
+      c.font = '10px Inter, sans-serif'; c.fillStyle = muted;
+      [2500, 2000, 1500, 1000].forEach(f => { c.fillText(f, X(f) - 10, H - 12); });
+      [300, 500, 700].forEach(f => { c.fillText(f, 6, Y(f) + 3); });
+      c.fillText('F2 (Hz)', pl + pw / 2 - 16, H - 1);
+      REF_VOWELS.forEach(([v, f1, f2]) => { c.fillStyle = muted; c.beginPath(); c.arc(X(f2), Y(f1), 3, 0, 2 * Math.PI); c.fill(); c.fillStyle = ink; c.font = '12px Inter, sans-serif'; c.fillText('/' + v + '/', X(f2) + 5, Y(f1) + 4); });
+      if (F.length >= 2) {
+        const x = X(Math.min(2600, Math.max(600, F[1]))), yv = Y(Math.min(900, Math.max(180, F[0])));
+        c.fillStyle = acc2; c.beginPath(); c.arc(x, yv, 7, 0, 2 * Math.PI); c.fill();
+        c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke();
+        c.fillStyle = muted; c.font = '10px Inter, sans-serif'; c.fillText('F1 (Hz)', 6, pt + 8);
+      }
+    }
+    if (F.length >= 2) {
+      let best = null, bd = 1e9;
+      REF_VOWELS.forEach(([v, f1, f2]) => { const d = Math.hypot((F[0] - f1) / 150, (F[1] - f2) / 400); if (d < bd) { bd = d; best = v; } });
+      $('vtNote').textContent = `Computed formants: ${F.slice(0, 4).join(', ')} Hz. Closest reference vowel: /${best}/` + (bd > 1.2 ? ' (though not very close: real vowels need more than one constriction).' : '.');
+    }
+  }
+  ['vtPos', 'vtDeg', 'vtRound'].forEach(id => $(id).addEventListener('input', () => { document.querySelectorAll('#vtPreset button').forEach(b => b.classList.remove('on')); vtDrawAll(); }));
+  document.querySelectorAll('#vtPreset button').forEach(b => b.addEventListener('click', () => {
+    const [pos, deg, rnd] = VT_PRESETS[b.dataset.p];
+    $('vtPos').value = pos; $('vtDeg').value = deg; $('vtRound').value = rnd;
+    document.querySelectorAll('#vtPreset button').forEach(x => x.classList.toggle('on', x === b));
+    vtDrawAll();
+  }));
+  $('vtPlay').addEventListener('click', () => {
+    const geo = (vtCache || vtCompute()).geo;
+    let mx = 0; const probe = []; for (let f = 50; f < 5000; f += 50) { const v = vtResponse(geo, f); probe.push(v); mx = Math.max(mx, v); }
+    play(synthFromResponse(f => vtResponse(geo, f) / mx, 120));
+  });
+  window.addEventListener('resize', () => { vtDrawAll(); tubeDraw(); smDraw(); });
+  vtDrawAll();
+  // ---------------- echo animation: one pulse bouncing in a closed–open tube ----------------
+  const echo = { t: 0, last: null, hold: 0 };
+  const TRIP_SEC = 1.1, N_TRIPS = 10, LEAK = 0.8;          // seconds of animation per trip; trips shown; amplitude kept per lip reflection
+  const echoL = () => +$('echoL').value / 10;
+  const tripSign = k => (Math.floor((k + 1) / 2) % 2 === 0 ? 1 : -1);
+  const tripAmp = k => Math.pow(LEAK, Math.floor((k + 1) / 2));
+  function echoLabels() {
+    const L = echoL(), trip = L / 100 / 350 * 1000;
+    $('echoLv').textContent = L.toFixed(1) + ' cm';
+    setTex($('echoNote'), `one trip = ${trip.toFixed(2)} ms &nbsp;·&nbsp; pattern repeats every 4 trips = ${(4 * trip).toFixed(2)} ms &nbsp;→&nbsp; \\(F_1 = 1/${(4 * trip).toFixed(2)}\\)&nbsp;ms = ${Math.round(1000 / (4 * trip))} Hz`);
+  }
+  function echoDraw() {
+    const { c, W, H } = setupCanvas($('echoCanvas'));
+    const ink = css('--ink'), muted = css('--muted'), line = css('--line'), push = css('--accent-2'), pull = css('--accent');
+    const L = echoL(), trip = L / 100 / 350 * 1000;
+    const tx0 = 70, tx1 = 70 + (W - 140) * L / 20, yc = 62, hh = 30;
+    // tube
+    c.fillStyle = css('--surface-2'); c.fillRect(tx0, yc - hh, tx1 - tx0, 2 * hh);
+    c.strokeStyle = ink; c.lineWidth = 3; c.beginPath(); c.moveTo(tx1, yc - hh); c.lineTo(tx0, yc - hh); c.lineTo(tx0, yc + hh); c.lineTo(tx1, yc + hh); c.stroke();
+    c.font = '11px Inter, sans-serif'; c.fillStyle = ink; c.textAlign = 'center';
+    c.fillText('glottis (closed)', tx0, yc + hh + 16); c.fillText('lips (open)', tx1, yc + hh + 16);
+    // the pulse
+    const k = Math.min(Math.floor(echo.t), N_TRIPS - 1), u = Math.min(1, echo.t - k);
+    if (echo.t < N_TRIPS) {
+      const pos = k % 2 === 0 ? u : 1 - u, x = tx0 + pos * (tx1 - tx0), sg = tripSign(k), a = tripAmp(k);
+      const g = c.createRadialGradient(x, yc, 1, x, yc, 26);
+      const col = sg > 0 ? push : pull;
+      g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
+      c.globalAlpha = 0.25 + 0.75 * a; c.fillStyle = g; c.fillRect(x - 26, yc - hh + 2, 52, 2 * hh - 4); c.globalAlpha = 1;
+      c.fillStyle = col; c.font = '600 12px Inter, sans-serif';
+      c.fillText(sg > 0 ? 'high pressure' : 'low pressure', x, yc - hh - 8);
+      c.fillStyle = muted; c.font = '11px Inter, sans-serif'; c.textAlign = 'left';
+      const dir = k % 2 === 0 ? 'glottis → lips' : 'lips → glottis';
+      c.fillText(`trip ${k + 1}: ${dir}`, 8, 14);
+      c.textAlign = 'center';
+    }
+    // leaks at the lips: little arcs just after each arrival
+    for (let j = 0; j < N_TRIPS; j += 2) {
+      const tArr = j + 1, age = echo.t - tArr;
+      if (age < 0 || age > 0.6) continue;
+      c.strokeStyle = tripSign(j) > 0 ? push : pull; c.globalAlpha = 1 - age / 0.6; c.lineWidth = 2;
+      for (let r = 0; r < 3; r++) { c.beginPath(); c.arc(tx1, yc, 10 + age * 60 + r * 8, -0.6, 0.6); c.stroke(); }
+      c.globalAlpha = 1;
+    }
+    // timeline of what leaks out of the lips
+    const lx0 = 50, lx1 = W - 16, ly = 196, amp = 50, tMax = N_TRIPS + 0.5;
+    const X = t => lx0 + t / tMax * (lx1 - lx0);
+    c.strokeStyle = line; c.lineWidth = 1; c.beginPath(); c.moveTo(lx0, ly); c.lineTo(lx1, ly); c.stroke();
+    c.fillStyle = muted; c.font = '10px Inter, sans-serif'; c.textAlign = 'left';
+    c.fillText('what comes out of the lips', lx0, ly - amp - 12);
+    c.textAlign = 'center';
+    for (let t = 0; t <= N_TRIPS; t += 2) c.fillText(`${(t * trip).toFixed(1)} ms`, X(t), ly + amp + 16);
+    // faint ringing through the arrivals
+    if (echo.t > 5) {
+      c.strokeStyle = muted; c.setLineDash([3, 4]); c.lineWidth = 1; c.beginPath();
+      for (let px = 0; px <= X(Math.min(echo.t, tMax)) - X(1); px++) {
+        const t = 1 + px / (lx1 - lx0) * tMax, yv = ly - amp * Math.pow(LEAK, (t - 1) / 2) * Math.cos(2 * Math.PI * (t - 1) / 4);
+        px ? c.lineTo(X(t), yv) : c.moveTo(X(t), yv);
+      }
+      c.stroke(); c.setLineDash([]);
+    }
+    for (let j = 0; j < N_TRIPS; j += 2) {
+      const tArr = j + 1; if (echo.t < tArr) break;
+      const sg = tripSign(j), a = tripAmp(j), x = X(tArr), y1 = ly - sg * a * amp;
+      c.strokeStyle = sg > 0 ? push : pull; c.fillStyle = c.strokeStyle; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(x, ly); c.lineTo(x, y1); c.stroke(); c.beginPath(); c.arc(x, y1, 4, 0, 2 * Math.PI); c.fill();
+    }
+    if (echo.t > 5.2) {   // bracket one full cycle: arrivals 1 → 5
+      const yb = ly + amp + 26;
+      c.strokeStyle = ink; c.lineWidth = 1.2; c.beginPath(); c.moveTo(X(1), yb - 6); c.lineTo(X(1), yb); c.lineTo(X(5), yb); c.lineTo(X(5), yb - 6); c.stroke();
+      c.fillStyle = ink; c.font = '600 11px Inter, sans-serif';
+      c.fillText(`one full cycle = 4 trips = ${(4 * trip).toFixed(1)} ms → ${Math.round(1000 / (4 * trip))} Hz`, Math.max(150, (X(1) + X(5)) / 2), yb + 14);
+    }
+    c.textAlign = 'left';
+  }
+  function echoFrame(ts) {
+    if (echo.last != null) {
+      const dt = Math.min(0.05, (ts - echo.last) / 1000);
+      if (echo.t < N_TRIPS + 0.4) echo.t += dt / TRIP_SEC;
+      else { echo.hold += dt; if (echo.hold > 4) { echo.t = 0; echo.hold = 0; } }
+    }
+    echo.last = ts;
+    const r = $('echoCanvas').getBoundingClientRect();
+    if (r.bottom > 0 && r.top < innerHeight) echoDraw();
+    requestAnimationFrame(echoFrame);
+  }
+  $('echoL').addEventListener('input', () => { echoLabels(); echoDraw(); });
+  $('echoRestart').addEventListener('click', () => { echo.t = 0; echo.hold = 0; echoDraw(); });
+  $('echoCanvas').closest('details').addEventListener('toggle', () => { echo.t = 0; echo.hold = 0; echoDraw(); });
+  echoLabels(); echoDraw();
+  if (reduce) { echo.t = N_TRIPS + 0.4; echoDraw(); } else requestAnimationFrame(echoFrame);
+
+  // ---------------- concatenated tubes: drag each section's width ----------------
+  const STACK_L = 17.5;
+  const STACK_PRESETS = { uni: [3, 3, 3, 3, 3, 3, 3, 3], a: [0.7, 0.7, 0.7, 0.7, 7, 7, 7, 7], i: [7, 7, 7, 7, 0.6, 0.6, 0.6, 3], u: [3, 3, 3, 3, 0.4, 4, 4, 0.3] };
+  const stack = { A: STACK_PRESETS.uni.slice(), drag: -1 };
+  const STACK_AMAX = 8, STACK_AMIN = 0.2;
+  function stackGeom(W, H) { const x0 = 40, x1 = W - 16, yc = H / 2 + 2, sc = (H / 2 - 22) / Math.sqrt(STACK_AMAX); return { x0, x1, yc, sc, w: (x1 - x0) / stack.A.length }; }
+  function stackDraw() {
+    const cv = $('stackCanvas'), { c, W, H } = setupCanvas(cv), g = stackGeom(W, H);
+    const ink = css('--ink'), muted = css('--muted');
+    stack.A.forEach((a, i) => {
+      const r = Math.sqrt(a) * g.sc, x = g.x0 + i * g.w;
+      c.fillStyle = i === stack.drag ? '#E39A9E' : '#E9B7B9'; c.strokeStyle = '#9C4A50'; c.lineWidth = 1.4;
+      c.fillRect(x, g.yc - r, g.w, 2 * r); c.strokeRect(x, g.yc - r, g.w, 2 * r);
+      c.fillStyle = muted; c.font = '10px Inter, sans-serif'; c.textAlign = 'center';
+      c.fillText(a.toFixed(1), x + g.w / 2, H - 4);
+    });
+    // joints: reflection coefficient
+    for (let i = 1; i < stack.A.length; i++) {
+      const r = (stack.A[i - 1] - stack.A[i]) / (stack.A[i - 1] + stack.A[i]);
+      if (Math.abs(r) > 0.05) { c.fillStyle = css('--accent-2'); c.font = '600 10px Inter, sans-serif'; c.fillText(`r=${r.toFixed(2)}`, g.x0 + i * g.w, 11); }
+    }
+    c.fillStyle = ink; c.fillRect(g.x0 - 4, g.yc - 26, 4, 52);
+    c.fillStyle = muted; c.font = '10px Inter, sans-serif'; c.textAlign = 'left';
+    c.fillText('glottis', 2, g.yc + 40); c.textAlign = 'right'; c.fillText('lips →', W - 2, g.yc + 40);
+    c.fillText('areas in cm² ↓', W - 2, H - 16); c.textAlign = 'left';
+  }
+  function stackUpdate() {
+    stackDraw();
+    const geo = { A: Float64Array.from(stack.A), L: STACK_L }, df = 10, K = 410, mag = new Float64Array(K);
+    for (let k = 0; k < K; k++) mag[k] = vtResponse(geo, k * df + 1);
+    let mx = 0; for (const v of mag) mx = Math.max(mx, v);
+    const db = Array.from(mag, v => 20 * Math.log10(v / mx + 1e-9)), F = [];
+    for (let k = 1; k < K - 1 && F.length < 4; k++) if (mag[k] > mag[k - 1] && mag[k] >= mag[k + 1]) F.push(k * df);
+    drawSpec($('stackSpec'), [{ db, df, color: css('--accent'), width: 2, offset: -6 }], 4000, -50, 1000);
+    { const cv = $('stackSpec'), c = cv.getContext('2d'), W = cv.clientWidth, H = +cv.dataset.h, pl = 34, pw = W - pl - 8, pt = 8, ph = H - 28;
+      F.forEach((f, i) => { if (f > 4000) return; const x = pl + f / 4000 * pw, yv = pt + Math.min(1, -(db[f / df] - 6) / 50) * ph;
+        c.fillStyle = css('--accent-2'); c.beginPath(); c.arc(x, yv, 3.5, 0, 2 * Math.PI); c.fill();
+        c.font = '600 10px Inter, sans-serif'; c.textAlign = 'center'; c.fillText(`F${i + 1}`, x, Math.max(10, yv - 7)); c.textAlign = 'left'; }); }
+    setTex($('stackF'), F.slice(0, 3).map((f, i) => `\\(F_${i + 1} = ${f}\\)&nbsp;Hz`).join('&nbsp;&nbsp;&nbsp;'));
+    if (F.length >= 2) {
+      let best = null, bd = 1e9;
+      REF_VOWELS.forEach(([v, f1, f2]) => { const d = Math.hypot((F[0] - f1) / 150, (F[1] - f2) / 400); if (d < bd) { bd = d; best = v; } });
+      $('stackNote').textContent = `Closest reference vowel: /${best}/. Joints where the width jumps (red r values) are where the strongest echoes happen.`;
+    }
+    stack.geo = geo;
+  }
+  function stackPick(ev) {
+    const cv = $('stackCanvas'), rect = cv.getBoundingClientRect(), g = stackGeom(rect.width, +cv.dataset.h);
+    const x = ev.clientX - rect.left, y = ev.clientY - rect.top, i = Math.floor((x - g.x0) / g.w);
+    return { i, a: Math.max(STACK_AMIN, Math.min(STACK_AMAX, ((y - g.yc) / g.sc) ** 2)) };
+  }
+  $('stackCanvas').addEventListener('pointerdown', ev => {
+    const { i, a } = stackPick(ev); if (i < 0 || i >= stack.A.length) return;
+    stack.drag = i; stack.A[i] = a; $('stackCanvas').setPointerCapture(ev.pointerId);
+    document.querySelectorAll('#stackPreset button').forEach(b => b.classList.remove('on')); stackUpdate();
+  });
+  $('stackCanvas').addEventListener('pointermove', ev => { if (stack.drag < 0) return; stack.A[stack.drag] = stackPick(ev).a; stackUpdate(); });
+  ['pointerup', 'pointercancel'].forEach(e => $('stackCanvas').addEventListener(e, () => { stack.drag = -1; stackDraw(); }));
+  document.querySelectorAll('#stackPreset button').forEach(b => b.addEventListener('click', () => {
+    stack.A = STACK_PRESETS[b.dataset.p].slice();
+    document.querySelectorAll('#stackPreset button').forEach(x => x.classList.toggle('on', x === b)); stackUpdate();
+  }));
+  $('stackPlay').addEventListener('click', () => {
+    const geo = stack.geo; let mx = 0; for (let f = 50; f < 5000; f += 25) mx = Math.max(mx, vtResponse(geo, f));
+    play(synthFromResponse(f => vtResponse(geo, f) / mx, 120));
+  });
+  window.addEventListener('resize', () => { stackUpdate(); echoDraw(); });
+  stackUpdate();
+
+})();
+</script>
+
+<!--ai:foot--><footer class="ai-foot"><a href="../index.html">Speech and Audio Processing</a> &middot; Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati &middot; <a href="../index.html#credits">data credits</a></footer><!--/ai:foot-->
+</body>
+</html>

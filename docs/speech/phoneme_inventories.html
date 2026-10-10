@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phoneme inventories: India and the world</title>
+<meta name="description" content="Phoneme inventories of the world's languages and of India from PHOIBLE 2.0 and Glottolog: inventory sizes and tones, common and rare sounds, the South Asian signature (retroflex, aspirated and breathy-voiced stops) by family, a live inventory explorer, and what it means for speech technology.">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, { delimiters: [ { left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false } ], throwOnError: false });"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #F5F7FA; --bg-grid: #E7ECF2; --surface: #FFFFFF; --surface-2: #EAF0F7;
+    --ink: #10233F; --ink-soft: #24344F; --muted: #5C6B80; --line: #D7DEE8; --line-strong: #AEB9CB;
+    --accent: #14508C; --accent-2: #C1272D; --accent-3: #C9971B; --accent-4: #5B7083; --teal: #1D7A8C;
+    --shadow: 0 1px 0 rgba(16,35,63,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+      --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+      --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+      --shadow: 0 1px 0 rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+    --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+    --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+    --shadow: 0 1px 0 rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background:
+      repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      var(--bg);
+    color: var(--ink-soft);
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: 17px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: #fff; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1, h2, h3, h4 { font-family: "Poppins", ui-sans-serif, system-ui, sans-serif; color: var(--ink); font-weight: 600; }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.3rem); line-height: 1.08; margin: 0 0 0.35em; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; margin: 0 0 0.5em; }
+  h3 { font-size: 1.22rem; margin: 2em 0 0.3em; }
+  h4 { font-size: 1rem; margin: 0.2em 0 0.3em; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.88em; }
+
+  header.hero, section, footer { max-width: 900px; margin: 0 auto; padding: 56px 20px; }
+  section { border-top: 1px solid var(--line); }
+  header.hero { padding-top: 72px; }
+  .kicker { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.74rem; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+  .lede { font-size: 1.12rem; }
+  .meta-line { font-size: 0.85rem; color: var(--muted); margin-top: 18px; }
+
+  .roadmap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-top: 26px; font-size: 0.92rem; }
+  .roadmap ol { margin: 6px 0 0; padding-left: 20px; }
+  .roadmap li { margin: 3px 0; }
+  .roadmap .later { color: var(--muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  .intuition { border-left: 3px solid var(--accent-3); background: var(--surface-2); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 0.97rem; }
+  .keyidea { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .keyidea::before { content: "Key idea"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .try { border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 16px; margin: 16px 0; font-size: 0.93rem; }
+  .try::before { content: "Try this yourself"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-bottom: 2px; }
+  .eq { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.95rem; background: var(--surface); border: 1px solid var(--line);
+        border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; overflow-x: auto; color: var(--ink); line-height: 2; }
+
+  figure { margin: 22px 0 26px; }
+  figure .frame { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 0.86rem; color: var(--muted); margin-top: 8px; line-height: 1.55; }
+  figcaption b { color: var(--ink-soft); }
+
+  button { font-family: inherit; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--line-strong);
+           background: var(--surface); color: var(--ink-soft); padding: 6px 12px; transition: all 0.15s ease; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .ctlrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 10px 0; font-size: 0.85rem; color: var(--muted); }
+  .valpill { font-family: "JetBrains Mono", monospace; color: var(--accent); font-weight: 600; }
+  input[type=range] { accent-color: var(--accent); }
+  canvas.plot { width: 100%; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .plotlabel { font-size: 0.75rem; color: var(--muted); margin: 8px 0 3px; }
+
+  /* slab rack */
+  .rack { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .rack { grid-template-columns: repeat(2, 1fr); } }
+  .slab { background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 6px 6px 10px; cursor: pointer; text-align: center; transition: border-color 0.15s; font: inherit; color: inherit; }
+  .slab:hover, .slab.sel { border-color: var(--accent); }
+  .slab svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .slab .name { font-weight: 600; color: var(--ink); font-size: 0.92rem; }
+  .slab .hint { font-size: 0.72rem; color: var(--muted); }
+  .mallet { transform-origin: 150px 12px; transform: rotate(22deg); transition: transform 0.12s ease-in; }
+  .slab.hit .mallet { transform: rotate(0deg); transition: transform 0.07s ease-in; }
+  .slab.ring .body { animation: shake 0.35s linear; }
+  @keyframes shake { 0%,100% { transform: translateY(0); } 20% { transform: translateY(1.6px); } 40% { transform: translateY(-1.2px); } 60% { transform: translateY(0.8px); } 80% { transform: translateY(-0.4px); } }
+  @media (prefers-reduced-motion: reduce) { .slab.ring .body { animation: none; } .mallet { transition: none; } }
+
+  .examples { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .examples { grid-template-columns: 1fr; } }
+  .examples .card p { font-size: 0.88rem; margin: 0; }
+  .examples .emoji { font-size: 1.5rem; line-height: 1; }
+  .examples audio { width: 100%; height: 32px; margin-top: 8px; }
+
+  /* voice grid */
+  .vgrid { display: grid; grid-template-columns: 120px repeat(4, 1fr); gap: 6px; align-items: stretch; font-size: 0.85rem; }
+  .vgrid .hdr { font-weight: 600; color: var(--ink); text-align: center; padding: 6px 2px; font-size: 0.8rem; }
+  .vgrid .rowh { font-weight: 600; color: var(--ink); display: flex; align-items: center; font-size: 0.8rem; }
+  .vgrid button { padding: 10px 4px; }
+  @media (max-width: 600px) { .vgrid { grid-template-columns: 78px repeat(4, 1fr); } .vgrid button { font-size: 0.72rem; } }
+
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram text { font-family: "Inter", sans-serif; }
+  .players { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 10px 0; }
+  .player { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+  .player audio { height: 34px; max-width: 250px; width: 100%; }
+  ul.refs li { font-size: 0.9rem; margin-bottom: 5px; }
+  footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); }
+  .scatterwrap { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 700px) { .scatterwrap { grid-template-columns: 1fr; } }
+  .bigr { font-family: "JetBrains Mono", monospace; font-size: 1.5rem; font-weight: 600; color: var(--ink); }
+  .timeline { position: relative; margin: 10px 0 0 8px; padding-left: 26px; border-left: 2px solid var(--line-strong); }
+  .timeline .ev { position: relative; margin: 0 0 16px; }
+  .timeline .ev::before { content: ""; position: absolute; left: -33px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--accent); }
+  .timeline .ev.speech::before { border-color: var(--accent-2); }
+  .timeline .yr { font-family: "JetBrains Mono", monospace; font-weight: 600; color: var(--accent); font-size: 0.9rem; }
+  .timeline .ev.speech .yr { color: var(--accent-2); }
+  .timeline p { margin: 2px 0 0; font-size: 0.92rem; }
+  .score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .score div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; font-size: 0.78rem; color: var(--muted); }
+  .score b { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.95rem; color: var(--ink); }
+  .readout { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .readout div { background: var(--surface-2); border-radius: 8px; padding: 6px 10px; font-size: 0.75rem; color: var(--muted); }
+  .eq { font-family: inherit; white-space: normal; line-height: 1.5; }
+  .eq .katex-display { margin: 0.4em 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+  .eq .note, .note { display: block; font-family: "Inter", sans-serif; font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .card .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+  .budget { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 58px; padding: 6px 8px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; }
+  .budget small { font-weight: 400; font-size: 0.7rem; color: var(--muted); }
+  .budget.f { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border: 1px solid var(--accent); color: var(--accent); }
+  .budget.f::after { content: "2 weights"; font-size: 0.66rem; font-weight: 400; color: var(--ink-soft); }
+  .budget.t { background: color-mix(in srgb, var(--accent-3) 18%, var(--surface)); border: 1px solid var(--accent-3); color: var(--ink); }
+  .budget.t::after { content: "2 weights"; font-size: 0.66rem; font-weight: 400; color: var(--ink-soft); }
+  .readout b { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.95rem; color: var(--ink); }
+  table.budget { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+  table.budget td, table.budget th { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  table.budget th { color: var(--ink); }
+  table.budget td.n { text-align: right; font-family: "JetBrains Mono", monospace; white-space: nowrap; }
+  .ipa-font, table.ipa td, .ipaglyphs, .ipx { font-family: "Noto Sans", "Charis SIL", "Doulos SIL", "Gentium Plus", "DejaVu Sans", "Segoe UI", "Arial Unicode MS", sans-serif; }
+  .ipx { font-size: 1.05em; }
+  .persp { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+  .persp .card h4 { margin: 0 0 4px; }
+  .persp .card p { font-size: 0.88rem; margin: 0; color: var(--ink-soft); }
+  .persp .card .big { font-family: "JetBrains Mono", monospace; font-size: 1.5rem; font-weight: 600; color: var(--ink); line-height: 1.1; margin-bottom: 4px; }
+  .demo select { font: inherit; font-size: 0.9rem; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); max-width: 100%; }
+  .demo .seg button { padding: 4px 9px; font-size: 0.8rem; }
+  .demo .seg button .cnt { font-family: "JetBrains Mono", monospace; font-size: 0.72rem; opacity: 0.8; }
+  .demo .seg button .star { color: var(--accent-3); }
+  .demo .seg button.on .star { color: #fff; }
+  .srcname { font-size: 0.8rem; color: var(--muted); margin: 8px 0 4px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+  .badge { font-size: 0.72rem; border-radius: 999px; padding: 2px 9px; border: 1px solid var(--line); }
+  .badge.yes { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border-color: var(--accent); color: var(--ink); }
+  .badge.no { color: var(--muted); }
+  .ipawrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 8px; }
+  table.ipa { border-collapse: collapse; font-size: 1.02rem; min-width: 100%; }
+  table.ipa th { font-family: "Inter", sans-serif; font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 6px; text-align: left; white-space: nowrap; }
+  table.ipa td { border: 1px solid var(--line); padding: 4px 7px; color: var(--ink); vertical-align: top; min-width: 2.2em; line-height: 1.6; }
+  table.ipa td span { white-space: nowrap; }
+  table.ipa .rx { background: color-mix(in srgb, var(--accent-2) 10%, transparent); }
+  table.ipa.vow td { min-width: 4em; }
+  .marg { color: var(--muted); }
+  .ipanote { font-size: 0.82rem; color: var(--muted); margin: 6px 0 0; }
+  .ipanote .ipaglyphs { color: var(--ink); font-size: 0.98rem; }
+  .demohead { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+  .warn { font-size: 0.82rem; color: var(--muted); }
+  .wide { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+</style>
+<!--ai:head--><link rel="stylesheet" href="../assets/site.css?v=3bd065aa"><!--/ai:head-->
+</head>
+<body>
+<!--ai:nav--><nav class="ai-nav" aria-label="Course navigation"><div class="ai-nav-in"><a class="ai-brand" href="../index.html" title="Speech and Audio Processing"><span class="ai-logo" aria-hidden="true">◖◗</span><span class="ai-brand-full">Speech and Audio Processing</span><span class="ai-brand-short">SAP</span></a><span class="ai-where">Module 2 &middot; The sounds of language</span><details class="ai-menu"><summary>All pages</summary><ul><li><a href="spectrogram.html">1. Seeing sound: the spectrogram</a></li><li><a href="sounds_language.html">2. The sounds of language: from sound to phoneme</a></li><li><a href="phoneme_inventories.html" aria-current="page">2. Phoneme inventories: India and the world</a></li><li><a href="source_filter.html">3. A buzz and a tube</a></li><li><a href="vocal_tract.html">3. Vocal tract, live</a></li><li><a href="linear_prediction.html">4. Guessing the next sample</a></li><li><a href="ar_model.html">5. The all-pole vocal tract</a></li><li><a href="codecs.html">6. Squeezing speech</a></li><li><a href="decibels.html">Why does audio live in decibels?</a></li><li><a href="../convolution/index.html">Convolution, animated</a></li></ul></details><a class="ai-step ai-prev" href="sounds_language.html" title="The sounds of language: from sound to phoneme">← prev</a><a class="ai-step ai-next" href="source_filter.html" title="A buzz and a tube">next →</a></div></nav><!--/ai:nav-->
+
+<header class="hero">
+  <div class="kicker">Speech and Audio Processing &middot; Module 2 &middot; page 2</div>
+  <h1>Phoneme inventories: India and the world</h1>
+  <p class="lede">
+    <a href="sounds_language.html">Page 1</a> introduced phonemes, the sound categories a language uses to tell words apart, and the IPA chart that classifies them. Every language picks
+    its own <strong>phoneme inventory</strong> from that chart: Hawaiian manages with 13; some languages of southern Africa use well over a hundred. Which sounds are almost
+    universal, which are rare, and where do India's languages sit?
+  </p>
+  <p class="lede">
+    <strong>PHOIBLE</strong>, a database of 3020 inventories for about 2079 languages, joined with <strong>Glottolog</strong>'s catalogue of the world's languages,
+    answers with data: why South Asian inventories are recognisable from far away (retroflex <span class="ipx">ʈ ɖ ɳ</span>, aspirated <span class="ipx">pʰ</span>, breathy
+    <span class="ipx">bʱ</span>), and why the honest answer to &ldquo;how many phonemes does Hindi have?&rdquo; is &ldquo;it depends who is counting&rdquo;.
+  </p>
+  <div class="roadmap">
+    <strong style="color:var(--ink);">The path through this page</strong>
+    <ol>
+      <li><a href="#what">What PHOIBLE is</a>: inventories, sources, and the rules this page uses</li>
+      <li><a href="#sizes">How big is an inventory?</a>: consonants, vowels and tones across the world</li>
+      <li><a href="#common">Common and rare sounds</a>: /m/, /i/, /k/ … and the long tail</li>
+      <li><a href="#india">India in PHOIBLE</a>: 140 languages, five groups, one map</li>
+      <li><a href="#areal">What makes South Asian inventories distinctive</a>: retroflexes, aspiration, breathy voice, by family</li>
+      <li><a href="#indiasizes">Bigger inventories?</a>: India's sizes against the world</li>
+      <li><a href="#explore">Case studies and a live explorer</a>: one language, several inventories</li>
+      <li><a href="#tech">Why this matters for speech technology</a></li>
+      <li><a href="#quiz">Check your understanding</a></li>
+    </ol>
+  </div>
+  <div class="meta-line">Module 2 of Speech and Audio Processing, page 2 of 2 &middot; before: <a href="sounds_language.html">The sounds of language</a> &middot;
+    data: PHOIBLE 2.0 and Glottolog, CC BY 4.0 &middot; every figure, number and explorer data file is computed by <code>sounds_language/make_figures.py</code></div>
+</header>
+
+<!-- ============================================================ 1. WHAT -->
+<section id="what">
+  <div class="kicker">01 &middot; What PHOIBLE is</div>
+  <h2>A shelf of sound inventories.</h2>
+  <p>
+    A <strong>phoneme inventory</strong> is the full list of a language's phonemes: the consonants, vowels (and tones, if the language uses pitch to tell words apart) that a
+    linguist needs to write every word unambiguously. <a href="sounds_language.html#phonemes">Page 1</a> used minimal pairs to tell phonemes apart, and showed that Hindi has four labial
+    stops (/p/, /pʰ/, /b/, /bʱ/); a phonological description does that for every sound of the language, and an inventory is its summary: the language's list of phonemes.
+  </p>
+  <p>
+    <a href="https://phoible.org" target="_blank" rel="noopener">PHOIBLE 2.0</a> (Moran &amp; McCloy 2019) collects such inventories from grammars and from older databases, and re-writes
+    them in one IPA-based notation (some source conventions survive, as we will see). Its data file has one row per phoneme per inventory: 105&nbsp;484 rows, 3020 inventories, 2096 ISO language
+    codes, and 8 contributing <strong>sources</strong>:
+  </p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>code</th><th>source</th><th style="text-align:right">inventories</th><th style="text-align:right">of which India</th></tr>
+      <tr><td><b>ph</b></td><td>PHOIBLE's own, transcribed from published grammars (Moran 2012 and later)</td><td class="n">929</td><td class="n">28</td></tr>
+      <tr><td><b>upsid</b></td><td>UCLA Phonological Segment Inventory Database (Maddieson 1984; Maddieson &amp; Precoda 1990)</td><td class="n">450</td><td class="n">22</td></tr>
+      <tr><td><b>er</b></td><td>Australian languages (Round 2019)</td><td class="n">391</td><td class="n">0</td></tr>
+      <tr><td><b>ea</b></td><td>Database of Eurasian Phonological Inventories (Nikolaev, Nikulin &amp; Kukhto 2015)</td><td class="n">376</td><td class="n">78</td></tr>
+      <tr><td><b>saphon</b></td><td>South American Phonological Inventory Database (Michael, Stark &amp; Chang)</td><td class="n">355</td><td class="n">0</td></tr>
+      <tr><td><b>aa</b></td><td>Alphabets des langues africaines (Hartell 1993; Chanard 2006)</td><td class="n">203</td><td class="n">0</td></tr>
+      <tr><td><b>spa</b></td><td>Stanford Phonology Archive (Crothers et al. 1979)</td><td class="n">197</td><td class="n">13</td></tr>
+      <tr><td><b>ra</b></td><td>N. Ramaswami, <em>Common Linguistic Features in Indian Languages: Phonetics</em> (CIIL, Mysore, 1999)</td><td class="n">100</td><td class="n">98</td></tr>
+    </table>
+    <p class="note" style="margin-top:6px;">Counts are after mapping each inventory to a Glottolog language (see the rules below), so they total 3001 rather than 3020.</p>
+  </div>
+
+  <h3>An inventory is an analysis, not a measurement</h3>
+  <p>
+    Two linguists describing the same language can produce different lists, and both can be defensible. The commonest disagreements:
+  </p>
+  <ul>
+    <li><strong>Units or sequences?</strong> Is Hindi <span class="ipx">t̠ʃ</span> one phoneme or /t/ + /ʃ/? Is a long <span class="ipx">pː</span> a separate phoneme, or two /p/s? Is <span class="ipx">ai</span> a diphthong phoneme or two vowels?</li>
+    <li><strong>Loanwords.</strong> Hindi /f/, /z/ and /q/ come from Persian, Arabic and English words. Some sources list them, some mark them <em>marginal</em>, some leave them out.</li>
+    <li><strong>Phonemes or allophones?</strong> If two sounds never contrast, they are one phoneme with two variants. Deciding that requires judgement, and sources differ.</li>
+    <li><strong>Tones.</strong> Several sources simply never record tones (more below).</li>
+    <li><strong>Notation.</strong> The same breathy-voiced stop appears as <span class="ipx">b̤</span> or <span class="ipx">bʱ</span>; a dental stop as <span class="ipx">t̪</span>, <span class="ipx">t̻</span>, or a plain <span class="ipx">t</span>.</li>
+  </ul>
+  <p>
+    PHOIBLE keeps every source's inventory as it is, so many languages have several: 573 languages have more than one inventory, and one language of India has
+    8. Any statistic therefore needs a rule for which inventory counts.
+  </p>
+
+  <div class="keyidea">
+    <strong>The rules used on this page.</strong> (1) <em>Language</em> means a Glottolog language; 154 inventories coded with a dialect are rolled up to their
+    language, and 19 coded only with a family (or nothing) are left out, giving 3001 inventories for 2079 languages.
+    (2) <em>One inventory per language</em>: the <strong>median inventory</strong>, the one whose consonant + vowel count is closest to the median of that language's inventories (ties
+    broken by a fixed source order ph, ea, ra, upsid, spa, saphon, aa, er). It avoids both the most generous and the most frugal analysis. Every headline number was also recomputed with a
+    preferred-source rule, 200 random picks, and all inventories pooled; the ranges are shown where they matter.
+    (3) <em>Sizes</em> count every listed segment, as PHOIBLE does; &ldquo;has feature X&rdquo; uses non-marginal phonemes only.
+  </div>
+
+  <h3>Not a random sample</h3>
+  <figure>
+    <div class="frame"><img src="sounds_language/fig/01_sample_map.png?v=1" alt="World map of PHOIBLE languages over all Glottolog languages, and coverage by macroarea" loading="lazy"></div>
+    <figcaption><b>Figure 1.</b> <b>Left:</b> one blue dot per PHOIBLE language at its Glottolog coordinates, over every Glottolog language in grey (no map outline is drawn: the grey dots
+    themselves trace the continents). <b>Right:</b> share of Glottolog's spoken languages (sign languages, bookkeeping and unattested entries excluded) that have a PHOIBLE inventory.
+    Overall 26.3%. Based on PHOIBLE 2.0 / Glottolog data, CC BY 4.0.</figcaption>
+  </figure>
+  <p>
+    Coverage is very uneven: 78% of Australian languages (thanks to one dedicated source), 52% in South America, but only
+    8.4% in Papunesia (New Guinea and the Pacific), where the world's linguistic diversity is densest. PHOIBLE is a <strong>convenience sample</strong>: it holds the languages
+    someone described and someone else digitised. Related languages also share sounds by descent, so &ldquo;60% of languages&rdquo; partly means &ldquo;a few big families&rdquo;. Read every
+    percentage below as &ldquo;of the languages in PHOIBLE&rdquo;, not &ldquo;of all human languages&rdquo;.
+  </p>
+</section>
+
+<!-- ============================================================ 2. SIZES -->
+<section id="sizes">
+  <div class="kicker">02 &middot; How big is an inventory?</div>
+  <h2>About 21 consonants and 9 vowels.</h2>
+  <figure>
+    <div class="frame"><img src="sounds_language/fig/02_size_distributions.png?v=1" alt="Histograms of consonant, vowel and tone counts across PHOIBLE languages" loading="lazy"></div>
+    <figcaption><b>Figure 2.</b> Inventory sizes for 2079 languages, one median inventory each. Consonants: median 21, middle half between
+    17 and 27. Vowels (counting every listed vowel, including long, nasalised and diphthong units): median 9, middle half
+    6&ndash;13. Red triangles mark the extremes named in the text. Based on PHOIBLE 2.0 / Glottolog data, CC BY 4.0.</figcaption>
+  </figure>
+  <p>
+    The <strong>typical language</strong> in PHOIBLE has 21 consonants and 9 vowels (means 23.6 and 10.3: the
+    long right tail pulls the mean up). The medians hardly move with the inventory-choice rule (21&ndash;22 consonants,
+    9 vowels). English, with 24 consonants and 16 vowels in its median inventory, is a little above average on both.
+  </p>
+  <div class="persp">
+    <div class="card"><div class="big">6 + 5</div><h4>Rotokas (Bougainville)</h4><p>The smallest consonant inventory in PHOIBLE: 6 consonants, 5 vowels (UPSID).</p></div>
+    <div class="card"><div class="big">8 + 3</div><h4>Pirahã (Amazonia)</h4><p>8 consonants and only 3 vowels in both of its inventories.</p></div>
+    <div class="card"><div class="big">8 + 5</div><h4>Hawaiian</h4><p>8 consonants and 5 vowels in UPSID; another source lists 10 vowels by counting long vowels separately.</p></div>
+    <div class="card"><div class="big">130</div><h4>East Taa, or !Xóõ (Botswana)</h4><p>The largest consonant count: 130, most of them clicks combined with different voicing, aspiration and airflow.</p></div>
+  </div>
+  <p>
+    Extremes are where analysis choices matter most. !Xóõ's count depends on whether a click with its accompaniment is one segment or two. Kildin Saami reaches 113 consonants in
+    its source because palatalised and long consonants are each listed. And the largest vowel counts (up to 50) come from sources that list every long, nasalised and
+    diphthong vowel as a unit. Treat any single &ldquo;record&rdquo; with care.
+  </p>
+
+  <h3>Tones: a lesson in missing data</h3>
+  <p>
+    In Figure 2, 23.3% of languages list at least one tone. That is an underestimate, and for a reason that has nothing to do with the languages: four sources
+    (ea, upsid, saphon, er) <strong>never record tones</strong> (0% of their inventories do), while 69.5% of aa and 45.2% of ph
+    inventories do. Counting only inventories from sources that record tone, 48.8% of non-Indian languages are tonal. A zero in a database can mean &ldquo;absent&rdquo; or
+    &ldquo;not recorded&rdquo;: always check which.
+  </p>
+</section>
+
+<!-- ============================================================ 3. COMMON -->
+<section id="common">
+  <div class="kicker">03 &middot; Common and rare sounds</div>
+  <h2>/m/ is almost everywhere. Most sounds are almost nowhere.</h2>
+  <figure>
+    <div class="frame"><img src="sounds_language/fig/03_common_phonemes.png?v=1" alt="Bar chart of the 25 most widespread phonemes, all languages vs languages of India" loading="lazy"></div>
+    <figcaption><b>Figure 3.</b> Percentage of languages whose median inventory contains each phoneme, written exactly as in PHOIBLE. Blue: all 2079 languages; red: the
+    140 languages of India. Based on PHOIBLE 2.0 / Glottolog data, CC BY 4.0.</figcaption>
+  </figure>
+  <p>
+    The winners are the sounds you would guess a baby makes first: <span class="ipx">/m/</span> (96.3% of languages), <span class="ipx">/i/</span> (93.4%),
+    <span class="ipx">/k/</span> (90.9%), <span class="ipx">/j/</span> (the &ldquo;y&rdquo; of <em>yes</em>, 89.9%), <span class="ipx">/u/</span>, <span class="ipx">/a/</span>,
+    <span class="ipx">/p/</span>, <span class="ipx">/w/</span> and <span class="ipx">/n/</span>. Corner vowels (<span class="ipx">i a u</span>) are maximally different in the vowel space, and labial,
+    coronal and velar stops and nasals use the three most independent places of articulation (lips, tongue tip, tongue back).
+  </p>
+  <div class="intuition">
+    Why is <span class="ipx">/t/</span> only at 69.6%? Because of notation, not phonetics. Many sources write the dental stop as <span class="ipx">t̪</span> (in
+    22.7% of languages) or leave dental/alveolar undecided as <span class="ipx">t̪|t</span>. Counting any of <span class="ipx">t, t̪, t̪|t, t̺, t̻</span>, a voiceless coronal stop
+    is in 92% of languages. In India the plain <span class="ipx">t</span> is rarer still (38.6%) and <span class="ipx">t̪</span> commoner (60%), because most
+    Indian languages contrast a <em>dental</em> <span class="ipx">t̪</span> with a <em>retroflex</em> <span class="ipx">ʈ</span>.
+  </div>
+  <p>
+    Other differences in Figure 3 are worth a look: <span class="ipx">/f/</span> is in 43.8% of all languages but 23.6% of Indian ones (Indo-Aryan
+    <span class="ipx">pʰ</span> often takes its place), and <span class="ipx">/b/</span>, <span class="ipx">/ɡ/</span> and <span class="ipx">/h/</span> are commoner in India than elsewhere.
+  </p>
+  <p>
+    At the other end is a very long tail. The median inventories use 2535 distinct symbols, and 1344 of them
+    (53%) occur in <strong>only one language</strong>. Many are fine phonetic detail (an exact vowel quality, a particular release) recorded by one author; some are
+    genuinely rare sounds, like the clicks of southern Africa or the double-articulated <span class="ipx">k͡p</span> of West Africa.
+  </p>
+</section>
+
+<!-- ============================================================ 4. INDIA -->
+<section id="india">
+  <div class="kicker">04 &middot; India in PHOIBLE</div>
+  <h2>140 languages, four big families and a few loners.</h2>
+  <p>
+    Which languages count as &ldquo;languages of India&rdquo;? We let Glottolog decide: a language is included if India (<code>IN</code>) is among the countries in its <code>Countries</code> field.
+    That gives 518 Glottolog languages, of which 481 are spoken languages (the rest are sign languages and bookkeeping or unattested entries).
+    PHOIBLE has inventories for 140 of them (29.1%), 239 inventories in all. (Matching Glottocodes directly gives
+    136 languages and 231 inventories; the difference is the dialect roll-up, e.g. the Kurukh, Abujmaria and Mising inventories are coded as dialects.)
+  </p>
+  <figure>
+    <div class="frame"><img src="sounds_language/fig/04_india_map.png?v=1" alt="Point map of the PHOIBLE languages of India coloured by family, and coverage by family" loading="lazy"></div>
+    <figcaption><b>Figure 4.</b> <b>Left:</b> the 140 PHOIBLE languages of India at their Glottolog coordinates (one point per language, its approximate centre), over every
+    Glottolog language of the region in grey. No borders are drawn. <b>Right:</b> how many of India's spoken Glottolog languages in each group have a PHOIBLE inventory.
+    Indo-Aryan = Indo-European minus Northern Pashto (Iranian) and the Portuguese creoles. Based on PHOIBLE 2.0 / Glottolog data, CC BY 4.0.</figcaption>
+  </figure>
+  <div class="persp">
+    <div class="card"><div class="big" style="color:var(--accent)">36</div><h4>Indo-Aryan</h4><p>Hindi-Urdu, Bengali, Marathi, Gujarati, Odia, Assamese, Sindhi, Kashmiri … and Sanskrit.</p></div>
+    <div class="card"><div class="big" style="color:var(--accent-2)">31</div><h4>Dravidian</h4><p>Tamil, Telugu, Kannada, Malayalam, Tulu, and many tribal languages of central India (Kui, Kuvi, Gondi, Kurukh).</p></div>
+    <div class="card"><div class="big" style="color:var(--accent-3)">15</div><h4>Austroasiatic</h4><p>Munda (Santali, Mundari, Ho, Kharia, Sora), Khasian (Khasi, Pnar) and Nicobarese.</p></div>
+    <div class="card"><div class="big" style="color:var(--teal)">53</div><h4>Sino-Tibetan</h4><p>Tibeto-Burman languages of the Himalaya and the North-East: Manipuri (Meitei), Bodo, Garo, Mizo, Naga languages, Ladakhi.</p></div>
+  </div>
+  <p>
+    The <strong>other 5</strong> are Great Andamanese (Apucikwar), Önge (Jarawa-Onge family), Burushaski (an isolate), Northern Pashto and Uyghur. Some well-known members of
+    India's smaller groups have <em>no</em> PHOIBLE inventory: the isolate Nihali, and the Tai-Kadai languages of Assam (Khamti, Ahom, Phake).
+  </p>
+  <div class="intuition">
+    &ldquo;Spoken in India&rdquo; is broader than &ldquo;of India&rdquo;. Glottolog lists every country where a language is spoken, so cross-border languages such as Bengali, Nepali-area
+    Himalayan languages, Uyghur, Khams Tibetan and Pashto are in, and they sit outside India's borders in Figure 4 because their coordinates mark the language's centre. As a check, the
+    stricter set of languages listed <em>only</em> for India (76 with inventories) gives very similar results: 77.6% with retroflexes and
+    34.2% with breathy-voiced stops, against 72.9% and 33.6% for the full set.
+  </div>
+  <p>
+    Coverage of India is a little above the Eurasian average, and it is unusually <strong>uniform</strong>: 98 of the 239 Indian inventories come from one
+    survey, Ramaswami (1999), written by one team with one set of conventions. That is a blessing for comparing Indian languages with each other, and a reason for caution when
+    comparing them with the rest of the world (<a href="#explore">section 7</a>).
+  </p>
+</section>
+
+<!-- ============================================================ 5. AREAL -->
+<section id="areal">
+  <div class="kicker">05 &middot; What makes South Asian inventories distinctive</div>
+  <h2>Retroflex, aspirated, breathy: the South Asian signature.</h2>
+  <p>
+    In 1956 Murray Emeneau called India a <strong>linguistic area</strong>: languages from unrelated families, in contact for millennia, have come to share features. The best-known is the
+    <strong>retroflex</strong> series, made with the tongue tip curled back behind the gum ridge (<span class="ipx">ʈ ɖ ɳ ɭ ʂ ɽ</span>, as in Hindi <span lang="hi">टमाटर</span>
+    <em>ʈamaːʈar</em> &lsquo;tomato&rsquo;). Masica (1991) adds the Indo-Aryan <strong>laryngeal</strong> system: voiceless, aspirated, voiced and breathy-voiced (murmured) stops at each place.
+    PHOIBLE lets us put numbers on these claims.
+  </p>
+
+  <h3>How each property is detected</h3>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>property</th><th>rule (on the phoneme symbols of an inventory, marginal phonemes excluded)</th></tr>
+      <tr><td>retroflex</td><td>a consonant containing <span class="ipx">ʈ ɖ ɳ ɭ ʂ ʐ ɽ ɻ ᶑ</span> or the rhotic hook <span class="ipx">˞</span> (clicks excluded). Cross-check with PHOIBLE's <a href="sounds_language.html#features">distinctive features</a> (coronal, −anterior, −distributed): the two agree for 96.4% of languages; most disagreements are Australian apical <span class="ipx">ɹ̺</span>, which the features count and the glyph rule does not.</td></tr>
+      <tr><td>aspirated stop</td><td>a stop or affricate with <span class="ipx">ʰ</span></td></tr>
+      <tr><td>breathy-voiced stop</td><td>a stop or affricate with <span class="ipx">ʱ</span> or the diaeresis below <span class="ipx">◌̤</span> (both notations occur, sometimes in one source)</td></tr>
+      <tr><td>four-way contrast</td><td>at one place of articulation, voiceless, voiceless aspirated, voiced and breathy-voiced stops all present (<span class="ipx">p pʰ b bʱ</span>, <span class="ipx">ʈ ʈʰ ɖ ɖʱ</span>, …)</td></tr>
+      <tr><td>nasalised vowel</td><td>a vowel with the tilde <span class="ipx">◌̃</span></td></tr>
+      <tr><td>vowel length contrast</td><td>some vowel present both short and long (<span class="ipx">a</span> and <span class="ipx">aː</span>)</td></tr>
+      <tr><td>dental&ndash;alveolar contrast</td><td>a dental consonant (bridge <span class="ipx">◌̪</span>) and the same consonant without it, e.g. <span class="ipx">n̪</span> and <span class="ipx">n</span> (the undecided <span class="ipx">t̪|t</span> does not count)</td></tr>
+      <tr><td>tones</td><td>any tone segment listed</td></tr>
+    </table>
+  </div>
+
+  <figure>
+    <div class="frame"><img src="sounds_language/fig/05_retroflex_world.png?v=1" alt="World map of languages with and without retroflex consonants" loading="lazy"></div>
+    <figcaption><b>Figure 5.</b> Languages with at least one retroflex consonant (red, 553 languages) and without (grey-blue). Two hot spots stand out: South Asia and
+    Australia (72.4% of PHOIBLE's Australian languages). Based on PHOIBLE 2.0 / Glottolog data, CC BY 4.0.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="frame"><img src="sounds_language/fig/06_india_vs_world.png?v=1" alt="Bar chart comparing feature frequencies in languages of India and the rest of the world" loading="lazy"></div>
+    <figcaption><b>Figure 6.</b> Share of languages with each property, India (140) vs the rest of PHOIBLE (1939). Bars use the median inventory; black
+    lines span the values under the other rules (preferred source, 200 random picks, all inventories pooled). &ldquo;Tones listed&rdquo; is depressed for both groups by sources that never
+    record tone. Based on PHOIBLE 2.0 / Glottolog data, CC BY 4.0.</figcaption>
+  </figure>
+  <div class="persp">
+    <div class="card"><div class="big">73% <span style="font-size:0.9rem;color:var(--muted)">vs 23%</span></div><h4>retroflex consonants</h4><p>Indian languages have on average 4.7 retroflexes when they have any (elsewhere 3.1).</p></div>
+    <div class="card"><div class="big">69% <span style="font-size:0.9rem;color:var(--muted)">vs 16%</span></div><h4>aspirated stops</h4><p>Including most Tibeto-Burman languages, which contrast plain and aspirated voiceless stops.</p></div>
+    <div class="card"><div class="big">34% <span style="font-size:0.9rem;color:var(--muted)">vs 1%</span></div><h4>breathy-voiced stops</h4><p>47 of the 68 PHOIBLE languages with them (69%) are languages of India.</p></div>
+    <div class="card"><div class="big">46 / 59</div><h4>four-way contrast</h4><p>of all PHOIBLE languages with <span class="ipx">p pʰ b bʱ</span>-type systems are languages of India (78%).</p></div>
+  </div>
+  <p>
+    The contrasts are large and robust: under every inventory-choice rule India stays between 70% and 80% for retroflexes and
+    31&ndash;36% for breathy-voiced stops, against about 23% and 1% elsewhere. Counting marginal
+    phonemes too changes the breathy figures by less than a percentage point. Nasalised vowels and vowel length are only somewhat more common in India, and the dental&ndash;alveolar
+    contrast is rare everywhere, with one exception below.
+  </p>
+
+  <h3>By family: one area, different recipes</h3>
+  <figure>
+    <div class="frame"><img src="sounds_language/fig/07_family_heatmap.png?v=1" alt="Heat map of feature frequencies by language family within India" loading="lazy"></div>
+    <figcaption><b>Figure 7.</b> Percentage of languages with each property, by group, for the languages of India; the bottom rows repeat India overall and the rest of the world. In the small
+    groups (\(n = 15\) or fewer) a single language moves a percentage by 7 points or more. Based on PHOIBLE 2.0 / Glottolog data, CC BY 4.0.</figcaption>
+  </figure>
+  <ul>
+    <li><strong>Indo-Aryan</strong> is the home of the laryngeal system: 81% have breathy-voiced stops and 78% the full four-way contrast.
+      Most also have retroflexes (89%) and nasalised vowels (58%). The exceptions are instructive: Assamese has merged the dental and
+      retroflex series into alveolar <span class="ipx">t d</span>, and the Bangladeshi-Bengali inventory shows the same.</li>
+    <li><strong>Dravidian</strong> is the retroflex family par excellence (100%, including the approximant <span class="ipx">ɻ</span> of Tamil and Malayalam
+      <span lang="ta">ழ</span>), with vowel length in 84% and the only common <strong>dental&ndash;alveolar contrast</strong> (36%):
+      Malayalam distinguishes <span class="ipx">n̪</span>, <span class="ipx">n</span> and <span class="ipx">ɳ</span>. Aspirated and breathy stops (16%) appear in the
+      literary languages, Telugu, Kannada and Malayalam, mainly in words borrowed from Sanskrit; Tamil has none.</li>
+    <li><strong>Austroasiatic</strong>: the Munda languages have retroflexes (80% of the group) and several have Indo-Aryan-style breathy stops, borrowed
+      through long contact; the Mon-Khmer-side languages (Khasi, Pnar, Nicobarese) have at most one retroflex.</li>
+    <li><strong>Sino-Tibetan</strong> languages mostly have a two-way plain&ndash;aspirated contrast (87% aspirated, only 17% breathy),
+      fewer vowels, and <strong>tone</strong>: 30% list tones, but 53% of those whose source records tone at all. Retroflexes
+      (45%) are mostly in Himalayan languages (Ladakhi, Balti, Tibetan varieties, Kinnauri, Sherpa, Dzongkha) and rare in the Naga, Kuki-Chin and Bodo-Garo languages of the North-East.</li>
+  </ul>
+  <div class="keyidea">
+    The South Asian &ldquo;sound&rdquo; is real and measurable: about three times as many Indian languages as other languages have retroflexes, and breathy-voiced stops are almost
+    unique to the subcontinent (seven in ten of PHOIBLE's languages with them are Indian). But the recipe differs by family: Indo-Aryan builds four laryngeal series, Dravidian piles up
+    places of articulation (dental, alveolar, retroflex), Tibeto-Burman adds tone.
+  </div>
+</section>
+
+<!-- ============================================================ 6. SIZES INDIA -->
+<section id="indiasizes">
+  <div class="kicker">06 &middot; Bigger inventories?</div>
+  <h2>More consonants, mostly thanks to the stops.</h2>
+  <figure>
+    <div class="frame"><img src="sounds_language/fig/08_sizes_by_family.png?v=1" alt="Box plots of consonant and vowel counts by family in India and the rest of the world" loading="lazy"></div>
+    <figcaption><b>Figure 8.</b> Consonant (left) and vowel (right) counts, rest of world vs each group of Indian languages (dots: individual languages). Boxes span the middle half; whiskers
+    1.5 times that range. Based on PHOIBLE 2.0 / Glottolog data, CC BY 4.0.</figcaption>
+  </figure>
+  <p>
+    The median language of India has 28.5 consonants against 21 elsewhere (more than 78% of all PHOIBLE languages), and
+    12 vowels against 8. The consonant gap is robust (India's median ranges 27&ndash;30 under the
+    other rules) and its source is easy to find. A four-way laryngeal contrast at five places (labial, dental, retroflex, palatal, velar) is already 20 stops and affricates, and the
+    median Indo-Aryan inventory has exactly 20 of them, against 8 for the median language elsewhere. Indo-Aryan's median is
+    32 consonants; Sino-Tibetan reaches 31 with aspiration and many fricatives and affricates, while Dravidian and Austroasiatic sit at
+    23 and 23, nearer the world median.
+  </p>
+  <p>
+    Vowel counts are noisier, because they depend so much on whether long, nasalised and diphthong vowels are listed as units: the median Sino-Tibetan language of India has
+    8 vowels, Indo-Aryan 14 (seven or eight qualities, many also nasalised), Dravidian 13 (five qualities, short and long).
+  </p>
+</section>
+
+<!-- ============================================================ 7. CASE STUDIES -->
+<section id="explore">
+  <div class="kicker">07 &middot; Case studies and a live explorer</div>
+  <h2>One language, several inventories.</h2>
+  <p>Before looking at single languages, see how much the sources disagree about the same language:</p>
+  <figure>
+    <div class="frame"><img src="sounds_language/fig/09_sources_disagree.png?v=1" alt="Dot plot of consonant and vowel counts per source for thirteen Indian languages" loading="lazy"></div>
+    <figcaption><b>Figure 9.</b> Every PHOIBLE inventory of thirteen major languages of India (number in brackets), coloured by source; the ringed one is the median inventory used in the
+    statistics. Dots at the same value are stacked. Based on PHOIBLE 2.0 / Glottolog data, CC BY 4.0.</figcaption>
+  </figure>
+  <p>
+    Hindi has five inventories with 34 to 71 consonants. The biggest counts (spa and ph) list every long (geminate) consonant such as
+    <span class="ipx">pː kʰː</span> as a separate phoneme; the smallest (ea) lists only the core series. The ph inventory lists 11 vowels, none of them nasalised, where
+    others list up to 23 with nasal and long vowels as units. Santali's vowel count jumps from 11 to 31 when diphthongs are listed. None of these is &ldquo;wrong&rdquo;;
+    they answer the question &ldquo;what are the units?&rdquo; differently. This is why a single inventory per language must be chosen with a stated rule, and why the counts in
+    <a href="#indiasizes">section 6</a> are compared as medians.
+  </p>
+
+  <div class="card demo" id="invDemo">
+    <h4 style="margin:0 0 6px;">Inventory explorer</h4>
+    <div class="demohead">
+      <label for="phLang" class="warn">language:</label>
+      <select id="phLang" aria-label="Choose a language"></select>
+    </div>
+    <div class="ctlrow" style="margin-top:8px;"><span>quick picks:</span><div class="seg" id="phQuick"></div></div>
+    <div class="ctlrow"><span>inventories (source · counts, ★ = median):</span><div class="seg" id="phSrc"></div></div>
+    <div class="readout" id="phInfo"></div>
+    <div class="srcname" id="phSrcName"></div>
+    <div class="badges" id="phBadges"></div>
+    <div class="plotlabel">Consonants by manner (rows) and place (columns); empty rows and columns are hidden; retroflex column shaded; (parentheses) = marginal in this source.</div>
+    <div class="ipawrap" id="phCons"></div>
+    <div class="plotlabel" style="margin-top:12px;">Vowels by height and backness (rounded and unrounded share a cell)</div>
+    <div class="ipawrap" id="phVow"></div>
+    <p class="warn" style="margin:10px 0 0;">The chart places each symbol from its base letter (e.g. <span class="ipx">ʈʰ</span> → retroflex stop). Only symbols marked with the bridge
+      <span class="ipx">◌̪</span> go in the dental column; sources that write dentals as plain <span class="ipx">t</span> or laminal <span class="ipx">t̻</span> show them as alveolar. The
+      classifier places 98% of consonant entries; the rest (clicks, <span class="ipx">kp</span>-type double stops) are listed below the chart. Includes all
+      140 languages of India plus a few for comparison (205&nbsp;KB of data).</p>
+  </div>
+
+  <h3>Notes on the case studies</h3>
+  <ul>
+    <li><strong>Assamese</strong> (the language of IIT Guwahati's state) is the Indo-Aryan exception: no retroflex series, alveolar <span class="ipx">t tʰ d d̤</span>, and a velar fricative
+      <span class="ipx">x</span> (from older <em>s</em>) that most of its neighbours lack. Its three inventories agree on 22&ndash;23 consonants.</li>
+    <li><strong>Hindi</strong>: the textbook four-way system at labial, dental, retroflex, palatal (affricate) and velar places, plus the retroflex flaps <span class="ipx">ɽ ɽ̤</span>.</li>
+    <li><strong>Bengali</strong>: the spa, upsid and ra inventories have retroflexes; the two inventories of Dhaka (Bangladeshi Standard) Bengali, ph and ea, have alveolar <span class="ipx">t d</span> contrasting with dental <span class="ipx">t̪ d̪</span> instead.</li>
+    <li><strong>Marathi</strong> (only ra) has dental affricates <span class="ipx">ts dz</span> beside palatal ones, and breathy sonorants such as <span class="ipx">m̤ l̤</span>.</li>
+    <li><strong>Tamil</strong>: no native voicing contrast (voiced stops appear as marginal or allophonic in ph), up to six nasals (<span class="ipx">m n̪ n ɳ ɲ ŋ</span> in ea), and <span class="ipx">ɻ</span> (written <span class="ipx">ʐ</span> in ea).
+      <strong>Malayalam</strong> adds a three-way coronal contrast. <strong>Telugu</strong> and <strong>Kannada</strong> list aspirated and breathy stops from Sanskrit loans.</li>
+    <li><strong>Santali</strong> and <strong>Mundari</strong> (Munda): retroflexes and borrowed breathy stops; ra marks their checked (glottalised) final stops with a creaky diacritic (<span class="ipx">p̰ k̰</span>).
+      One of Mundari's ra inventories is labelled Bhumij, which Glottolog treats as a Mundari dialect.</li>
+    <li><strong>Khasi</strong>: Austroasiatic but on the Mon-Khmer side, with aspirated stops and a single retroflex (<span class="ipx">ɭ</span>) in its UPSID inventory; its ra inventory has none.</li>
+    <li><strong>Manipuri (Meitei)</strong>: tones (2 in ph, 3 in ra); its breathy stops are marked marginal in ph. <strong>Bodo</strong> has a single, small UPSID inventory
+      (15 consonants) and, like every UPSID entry, no tones listed.</li>
+  </ul>
+  <div class="try">
+    Pick <em>Hindi</em> and switch between its five inventories: watch the long consonants and nasal vowels appear and disappear. Then compare <em>Tamil</em> with <em>Malayalam</em> (count the
+    coronal nasals), <em>Assamese</em> with <em>Bengali</em> (look for the shaded retroflex column), and <em>Hawaiian</em> with anything.
+  </div>
+</section>
+
+<!-- ============================================================ 8. TECH -->
+<section id="tech">
+  <div class="kicker">08 &middot; Why this matters for speech technology</div>
+  <h2>Phone sets are design decisions.</h2>
+  <p>
+    A speech recogniser or synthesiser that models sounds explicitly needs a <strong>phone set</strong>: the inventory of units it predicts or generates, and a pronunciation lexicon or
+    grapheme-to-phoneme rules that map words onto them. Everything on this page carries over:
+  </p>
+  <ul>
+    <li><strong>The inventory question is the phone-set question.</strong> Should Hindi geminates, nasal vowels, or loan sounds such as <span class="ipx">f z q</span> be separate units? Each
+      choice changes the number of classes to learn and the data needed for each. Sources disagree because the linguistics is genuinely open; a phone set should state its choices just as
+      a PHOIBLE source does.</li>
+    <li><strong>Shared sets across Indian languages.</strong> Because the languages share so much (Figure 7), and because Brahmi-derived scripts map closely onto sounds, Indian speech
+      projects have defined <em>common label sets</em> that give the same label to the same sound in different languages (e.g. the Indian TTS consortium's common label set, Baby et al. 2016).
+      Shared units let a model trained on one language help another.</li>
+    <li><strong>Cross-lingual transfer.</strong> Multilingual phone recognisers such as Allosaurus (Li et al. 2020) predict universal phones and then map them onto a target language's
+      inventory taken from PHOIBLE, so a language with little data can still get a phone recogniser. The rare-sound tail (<a href="#common">section 3</a>) is where such transfer struggles: a click or a breathy
+      stop seen in only a few training languages is hard to learn.</li>
+    <li><strong>Code-switching with English.</strong> Indian speakers mix English words into nearly every language, and pronounce them with their own inventory: English alveolar
+      <span class="ipx">t d</span> are commonly realised as retroflex <span class="ipx">ʈ ɖ</span> in Indian English, and English <span class="ipx">f</span> or <span class="ipx">z</span> may surface as
+      <span class="ipx">pʰ</span> or <span class="ipx">dʒ</span> in some speakers. A recogniser needs a phone set, or a lexicon, that covers both languages and these mappings.</li>
+    <li><strong>Evaluation by sound class.</strong> Knowing which contrasts a language uses tells you where to look for errors: aspiration and breathy voice in Hindi, the three coronal nasals in
+      Malayalam, tone in Manipuri.</li>
+  </ul>
+  <p>End-to-end models that output characters or subwords hide the phone set, but the same distinctions still have to be learnt from the audio, and the confusions they make follow the
+    contrasts on this page.</p>
+</section>
+
+<!-- ============================================================ 9. QUIZ -->
+<section id="quiz">
+  <div class="kicker">09 &middot; Check your understanding</div>
+  <h2>Five questions.</h2>
+  <details><summary>1. PHOIBLE lists 5 inventories for Hindi, with 34 to 71 consonants. Which one is correct?</summary>
+    <p style="font-size:0.93rem;">None is uniquely correct: they reflect different analyses (geminates as units or not, loan sounds included or marked marginal, notation). For statistics
+    you need a stated rule for picking one per language (here: the median inventory) and a check that conclusions survive other rules.</p></details>
+  <details><summary>2. 23% of PHOIBLE languages list tones. Why is the true share of tonal languages in the database certainly higher?</summary>
+    <p style="font-size:0.93rem;">Four sources (ea, upsid, saphon, er) never record tones, so their tonal languages show zero tones. Restricting to sources that record tone, 49% of the
+    non-Indian languages are tonal. Missing data must not be read as absence.</p></details>
+  <details><summary>3. Which property most sharply separates languages of India from the rest of PHOIBLE, and which family carries it?</summary>
+    <p style="font-size:0.93rem;">Breathy-voiced (murmured) stops such as <span class="ipx">bʱ ɡʱ</span>: 34% of Indian languages vs 1% elsewhere, and 69% of
+    all PHOIBLE languages with them are Indian. Indo-Aryan carries it (81% of Indo-Aryan languages), with the full <span class="ipx">p pʰ b bʱ</span> contrast.</p></details>
+  <details><summary>4. Why does the plain symbol /t/ appear in fewer Indian languages (39%) than in the world (70%), even though nearly every language has some t-like sound?</summary>
+    <p style="font-size:0.93rem;">Most Indian languages contrast a dental <span class="ipx">t̪</span> with a retroflex <span class="ipx">ʈ</span>, and the sources write the dental with the
+    bridge diacritic. Exact-symbol frequencies depend on notation; grouping the variants (t, t̪, t̪|t, …) gives 92% worldwide.</p></details>
+  <details><summary>5. You are designing a phone set for a Hindi&ndash;English code-switching recogniser. Name two inventory decisions you must make.</summary>
+    <p style="font-size:0.93rem;">For example: whether geminates and nasalised vowels are separate units; whether loan sounds <span class="ipx">f z q</span> get their own labels; whether English
+    alveolar <span class="ipx">t d</span> share labels with Hindi retroflex <span class="ipx">ʈ ɖ</span> (as Indian-English speakers often pronounce them) or stay separate; how to label
+    breathy-voiced stops that English lacks.</p></details>
+</section>
+
+<footer>
+  Speech and Audio Processing &middot; Module 2, page 2 &middot; figures, numbers and explorer data from <code>sounds_language/make_figures.py</code>, live explorer in <code>sounds_language/page.js</code>
+  (data: <code>inventories.js</code>). All figures and numbers on this page are
+  <strong>based on PHOIBLE 2.0 / Glottolog data, CC BY 4.0</strong>; the explorer shows PHOIBLE inventories as published, with symbols placed in a chart by our classifier.
+  Percentages are over the languages in PHOIBLE, which is not a random sample of the world's languages.
+  <ul class="refs" style="margin-top:12px;">
+    <li>S. Moran &amp; D. McCloy (eds.), <em>PHOIBLE 2.0</em>, Jena: Max Planck Institute for the Science of Human History, 2019. <a href="https://phoible.org" target="_blank" rel="noopener">https://phoible.org</a>, doi:10.5281/zenodo.2626687. CC BY 4.0.</li>
+    <li>H. Hammarström, R. Forkel, M. Haspelmath &amp; S. Bank, <em>Glottolog</em>, Leipzig: Max Planck Institute for Evolutionary Anthropology (current version). <a href="https://glottolog.org" target="_blank" rel="noopener">https://glottolog.org</a>. CC BY 4.0.</li>
+    <li>N. Ramaswami, <em>Common Linguistic Features in Indian Languages: Phonetics</em>, Mysore: Central Institute of Indian Languages, 1999 (PHOIBLE source &ldquo;ra&rdquo;).</li>
+    <li>D. Nikolaev, A. Nikulin &amp; A. Kukhto, <em>The database of Eurasian phonological inventories</em>, 2015 (PHOIBLE source &ldquo;ea&rdquo;).</li>
+    <li>I. Maddieson, <em>Patterns of Sounds</em>, Cambridge University Press, 1984; I. Maddieson &amp; K. Precoda, UPSID, 1990 (source &ldquo;upsid&rdquo;).</li>
+    <li>J. H. Crothers, J. P. Lorentz, D. A. Sherman &amp; M. M. Vihman, <em>Handbook of Phonological Data from a Sample of the World's Languages</em>, Stanford Phonology Archive, 1979 (source &ldquo;spa&rdquo;).</li>
+    <li>S. Moran, <em>Phonetics Information Base and Lexicon</em>, PhD thesis, University of Washington, 2012 (source &ldquo;ph&rdquo;). Other PHOIBLE sources (not used for India): E. Round, Australian phonemic inventories, 2019 (&ldquo;er&rdquo;); L. Michael, T. Stark &amp; W. Chang, SAPhon (&ldquo;saphon&rdquo;); R. Hartell 1993 and C. Chanard 2006, <em>Alphabets des langues africaines</em> (&ldquo;aa&rdquo;).</li>
+    <li>M. B. Emeneau, &ldquo;India as a linguistic area,&rdquo; <em>Language</em> 32(1), 3&ndash;16, 1956.</li>
+    <li>C. P. Masica, <em>The Indo-Aryan Languages</em>, Cambridge University Press, 1991 (retroflexion, laryngeal series, areal features).</li>
+    <li>A. Baby, A. L. Thomas, N. L. Nishanthi, TTS Consortium &amp; H. A. Murthy, &ldquo;Resources for Indian languages,&rdquo; <em>Proc. CBBLR workshop, TSD</em>, 2016 (common label set).</li>
+    <li>X. Li et al., &ldquo;Universal phone recognition with a multilingual allophone system,&rdquo; <em>Proc. ICASSP</em>, 2020 (Allosaurus).</li>
+  </ul>
+</footer>
+
+<script src="sounds_language/inventories.js?v=1"></script>
+<script src="sounds_language/page.js?v=2"></script>
+
+<!--ai:foot--><footer class="ai-foot"><a href="../index.html">Speech and Audio Processing</a> &middot; Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati &middot; <a href="../index.html#credits">data credits</a></footer><!--/ai:foot-->
+</body>
+</html>

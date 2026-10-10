@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The All-Pole Vocal Tract</title>
+<meta name="description" content="The autoregressive (all-pole) model of speech: feedback filters, poles and formants in the z-plane, LPC envelopes on real speech, and an LPC vocoder.">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, { delimiters: [ { left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false } ], throwOnError: false });"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #F5F7FA; --bg-grid: #E7ECF2; --surface: #FFFFFF; --surface-2: #EAF0F7;
+    --ink: #10233F; --ink-soft: #24344F; --muted: #5C6B80; --line: #D7DEE8; --line-strong: #AEB9CB;
+    --accent: #14508C; --accent-2: #C1272D; --accent-3: #C9971B; --accent-4: #5B7083; --teal: #1D7A8C;
+    --shadow: 0 1px 0 rgba(16,35,63,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+      --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+      --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+      --shadow: 0 1px 0 rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+    --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+    --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+    --shadow: 0 1px 0 rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background:
+      repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      var(--bg);
+    color: var(--ink-soft);
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: 17px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: #fff; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1, h2, h3, h4 { font-family: "Poppins", ui-sans-serif, system-ui, sans-serif; color: var(--ink); font-weight: 600; }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.3rem); line-height: 1.08; margin: 0 0 0.35em; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; margin: 0 0 0.5em; }
+  h3 { font-size: 1.22rem; margin: 2em 0 0.3em; }
+  h4 { font-size: 1rem; margin: 0.2em 0 0.3em; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.88em; }
+
+  header.hero, section, footer { max-width: 900px; margin: 0 auto; padding: 56px 20px; }
+  section { border-top: 1px solid var(--line); }
+  header.hero { padding-top: 72px; }
+  .kicker { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.74rem; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+  .lede { font-size: 1.12rem; }
+  .meta-line { font-size: 0.85rem; color: var(--muted); margin-top: 18px; }
+
+  .roadmap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-top: 26px; font-size: 0.92rem; }
+  .roadmap ol { margin: 6px 0 0; padding-left: 20px; }
+  .roadmap li { margin: 3px 0; }
+  .roadmap .later { color: var(--muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  .intuition { border-left: 3px solid var(--accent-3); background: var(--surface-2); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 0.97rem; }
+  .keyidea { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .keyidea::before { content: "Key idea"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .try { border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 16px; margin: 16px 0; font-size: 0.93rem; }
+  .try::before { content: "Try this yourself"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-bottom: 2px; }
+  .eq { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.95rem; background: var(--surface); border: 1px solid var(--line);
+        border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; overflow-x: auto; color: var(--ink); line-height: 2; }
+
+  figure { margin: 22px 0 26px; }
+  figure .frame { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 0.86rem; color: var(--muted); margin-top: 8px; line-height: 1.55; }
+  figcaption b { color: var(--ink-soft); }
+
+  button { font-family: inherit; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--line-strong);
+           background: var(--surface); color: var(--ink-soft); padding: 6px 12px; transition: all 0.15s ease; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .ctlrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 10px 0; font-size: 0.85rem; color: var(--muted); }
+  .valpill { font-family: "JetBrains Mono", monospace; color: var(--accent); font-weight: 600; }
+  input[type=range] { accent-color: var(--accent); }
+  canvas.plot { width: 100%; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .plotlabel { font-size: 0.75rem; color: var(--muted); margin: 8px 0 3px; }
+
+  /* slab rack */
+  .rack { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .rack { grid-template-columns: repeat(2, 1fr); } }
+  .slab { background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 6px 6px 10px; cursor: pointer; text-align: center; transition: border-color 0.15s; font: inherit; color: inherit; }
+  .slab:hover, .slab.sel { border-color: var(--accent); }
+  .slab svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .slab .name { font-weight: 600; color: var(--ink); font-size: 0.92rem; }
+  .slab .hint { font-size: 0.72rem; color: var(--muted); }
+  .mallet { transform-origin: 150px 12px; transform: rotate(22deg); transition: transform 0.12s ease-in; }
+  .slab.hit .mallet { transform: rotate(0deg); transition: transform 0.07s ease-in; }
+  .slab.ring .body { animation: shake 0.35s linear; }
+  @keyframes shake { 0%,100% { transform: translateY(0); } 20% { transform: translateY(1.6px); } 40% { transform: translateY(-1.2px); } 60% { transform: translateY(0.8px); } 80% { transform: translateY(-0.4px); } }
+  @media (prefers-reduced-motion: reduce) { .slab.ring .body { animation: none; } .mallet { transition: none; } }
+
+  .examples { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .examples { grid-template-columns: 1fr; } }
+  .examples .card p { font-size: 0.88rem; margin: 0; }
+  .examples .emoji { font-size: 1.5rem; line-height: 1; }
+  .examples audio { width: 100%; height: 32px; margin-top: 8px; }
+
+  /* voice grid */
+  .vgrid { display: grid; grid-template-columns: 120px repeat(4, 1fr); gap: 6px; align-items: stretch; font-size: 0.85rem; }
+  .vgrid .hdr { font-weight: 600; color: var(--ink); text-align: center; padding: 6px 2px; font-size: 0.8rem; }
+  .vgrid .rowh { font-weight: 600; color: var(--ink); display: flex; align-items: center; font-size: 0.8rem; }
+  .vgrid button { padding: 10px 4px; }
+  @media (max-width: 600px) { .vgrid { grid-template-columns: 78px repeat(4, 1fr); } .vgrid button { font-size: 0.72rem; } }
+
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram text { font-family: "Inter", sans-serif; }
+  .players { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 10px 0; }
+  .player { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+  .player audio { height: 34px; max-width: 250px; width: 100%; }
+  ul.refs li { font-size: 0.9rem; margin-bottom: 5px; }
+  footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); }
+  .scatterwrap { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 700px) { .scatterwrap { grid-template-columns: 1fr; } }
+  .bigr { font-family: "JetBrains Mono", monospace; font-size: 1.5rem; font-weight: 600; color: var(--ink); }
+  .timeline { position: relative; margin: 10px 0 0 8px; padding-left: 26px; border-left: 2px solid var(--line-strong); }
+  .timeline .ev { position: relative; margin: 0 0 16px; }
+  .timeline .ev::before { content: ""; position: absolute; left: -33px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--accent); }
+  .timeline .ev.speech::before { border-color: var(--accent-2); }
+  .timeline .yr { font-family: "JetBrains Mono", monospace; font-weight: 600; color: var(--accent); font-size: 0.9rem; }
+  .timeline .ev.speech .yr { color: var(--accent-2); }
+  .timeline p { margin: 2px 0 0; font-size: 0.92rem; }
+  .score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .score div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; font-size: 0.78rem; color: var(--muted); }
+  .score b { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.95rem; color: var(--ink); }
+  .readout { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .readout div { background: var(--surface-2); border-radius: 8px; padding: 6px 10px; font-size: 0.75rem; color: var(--muted); }
+  .eq { font-family: inherit; white-space: normal; line-height: 1.5; }
+  .eq .katex-display { margin: 0.4em 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+  .eq .note, .note { display: block; font-family: "Inter", sans-serif; font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .card .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+  .budget { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 58px; padding: 6px 8px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; }
+  .budget small { font-weight: 400; font-size: 0.7rem; color: var(--muted); }
+  .budget.f { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border: 1px solid var(--accent); color: var(--accent); }
+  .budget.f::after { content: "2 weights"; font-size: 0.66rem; font-weight: 400; color: var(--ink-soft); }
+  .budget.t { background: color-mix(in srgb, var(--accent-3) 18%, var(--surface)); border: 1px solid var(--accent-3); color: var(--ink); }
+  .budget.t::after { content: "2 weights"; font-size: 0.66rem; font-weight: 400; color: var(--ink-soft); }
+  .readout b { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.95rem; color: var(--ink); }
+  .demo3 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 700px) { .demo3 { grid-template-columns: 1fr; } }
+  .zwrap { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 700px) { .zwrap { grid-template-columns: 1fr; } }
+  table.ftab { border-collapse: collapse; font-size: 0.85rem; margin-top: 6px; }
+  table.ftab td, table.ftab th { padding: 3px 10px 3px 0; text-align: left; }
+  table.ftab th { color: var(--muted); font-weight: 600; }
+  .vgrid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .vgrid2 .card p { font-size: 0.85rem; margin: 4px 0 6px; }
+  .vgrid2 audio { width: 100%; height: 32px; }
+</style>
+<!--ai:head--><link rel="stylesheet" href="../assets/site.css?v=3bd065aa"><!--/ai:head-->
+</head>
+<body>
+<!--ai:nav--><nav class="ai-nav" aria-label="Course navigation"><div class="ai-nav-in"><a class="ai-brand" href="../index.html" title="Speech and Audio Processing"><span class="ai-logo" aria-hidden="true">◖◗</span><span class="ai-brand-full">Speech and Audio Processing</span><span class="ai-brand-short">SAP</span></a><span class="ai-where">Module 5 &middot; Linear prediction for speech</span><details class="ai-menu"><summary>All pages</summary><ul><li><a href="spectrogram.html">1. Seeing sound: the spectrogram</a></li><li><a href="sounds_language.html">2. The sounds of language: from sound to phoneme</a></li><li><a href="phoneme_inventories.html">2. Phoneme inventories: India and the world</a></li><li><a href="source_filter.html">3. A buzz and a tube</a></li><li><a href="vocal_tract.html">3. Vocal tract, live</a></li><li><a href="linear_prediction.html">4. Guessing the next sample</a></li><li><a href="ar_model.html" aria-current="page">5. The all-pole vocal tract</a></li><li><a href="codecs.html">6. Squeezing speech</a></li><li><a href="decibels.html">Why does audio live in decibels?</a></li><li><a href="../convolution/index.html">Convolution, animated</a></li></ul></details><a class="ai-step ai-prev" href="linear_prediction.html" title="Guessing the next sample">← prev</a><a class="ai-step ai-next" href="codecs.html" title="Squeezing speech">next →</a></div></nav><!--/ai:nav-->
+
+<header class="hero">
+  <div class="kicker">Speech and Audio Processing &middot; Module 5</div>
+  <h1>Turning the predictor into a vocal tract.</h1>
+  <p class="lede">
+    In <a href="linear_prediction.html">module 4</a> we predicted each speech sample from the last few, and found that what can't be predicted is the glottal kick. Rearranged, the predictor
+    equation reads \(x[n] = \sum_k a_k\,x[n-k] + e[n]\): a <em>source</em> \(e[n]\) going into something that rings. This page shows that this &ldquo;something&rdquo; is a filter made
+    entirely of <strong>poles</strong>, that each pair of poles is one <strong>formant</strong>, and that fitting it to a recording hands you the vocal tract's resonances,
+    good enough to take speech apart and rebuild it.
+  </p>
+  <div class="roadmap">
+    <strong style="color:var(--ink);">The path through this page</strong>
+    <ol>
+      <li><a href="#feedback">Turn the predictor around</a>: a filter that listens to itself</li>
+      <li><a href="#zplane">Poles and the z-plane</a>: where formants live</li>
+      <li><a href="#fit">Fitting real speech</a>: the LPC envelope and choosing the order</li>
+      <li><a href="#vocoder">Take speech apart, put it back</a>: residual, resynthesis, an LPC vocoder</li>
+      <li><a href="#limits">What an all-pole model can't do</a></li>
+    </ol>
+  </div>
+  <div class="meta-line">Module 5 of Speech and Audio Processing: <a href="source_filter.html">3 · A buzz and a tube</a> &middot; <a href="linear_prediction.html">4 · Guessing the next sample</a> &middot; 5 · this page &middot; <a href="codecs.html">6 · Squeezing speech (codecs)</a></div>
+</header>
+
+<!-- ============================================================ 1. FEEDBACK -->
+<section id="feedback">
+  <div class="kicker">01 &middot; Turn the predictor around</div>
+  <h2>A filter that listens to itself.</h2>
+  <p>
+    In module 4 the predictor <em>analysed</em> speech: given \(x[n]\), it produced the error \(e[n]\). Now read the same equation the other way, as a recipe for <em>making</em> a signal:
+  </p>
+  <div class="eq">$$x[n] = \underbrace{e[n]}_{\text{new input}} \;+\; \underbrace{a_1 x[n-1] + a_2 x[n-2] + \dots + a_p x[n-p]}_{\text{its own recent output, fed back}}$$</div>
+  <p>
+    Each new output sample is the new input <em>plus a weighted echo of what the filter itself just produced</em>. The output is fed back into the input: this is <strong>feedback</strong>, and it
+    is why the model is called <strong>autoregressive</strong> (AR), &ldquo;regressing on itself&rdquo;.
+  </p>
+  <figure>
+    <div class="card diagram" style="padding:12px;">
+      <svg viewBox="0 0 760 210" role="img" aria-label="Block diagram: input e[n] enters an adder whose output x[n] is delayed by one, two, … p samples, weighted by a1 … ap, and fed back into the adder">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+        <foreignObject x="20" y="35.1" width="360" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;line-height:28px;text-align:left;color:var(--ink);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(e[n]\)</div></foreignObject>
+        <text x="20" y="72" font-size="10.5" fill="var(--muted)" font-family="Inter, sans-serif">source</text>
+        <line x1="58" y1="50" x2="140" y2="50" stroke="var(--muted)" stroke-width="1.6" marker-end="url(#ar)"/>
+        <circle cx="160" cy="50" r="18" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.6"/>
+        <text x="160" y="56" text-anchor="middle" font-size="18" fill="var(--ink)">+</text>
+        <line x1="178" y1="50" x2="660" y2="50" stroke="var(--muted)" stroke-width="1.6" marker-end="url(#ar)"/>
+        <foreignObject x="672" y="35.1" width="360" height="28"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:14px;line-height:28px;text-align:left;color:var(--ink);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(x[n]\)</div></foreignObject>
+        <text x="672" y="72" font-size="10.5" fill="var(--muted)" font-family="Inter, sans-serif">speech</text>
+        <g font-family="Inter, sans-serif" font-size="12" fill="var(--ink)">
+          <line x1="600" y1="50" x2="600" y2="100" stroke="var(--muted)" stroke-width="1.4"/>
+          <rect x="570" y="100" width="60" height="30" rx="5" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="600" y="120" text-anchor="middle">delay 1</text>
+          <line x1="570" y1="115" x2="510" y2="115" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#ar)"/>
+          <rect x="450" y="100" width="60" height="30" rx="5" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="480" y="120" text-anchor="middle">delay 1</text>
+          <line x1="450" y1="115" x2="410" y2="115" stroke="var(--muted)" stroke-width="1.4" stroke-dasharray="4 3"/>
+          <text x="385" y="120" text-anchor="middle" fill="var(--muted)">…</text>
+          <line x1="600" y1="130" x2="600" y2="160" stroke="var(--muted)" stroke-width="1.2"/>
+          <line x1="480" y1="130" x2="480" y2="160" stroke="var(--muted)" stroke-width="1.2"/>
+          <line x1="340" y1="115" x2="340" y2="160" stroke="var(--muted)" stroke-width="1.2"/>
+          <foreignObject x="612" y="135.8" width="360" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;line-height:24px;text-align:left;color:var(--accent-2);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(\times\, a_1\)</div></foreignObject><foreignObject x="492" y="135.8" width="360" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;line-height:24px;text-align:left;color:var(--accent-2);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(\times\, a_2\)</div></foreignObject><foreignObject x="352" y="135.8" width="360" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:12px;line-height:24px;text-align:left;color:var(--accent-2);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(\times\, a_p\)</div></foreignObject>
+          <line x1="600" y1="175" x2="160" y2="175" stroke="var(--accent-2)" stroke-width="1.6"/>
+          <line x1="600" y1="160" x2="600" y2="175" stroke="var(--accent-2)" stroke-width="1.6"/><line x1="480" y1="160" x2="480" y2="175" stroke="var(--accent-2)" stroke-width="1.6"/><line x1="340" y1="160" x2="340" y2="175" stroke="var(--accent-2)" stroke-width="1.6"/>
+          <line x1="160" y1="175" x2="160" y2="72" stroke="var(--accent-2)" stroke-width="1.6" marker-end="url(#ar)"/>
+          <text x="250" y="198" fill="var(--accent-2)" font-size="11.5">feedback: the filter's own past output, weighted and added back in</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Figure 1.</b> The AR (all-pole) filter as a block diagram. Remove the feedback path and the output would just copy the input. With feedback, one input kick keeps echoing around the loop: the filter <em>rings</em>.</figcaption>
+  </figure>
+  <p>
+    Feedback is how anything rings. A swing, the mass on a spring from module 3, a bell: their position <em>now</em> is set by their position a moment ago. A microphone held near its own loudspeaker howls
+    at one particular pitch for the same reason. With just two weights we already know exactly what the ring looks like. Module 4 showed that a decaying sinusoid \(\rho^n \sin(\omega n)\) obeys
+    \(x[n] = 2\rho\cos\omega\,x[n-1] - \rho^2 x[n-2]\). So two feedback weights make <strong>one resonance</strong>, ringing at frequency \(\omega\) and dying away at a rate set by \(\rho\):
+  </p>
+  <div class="eq">$$a_1 = 2\rho\cos\omega, \qquad a_2 = -\rho^2, \qquad F = \frac{\omega}{2\pi}\,f_s, \qquad B \approx -\frac{f_s}{\pi}\ln\rho$$
+    <span class="note">\(F\) = resonance (formant) frequency in Hz, \(B\) = its bandwidth in Hz. The closer \(\rho\) is to 1, the longer the ring and the sharper the peak.</span></div>
+
+  <div class="card">
+    <div class="demo3">
+      <div class="ctlrow" style="margin:0;"><label for="rF">Frequency \(F\): <span class="valpill" id="rFv"></span></label><input type="range" id="rF" min="100" max="4000" step="10" value="700" style="flex:1;min-width:140px;"></div>
+      <div class="ctlrow" style="margin:0;"><label for="rR">Radius \(\rho\): <span class="valpill" id="rRv"></span></label><input type="range" id="rR" min="800" max="1010" value="975" style="flex:1;min-width:140px;"></div>
+    </div>
+    <div class="readout" id="rRead" style="margin-top:10px;"></div>
+    <div class="demo3" style="margin-top:8px;">
+      <div><div class="plotlabel">Impulse response: one kick in, the ring that comes out (first 20 ms)</div><canvas id="rImp" class="plot" height="170"></canvas></div>
+      <div><div class="plotlabel">Frequency response (0&ndash;8 kHz): one peak at \(F\), width \(B\)</div><canvas id="rSpec" class="plot" height="170"></canvas></div>
+    </div>
+    <div class="ctlrow" style="margin-top:10px;">
+      <button id="rPlay" class="on">▶ Hear it (a 120 Hz buzz through this resonator)</button>
+      <span id="rNote" style="flex:1;"></span>
+    </div>
+  </div>
+  <p style="margin-top:16px;">
+    Try pushing \(\rho\) towards 1: the ring lasts longer and the peak gets sharper and taller, exactly like light damping on the spring. Then push \(\rho\) <em>past</em> 1: each echo comes back
+    <em>bigger</em> than the last, and the output explodes. That is the howling microphone. A model of the vocal tract must keep \(\rho &lt; 1\).
+  </p>
+</section>
+
+<!-- ============================================================ 2. Z-PLANE -->
+<section id="zplane">
+  <div class="kicker">02 &middot; Poles and the z-plane</div>
+  <h2>Where formants live.</h2>
+  <p>
+    Engineers summarise a feedback filter with one piece of notation. Write \(z^{-1}\) for &ldquo;delay by one sample&rdquo;, so \(z^{-k}x[n]\) means \(x[n-k]\). The predictor equation, rearranged as
+    &ldquo;input = output minus its echoes&rdquo;, becomes a polynomial:
+  </p>
+  <div class="eq">$$e[n] = x[n] - \sum_{k=1}^{p} a_k x[n-k] \quad\Longleftrightarrow\quad E(z) = A(z)\,X(z), \qquad A(z) = 1 - \sum_{k=1}^{p} a_k z^{-k}$$
+    $$H(z) = \frac{X(z)}{E(z)} = \frac{1}{A(z)}$$
+    <span class="note">\(A(z)\) is the <em>prediction-error filter</em> of module 4 (speech in, source out); \(H(z) = 1/A(z)\) is the <em>vocal-tract filter</em> (source in, speech out).</span></div>
+  <p>
+    A polynomial can be factored into its roots. The roots of \(A(z)\) are the <strong>poles</strong> \(p_1, \dots, p_p\) of \(H(z)\): the values of \(z\) where the filter's response blows up.
+    Real filters have real weights, so complex poles always come in mirror-image pairs, \(p\) and \(p^*\). One such pair is exactly one resonance from section 01:
+  </p>
+  <div class="eq">$$H(z) = \frac{1}{\prod_{i}\bigl(1 - p_i z^{-1}\bigr)}, \qquad p_i = \rho_i\, e^{\pm j\omega_i} \;\Longrightarrow\; \text{formant at } F_i = \frac{\omega_i}{2\pi}f_s,\;\; B_i \approx -\frac{f_s}{\pi}\ln\rho_i$$</div>
+  <p>
+    So we can draw a filter as dots on a plane, the <strong>z-plane</strong>. A pole's <strong>angle</strong> says <em>which frequency</em> it boosts (0 on the right, \(f_s/2\) = 8&nbsp;kHz on the left).
+    Its <strong>distance from the centre</strong> says <em>how sharply</em>: near the unit circle means a narrow, tall formant; near the centre means a weak, broad one. Outside the circle, the filter is unstable.
+  </p>
+  <h3>Why the spectrum peaks near a pole: a geometric picture</h3>
+  <p>
+    The frequency response is the filter evaluated on the unit circle, \(z = e^{j\omega}\). Since \(H\) is one over a product, its size is one over a product of <strong>distances</strong>:
+  </p>
+  <div class="eq">$$\bigl|H(e^{j\omega})\bigr| = \frac{1}{\prod_i \bigl|\,e^{j\omega} - p_i\,\bigr|} = \frac{1}{\text{product of the distances from the point } e^{j\omega} \text{ to every pole}}$$</div>
+  <p>
+    Walk a point around the upper half of the unit circle from 0&nbsp;Hz to 8&nbsp;kHz. Whenever it passes close to a pole, one of the distances becomes tiny, the product drops, and \(|H|\) shoots up: a formant.
+    Try it: drag the poles, and use the frequency slider to walk the probe around the circle.
+  </p>
+  <div class="card">
+    <div class="zwrap">
+      <div>
+        <canvas id="zCanvas" class="plot" height="300" style="touch-action:none;cursor:grab;" aria-label="z-plane with draggable pole pairs"></canvas>
+        <p style="font-size:0.78rem;color:var(--muted);margin:4px 0 0;">Drag a pole (\(\times\)). Its mirror image follows automatically.</p>
+      </div>
+      <div>
+        <div class="ctlrow" style="margin-top:0;"><span>Presets:</span><span class="seg" id="zPreset"><button data-p="neutral">uniform tube /ə/</button><button data-p="a" class="on">/ɑ/</button><button data-p="i">/i/</button><button data-p="u">/u/</button></span></div>
+        <div class="plotlabel">Frequency response \(|H|\) (0&ndash;5 kHz); dashed line = the probe's frequency</div>
+        <canvas id="zSpec" class="plot" height="190"></canvas>
+        <div class="ctlrow"><label for="zProbe">Probe: <span class="valpill" id="zProbeV"></span></label><input type="range" id="zProbe" min="0" max="5000" step="10" value="700" style="flex:1;min-width:140px;"></div>
+        <table class="ftab" id="zTab"></table>
+        <div class="ctlrow"><button id="zPlay" class="on">▶ Hear this vowel</button><span id="zNote" style="flex:1;font-size:0.84rem;color:var(--muted);"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="keyidea">
+    An AR filter is fully described by its poles. Each complex pole pair is one formant: <strong>angle → formant frequency</strong>, <strong>distance from the unit circle → bandwidth</strong>.
+    &ldquo;All-pole&rdquo; means the spectrum is shaped only by peaks, which is just what a vowel's spectrum looks like.
+  </div>
+</section>
+
+<!-- ============================================================ 3. FIT -->
+<section id="fit">
+  <div class="kicker">03 &middot; Fitting real speech</div>
+  <h2>The LPC envelope: from weights to formants.</h2>
+  <p>
+    Now put the pieces together. Take a 32&nbsp;ms frame of real speech, find the best predictor weights exactly as in module 4 (autocorrelation method), and read them as \(A(z)\).
+    Then \(1/|A|\) draws a smooth curve over the spectrum (the <strong>LPC envelope</strong>), and the roots of \(A(z)\) give the formants. Nothing about formants was put in; they come out of
+    &ldquo;predict the next sample as well as possible&rdquo;.
+  </p>
+  <div class="eq">$$\text{model power spectrum:}\quad \hat{S}(f) = \frac{G^2}{\bigl|A(e^{j2\pi f/f_s})\bigr|^2}$$
+    <span class="note">\(G^2\) = the leftover prediction-error energy, which sets the overall level.</span></div>
+  <div class="card">
+    <div class="ctlrow"><span>Speech frame:</span><span class="seg" id="fSig"></span>
+      <label style="margin-left:6px;"><input type="checkbox" id="fPre" checked> pre-emphasis</label></div>
+    <div class="ctlrow"><label for="fP">Order \(p\): <span class="valpill" id="fPv"></span></label><input type="range" id="fP" min="2" max="40" value="18" style="flex:1;min-width:160px;"></div>
+    <div class="zwrap">
+      <div><div class="plotlabel">Poles of this fit</div><canvas id="fZ" class="plot" height="260"></canvas></div>
+      <div>
+        <div class="plotlabel"><span style="color:var(--line-strong)">&#9632;</span> spectrum of the frame &nbsp; <span style="color:var(--accent-2)">&#9632;</span> LPC envelope (0&ndash;8 kHz)</div>
+        <canvas id="fSpec" class="plot" height="220"></canvas>
+        <table class="ftab" id="fTab"></table>
+        <p id="fNote" style="font-size:0.84rem;color:var(--muted);margin:6px 0 0;"></p>
+      </div>
+    </div>
+  </div>
+  <figure>
+    <div class="frame"><img src="ar_model/fig/01_envelope_vs_order.png?v=3" alt="LPC envelopes of the vowel /ɑ/ in &ldquo;sharks&rdquo; for orders 2, 6, 12, 18 and 40, drawn over the frame's harmonic spectrum" loading="lazy"></div>
+    <figcaption><b>Figure 2.</b> Choosing the order, on a 32&nbsp;ms frame from the middle of /ɑ/ in &ldquo;sharks&rdquo; (CMU ARCTIC speaker ksp, Indian-English male, 16&nbsp;kHz, pitch about 136&nbsp;Hz here).
+    With too few poles there aren't enough to go round: at \(p = 6\), \(F_1\) and \(F_2\) merge into one hump near 990&nbsp;Hz.
+    At \(p = 18\), the rule of thumb \(2 + f_s/1000\), the main formants each get their own pole pair (▼ at about 720, 1250 and 2450&nbsp;Hz, plus a high resonance near 4700&nbsp;Hz). With far too many poles the spare pairs start
+    latching onto individual <em>harmonics</em>, which belong to the source, not the filter. At \(p = 40\) the envelope sprouts a bump on the second harmonic (about 270&nbsp;Hz) and splits \(F_1\) into two peaks (about 710 and 780&nbsp;Hz) that hug neighbouring harmonics. Neither is a formant.</figcaption>
+  </figure>
+  <p>
+    <strong>Why pre-emphasis?</strong> Toggle it in the demo. Without it, the voiced spectrum's steady downward tilt (about &minus;6&nbsp;dB/octave overall: roughly &minus;12 from the glottal pulse, +6 from lip radiation) eats several
+    poles just to model the slope, and the high formants come out weak or missing. A gentle high-frequency boost first, \(x[n] - 0.97\,x[n-1]\), flattens the tilt so the poles are spent on formants.
+  </p>
+</section>
+
+<!-- ============================================================ 4. VOCODER -->
+<section id="vocoder">
+  <div class="kicker">04 &middot; Take speech apart, put it back</div>
+  <h2>Residual, resynthesis and an LPC vocoder.</h2>
+  <p>
+    Run the fit on every 10&nbsp;ms frame of a whole sentence and we have a time-varying vocal-tract filter. Two things become possible:
+  </p>
+  <div class="grid2">
+    <div class="card"><h4>Analysis: speech → \(A(z)\) → source</h4><p style="font-size:0.9rem;margin:0;">Pass the speech through the prediction-error filter \(A(z)\). The resonances are removed, leaving the <strong>residual</strong>: a buzz of glottal pulses (and noise where the speech is unvoiced).</p></div>
+    <div class="card"><h4>Synthesis: source → \(1/A(z)\) → speech</h4><p style="font-size:0.9rem;margin:0;">Pass the residual back through the all-pole filter \(1/A(z)\). It puts the resonances back, and the speech comes out <strong>exactly</strong> as it went in.</p></div>
+  </div>
+  <figure style="margin-top:18px;">
+    <div class="frame"><img src="ar_model/fig/02_residual_and_rebuild.png?v=3" alt="80 ms of the vowel /ɑ/ in &ldquo;sharks&rdquo;, its LPC residual with one sharp pulse per pitch period, and the rebuilt waveform lying exactly on the original" loading="lazy"></div>
+    <figcaption><b>Figure 3.</b> /ɑ/ in &ldquo;sharks&rdquo; with an 18-pole model updated every 10&nbsp;ms. The residual is a train of sharp pulses, one per glottal closure (11 in these 80&nbsp;ms, about 7.3&nbsp;ms apart): the impulse-train source of module 3,
+    recovered from the recording alone. Passing it back through \(1/A(z)\) reproduces the speech exactly; over the whole sentence the difference is at the level of floating-point rounding (below −250&nbsp;dB).</figcaption>
+  </figure>
+  <p>
+    The exciting part comes next. If the residual is basically &ldquo;pulses at the pitch, or noise&rdquo;, we can <strong>throw it away</strong> and regenerate it from just three numbers per frame: voiced or not,
+    pitch, and loudness. Then we feed our home-made source through the 18 recorded filter weights. That is an <strong>LPC vocoder</strong>, the idea inside LPC-10 and the Speak &amp; Spell. Because source and filter
+    are now separate, we can also <em>change</em> the source while keeping the filter:
+  </p>
+  <div class="vgrid2">
+    <div class="card"><h4>1 · Original</h4><p>&ldquo;We fished sharks on Niihau together.&rdquo; CMU ARCTIC speaker ksp (Indian-English male), sentence a0505.</p><audio controls preload="none" src="ar_model/audio/ksp_original.wav?v=3"></audio></div>
+    <div class="card"><h4>2 · Residual</h4><p>Speech through \(A(z)\): the source. A buzzy, unintelligible-ish hum of glottal pulses, with hiss for /f/, /ʃ/ and /s/.</p><audio controls preload="none" src="ar_model/audio/ksp_residual.wav?v=3"></audio></div>
+    <div class="card"><h4>3 · Rebuilt</h4><p>Residual through \(1/A(z)\). Indistinguishable from the original.</p><audio controls preload="none" src="ar_model/audio/ksp_rebuilt.wav?v=3"></audio></div>
+    <div class="card"><h4>4 · LPC vocoder</h4><p>Residual thrown away; replaced by clean pulses at the measured pitch (or noise), same filters. Robotic but clearly the same words and voice.</p><audio controls preload="none" src="ar_model/audio/ksp_vocoder.wav?v=3"></audio></div>
+    <div class="card"><h4>5 · Monotone</h4><p>Pulses at a constant 100&nbsp;Hz (this speaker talks at around 130&ndash;140&nbsp;Hz): all intonation removed, the vowels and consonants untouched.</p><audio controls preload="none" src="ar_model/audio/ksp_monotone.wav?v=3"></audio></div>
+    <div class="card"><h4>6 · Higher pitch</h4><p>Pitch \(\times\,1.8\) with the <em>same</em> vocal tract: a higher voice, but not a &ldquo;chipmunk&rdquo;, because the formants haven't moved.</p><audio controls preload="none" src="ar_model/audio/ksp_higher.wav?v=3"></audio></div>
+    <div class="card"><h4>7 · Whisper</h4><p>Noise everywhere, no pulses: the same filters turn it into whispered speech, as in the source&ndash;filter page's grid.</p><audio controls preload="none" src="ar_model/audio/ksp_whisper.wav?v=3"></audio></div>
+  </div>
+  <p style="margin-top:16px;">
+    The vocoder sounds buzzy for two reasons: ideal pulses are a crude stand-in for the real glottal waveform, and a hard voiced/unvoiced switch can't do mixtures like /z/. That is precisely what
+    <strong>CELP</strong> fixed in 1985. It keeps the same all-pole filter, but instead of 3 numbers it sends a compact <em>code</em> for the residual itself, chosen so that the rebuilt speech sounds closest
+    to the original. Its descendants (VSELP, QCELP, and the ACELP family in GSM-EFR, AMR and its successors) have carried most mobile phone calls since the late 1990s.
+  </p>
+</section>
+
+<!-- ============================================================ 5. LIMITS -->
+<section id="limits">
+  <div class="kicker">05 &middot; Limits</div>
+  <h2>What an all-pole model can't do.</h2>
+  <ul>
+    <li><strong>Anti-resonances (zeros).</strong> In nasals (/m/, /n/), the sound leaves through the nose while the closed-off mouth hangs off the side as a dead-end branch (in nasalised vowels it is the nasal cavity that branches off). A side branch <em>absorbs</em> energy at its own resonant frequencies, carving dips into the spectrum.
+      Dips need <em>zeros</em> (roots of a numerator polynomial), which an all-pole model doesn't have. It can only approximate a dip with extra poles. Pole&ndash;zero (ARMA) models handle this, at the cost of a much
+      harder fit. For most speech work the all-pole approximation, with a slightly higher order, is good enough.</li>
+    <li><strong>High-pitched voices.</strong> With harmonics 250&ndash;400&nbsp;Hz apart, the spectrum samples the envelope sparsely, and the poles get pulled towards individual harmonics, biasing the formant estimates.</li>
+    <li><strong>A stationary frame.</strong> The model assumes the tract holds still for 20&ndash;30&nbsp;ms. Fast transitions (stop releases, quick glides) are smeared.</li>
+    <li><strong>The source is assumed flat.</strong> Real glottal pulses are smooth and lopsided, and some of their shape gets absorbed into \(A(z)\). Pre-emphasis helps; more careful
+      methods estimate the glottal pulse separately.</li>
+  </ul>
+  <div class="card" style="margin-top:14px;border-left:3px solid var(--teal);">
+    <h4>Looking ahead: back to the tubes</h4>
+    <p style="font-size:0.9rem;margin:0;">
+      The concatenated-tube model of module 3 and the all-pole filter on this page are mathematically the same thing. The Levinson&ndash;Durbin recursion produces, along the way, a set of
+      <em>reflection coefficients</em> \(k_1, \dots, k_p\), one per joint in a chain of equal-length tubes. From those we can estimate the <strong>shape of the vocal tract</strong> from a recording alone.
+    </p>
+  </div>
+</section>
+
+<footer>
+  Speech and Audio Processing &middot; Module 5 &middot; figures and audio generated by <code>ar_model/make_figures.py</code>; the live LPC demo uses the excerpts in <code>linear_prediction/signals.js</code>.
+  Speech: CMU ARCTIC speaker ksp (Indian English), J. Kominek &amp; A. W. Black, Carnegie Mellon University (free for any use with credit); the sentence is analysed, resynthesised and pitch-modified for this page.
+  <ul class="refs" style="margin-top:12px;">
+    <li>J. Makhoul, &ldquo;Linear prediction: a tutorial review,&rdquo; <em>Proc. IEEE</em> 63(4), 1975.</li>
+    <li>B. S. Atal &amp; S. L. Hanauer, &ldquo;Speech analysis and synthesis by linear prediction of the speech wave,&rdquo; <em>JASA</em> 50, 1971.</li>
+    <li>J. D. Markel &amp; A. H. Gray, <em>Linear Prediction of Speech</em>, Springer, 1976.</li>
+    <li>L. Rabiner &amp; R. Schafer, <em>Theory and Applications of Digital Speech Processing</em>, Pearson, 2011, ch. 9.</li>
+  </ul>
+</footer>
+
+<script src="linear_prediction/signals.js?v=3"></script>
+<script src="ar_model/page.js?v=3"></script>
+
+<!--ai:foot--><footer class="ai-foot"><a href="../index.html">Speech and Audio Processing</a> &middot; Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati &middot; <a href="../index.html#credits">data credits</a></footer><!--/ai:foot-->
+</body>
+</html>

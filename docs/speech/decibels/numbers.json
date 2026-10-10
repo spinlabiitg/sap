@@ -1,0 +1,12 @@
+{
+ "vowel_t": 0.69,
+ "fric_t": 1.36,
+ "pain_over_threshold_pressure": 1000000,
+ "vowel_power_above_1k_pct": 3.76,
+ "vowel_power_above_2k_pct": 2.312,
+ "sf_max_abs_err_db": 0.00019903282675670653,
+ "glob_snr": 20.0,
+ "seg_snr": 13.8,
+ "frame_snr_max": 29.2,
+ "frame_snr_min": -9.6
+}

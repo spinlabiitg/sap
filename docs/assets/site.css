@@ -1,0 +1,86 @@
+/* Speech and Audio Processing: shared navigation bar, footer and home page.
+   Everything is namespaced .ai-* so it never collides with a tutorial page's own styles. */
+:root {
+  --ai-bg: #F6F8FB; --ai-surface: #FFFFFF; --ai-surface-2: #EEF2F7; --ai-ink: #10233F; --ai-ink-soft: #24344F;
+  --ai-muted: #5C6B80; --ai-line: #D7DEE8; --ai-accent: #14508C; --ai-accent-2: #C1272D; --ai-gold: #C9971B; --ai-teal: #1D7A8C;
+  --ai-bar: rgba(255, 255, 255, 0.92);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ai-bg: #0E1726; --ai-surface: #152033; --ai-surface-2: #1B2840; --ai-ink: #F2F5FA; --ai-ink-soft: #D7E0EC;
+    --ai-muted: #90A0B7; --ai-line: #253247; --ai-accent: #5B9BD5; --ai-accent-2: #EF6B6B; --ai-gold: #F2C14E; --ai-teal: #4FC3D1;
+    --ai-bar: rgba(14, 23, 38, 0.92);
+  }
+}
+:root[data-theme="dark"] {
+  --ai-bg: #0E1726; --ai-surface: #152033; --ai-surface-2: #1B2840; --ai-ink: #F2F5FA; --ai-ink-soft: #D7E0EC;
+  --ai-muted: #90A0B7; --ai-line: #253247; --ai-accent: #5B9BD5; --ai-accent-2: #EF6B6B; --ai-gold: #F2C14E; --ai-teal: #4FC3D1;
+  --ai-bar: rgba(14, 23, 38, 0.92);
+}
+
+/* ---------------------------------------------------------------- navigation bar */
+.ai-nav { position: sticky; top: 0; z-index: 1000; background: var(--ai-bar); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--ai-line); font: 500 13px/1.3 Inter, ui-sans-serif, system-ui, sans-serif; color: var(--ai-ink); }
+.ai-nav *, .ai-foot * { box-sizing: border-box; }
+.ai-nav-in { max-width: 1180px; margin: 0 auto; padding: 8px 16px; display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; }
+.ai-brand { font: 600 14px/1 Poppins, Inter, sans-serif; color: var(--ai-ink); text-decoration: none; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.ai-logo { color: var(--ai-accent); letter-spacing: -2px; font-size: 13px; }
+.ai-where { color: var(--ai-muted); flex: 1 1 200px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-step { color: var(--ai-accent); text-decoration: none; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--ai-line); white-space: nowrap; }
+.ai-step:hover { border-color: var(--ai-accent); }
+.ai-off { color: var(--ai-line); }
+.ai-menu { position: relative; }
+.ai-menu summary { cursor: pointer; list-style: none; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--ai-line); color: var(--ai-ink-soft); white-space: nowrap; }
+.ai-menu summary::-webkit-details-marker { display: none; }
+.ai-menu summary::after { content: " ▾"; color: var(--ai-muted); }
+.ai-menu ul { position: absolute; right: 0; top: calc(100% + 6px); margin: 0; padding: 6px; list-style: none; width: min(380px, calc(100vw - 32px));
+  max-height: 70vh; overflow-y: auto; background: var(--ai-surface); border: 1px solid var(--ai-line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+.ai-menu li a { display: block; padding: 6px 10px; border-radius: 6px; color: var(--ai-ink); text-decoration: none; }
+.ai-menu li a:hover { background: var(--ai-surface-2); }
+.ai-menu li a[aria-current="page"] { color: var(--ai-accent); font-weight: 600; }
+.ai-brand-short { display: none; }
+@media (max-width: 640px) { .ai-where { display: none; } .ai-nav-in { gap: 6px 8px; } .ai-brand-full { display: none; } .ai-brand-short { display: inline; } }
+
+.ai-foot { max-width: 1180px; margin: 40px auto 0; padding: 18px 16px 30px; border-top: 1px solid var(--ai-line);
+  font: 400 13px/1.5 Inter, ui-sans-serif, system-ui, sans-serif; color: var(--ai-muted); text-align: center; }
+.ai-foot a { color: var(--ai-accent); }
+
+/* ---------------------------------------------------------------- home page (minimal: one panel, one row per module) */
+body.ai-home { margin: 0; background: var(--ai-surface); color: var(--ai-ink); font: 400 16px/1.6 Inter, ui-sans-serif, system-ui, sans-serif; }
+.ai-home main { max-width: 760px; margin: 0 auto; padding: 56px 16px 0; box-sizing: border-box; }
+.ai-home h1 { font: 600 32px/1.15 Poppins, Inter, sans-serif; margin: 0 0 6px; letter-spacing: -0.01em; }
+.ai-abbr { color: var(--ai-muted); font-weight: 500; }
+.ai-lede { margin: 0 0 6px; color: var(--ai-ink-soft); }
+.ai-instr { margin: 0; font-size: 14.5px; color: var(--ai-muted); }
+.ai-instr a { color: var(--ai-accent); text-decoration: none; }
+.ai-instr a:hover { text-decoration: underline; }
+.ai-home h2 { font: 600 12px/1 Inter, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ai-muted); margin: 44px 0 10px; }
+.ai-panel { list-style: none; margin: 0; padding: 0; border: 1px solid var(--ai-line); border-radius: 10px; overflow: hidden; }
+.ai-row { display: grid; grid-template-columns: 2.6em minmax(0, 1fr); gap: 0 10px; padding: 14px 18px; border-top: 1px solid var(--ai-line); }
+.ai-row:first-child { border-top: 0; }
+.ai-num { font: 500 14px/1.7 ui-monospace, Menlo, Consolas, monospace; color: var(--ai-muted); }
+.ai-row h3 { font: 600 16.5px/1.4 Inter, sans-serif; margin: 0; }
+.ai-row h3 a { color: var(--ai-ink); text-decoration: none; }
+.ai-row h3 a:hover { color: var(--ai-accent); text-decoration: underline; text-underline-offset: 3px; }
+.ai-row p { margin: 2px 0 0; font-size: 14.5px; color: var(--ai-muted); }
+.ai-row .ai-row-pages { font-size: 14px; }
+.ai-row-pages a { color: var(--ai-accent); text-decoration: none; }
+.ai-row-pages a:hover { text-decoration: underline; }
+.ai-note { font-weight: 400; font-size: 13px; color: var(--ai-muted); }
+.ai-updates { list-style: none; margin: 0; padding: 0; font-size: 14.5px; color: var(--ai-ink-soft); }
+.ai-updates li { margin: 4px 0; }
+.ai-updates time { font: 13px/1 ui-monospace, Menlo, Consolas, monospace; color: var(--ai-muted); margin-right: 8px; }
+.ai-credits-box { margin-top: 28px; font-size: 14px; color: var(--ai-muted); }
+.ai-credits-box summary { cursor: pointer; }
+.ai-credits { padding-left: 18px; color: var(--ai-ink-soft); font-size: 13.5px; }
+.ai-credits li { margin: 4px 0; }
+.ai-home a:focus-visible, .ai-nav a:focus-visible, .ai-menu summary:focus-visible, .ai-credits-box summary:focus-visible { outline: 2px solid var(--ai-accent); outline-offset: 2px; }
+@media (max-width: 520px) { .ai-home main { padding-top: 36px; } .ai-row { padding: 12px 14px; grid-template-columns: 2.2em minmax(0, 1fr); } }
+/* KaTeX's hidden MathML copy is absolutely positioned: give scrolling equation boxes a containing block so it is
+   clipped with the equation instead of widening the page on phones */
+.eq, .eqn, .katex-display { position: relative; }
+/* any display equation (also those inside lists, cards and tables) scrolls sideways instead of widening the page */
+.katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+/* every formula is the containing block of its own hidden MathML copy, so that copy is clipped by whatever
+   scrolling box the formula sits in (galleries, tables, cards) */
+.katex { position: relative; }

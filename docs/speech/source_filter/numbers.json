@@ -1,0 +1,171 @@
+{
+ "speaker": "ksp (CMU ARCTIC, Indian-English male)",
+ "credit": "Speech: CMU ARCTIC speaker ksp (Indian English), Carnegie Mellon University; excerpts trimmed/resampled for this site.",
+ "fig2": {
+  "me": {
+   "utt": "arctic_a0446",
+   "F0": 110.7
+  },
+  "dark": {
+   "utt": "arctic_a0447",
+   "F0": 120.7
+  },
+  "see": {
+   "utt": "arctic_a0586",
+   "F0": 172.7
+  },
+  "far": {
+   "utt": "arctic_b0524",
+   "F0": 159.3
+  }
+ },
+ "dark": {
+  "utt": "arctic_a0447",
+  "aa_ms": 140,
+  "F0": 120.7,
+  "gci_vs_pitchmarks_ms": [
+   2.44,
+   2.44,
+   2.44,
+   2.44,
+   2.44,
+   5.75
+  ],
+  "gci_periods_ms": [
+   8.38,
+   8.44,
+   8.38,
+   8.31,
+   8.19
+  ],
+  "T0_median_ms": 8.38,
+  "n_periods_overlaid": 5,
+  "pitchmarks_in_aa": 17
+ },
+ "s_energy_above_3k5": 0.989,
+ "z": {
+  "utt": "arctic_a0324",
+  "F0": 118.3,
+  "ripple_ms": 8.5
+ },
+ "s": {
+  "utt": "arctic_a0377"
+ },
+ "tube": {
+  "17.5cm": [
+   500,
+   1500,
+   2500,
+   3500
+  ],
+  "14.5cm": [
+   603,
+   1810,
+   3017,
+   4224
+  ],
+  "11.0cm": [
+   795,
+   2386,
+   3977,
+   5568
+  ]
+ },
+ "fig8": {
+  "F0_real": 120.7,
+  "formants": [
+   700,
+   1303,
+   2542
+  ],
+  "F0_synthetic": 220.0,
+  "F1_over_F0_real": 5.8,
+  "F1_over_F0_synthetic": 3.18
+ },
+ "gallery": {
+  "i": {
+   "word": "seat",
+   "utt": "arctic_b0171",
+   "F1": 307,
+   "F2": 2290,
+   "F0": 135.5,
+   "frames": [
+    [
+     307,
+     2255
+    ],
+    [
+     300,
+     2295
+    ],
+    [
+     326,
+     2290
+    ]
+   ]
+  },
+  "ae": {
+   "word": "sad",
+   "utt": "arctic_a0248",
+   "F1": 651,
+   "F2": 1648,
+   "F0": 132.0,
+   "frames": [
+    [
+     647,
+     1629
+    ],
+    [
+     651,
+     1648
+    ],
+    [
+     652,
+     1676
+    ]
+   ]
+  },
+  "a": {
+   "word": "dark",
+   "utt": "arctic_a0447",
+   "F1": 687,
+   "F2": 1326,
+   "F0": 122.8,
+   "frames": [
+    [
+     649,
+     1392
+    ],
+    [
+     701,
+     1302
+    ],
+    [
+     687,
+     1326
+    ]
+   ]
+  },
+  "u": {
+   "word": "two",
+   "utt": "arctic_b0236",
+   "F1": 319,
+   "F2": 814,
+   "F0": 160.2,
+   "frames": [
+    [
+     314,
+     806
+    ],
+    [
+     319,
+     814
+    ],
+    [
+     346,
+     830
+    ]
+   ]
+  }
+ }
+}

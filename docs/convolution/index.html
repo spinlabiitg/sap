@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convolution, Animated</title>
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, { delimiters: [ { left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false } ], throwOnError: false });"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #EEF2F1;
+    --bg-grid: #DCE6E3;
+    --surface: #FBFDFC;
+    --surface-2: #E7EEEC;
+    --ink: #14201D;
+    --ink-soft: #33423E;
+    --muted: #5C6E68;
+    --line: #C7D4CF;
+    --line-strong: #9DB2AB;
+    --sig-x: #1D7A8C;
+    --sig-h: #B9701F;
+    --sig-y: #6B4C93;
+    --shadow: 0 1px 0 rgba(20,32,29,0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1210;
+      --bg-grid: #142019;
+      --surface: #111C19;
+      --surface-2: #17241F;
+      --ink: #E7F1EC;
+      --ink-soft: #C3D3CC;
+      --muted: #82998F   ;
+      --line: #223129;
+      --line-strong: #33463C;
+      --sig-x: #4FD8E8;
+      --sig-h: #F0A94E;
+      --sig-y: #B394E8;
+      --shadow: 0 1px 0 rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1210;
+    --bg-grid: #142019;
+    --surface: #111C19;
+    --surface-2: #17241F;
+    --ink: #E7F1EC;
+    --ink-soft: #C3D3CC;
+    --muted: #82998F;
+    --line: #223129;
+    --line-strong: #33463C;
+    --sig-x: #4FD8E8;
+    --sig-h: #F0A94E;
+    --sig-y: #B394E8;
+    --shadow: 0 1px 0 rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background:
+      repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      var(--bg);
+    color: var(--ink-soft);
+    font-family: "Archivo", ui-sans-serif, system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--sig-h); color: #1a1005; }
+  a { color: var(--sig-h); }
+  a:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--sig-h);
+    outline-offset: 2px;
+  }
+
+  h1, h2, h3 {
+    font-family: "Instrument Serif", ui-serif, Georgia, serif;
+    color: var(--ink);
+    text-wrap: balance;
+    font-weight: 400;
+    margin: 0;
+  }
+
+  .mono { font-family: "JetBrains Mono", ui-monospace, "Courier New", monospace; font-variant-numeric: tabular-nums; }
+
+  .eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--sig-h);
+    font-weight: 500;
+  }
+
+  /* ---------- topbar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: clamp(0.7rem, 2vw, 1.6rem);
+    padding: 0.75rem clamp(1.1rem, 4vw, 2.6rem);
+    background: color-mix(in srgb, var(--surface) 90%, transparent);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+  }
+  .topbar .brand {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.76rem; letter-spacing: 0.05em; color: var(--ink);
+    white-space: nowrap; padding-right: clamp(0.5rem, 2vw, 1.3rem);
+    border-right: 1px solid var(--line);
+  }
+  .topbar nav { display: flex; gap: clamp(0.8rem, 2vw, 1.4rem); white-space: nowrap; }
+  .navlink {
+    font-family: "JetBrains Mono", monospace; font-size: 0.72rem; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--muted); text-decoration: none;
+    padding: 0.2rem 0; border-bottom: 1px solid transparent;
+  }
+  .navlink:hover { color: var(--sig-h); border-color: var(--sig-h); }
+  .topbar .spacer { flex: 1 1 auto; }
+  .legend-chip { display: flex; gap: 0.9rem; align-items: center; white-space: nowrap; }
+  .legend-chip span { display: inline-flex; align-items: center; gap: 0.35rem; font-family: "JetBrains Mono", monospace; font-size: 0.7rem; color: var(--muted); }
+  .legend-chip i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .dot-x { background: var(--sig-x); } .dot-h { background: var(--sig-h); } .dot-y { background: var(--sig-y); }
+  .theme-btn {
+    font-family: "JetBrains Mono", monospace; font-size: 0.85rem;
+    background: var(--surface-2); color: var(--ink-soft); border: 1px solid var(--line-strong);
+    border-radius: 6px; padding: 0.25rem 0.55rem; cursor: pointer; line-height: 1;
+  }
+  .theme-btn:hover { color: var(--sig-h); border-color: var(--sig-h); }
+
+  main { max-width: 920px; margin: 0 auto; padding: 0 clamp(1.1rem, 5vw, 2.4rem); }
+  section { padding: clamp(2.4rem, 6vw, 4.2rem) 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+
+  /* ---------- hero ---------- */
+  .hero { padding-top: clamp(2.6rem, 7vw, 4.4rem); }
+  .hero h1 { font-size: clamp(2.4rem, 6vw, 3.9rem); line-height: 1.02; letter-spacing: -0.01em; margin-top: 0.7rem; }
+  .hero .dek { margin-top: 1.1rem; max-width: 52ch; font-size: 1.13rem; color: var(--muted); }
+  .hero-visual {
+    margin-top: 2rem; padding: 1rem 1.2rem;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+  }
+  .hero-visual canvas { width: 100%; height: 110px; display: block; }
+  .hero-visual .cap { margin-top: 0.6rem; font-size: 0.78rem; color: var(--muted); font-family: "JetBrains Mono", monospace; }
+
+  .primer {
+    margin-top: 1.6rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem;
+    padding: 0.8rem 1.1rem; background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 10px; font-size: 0.84rem; color: var(--muted);
+  }
+  .primer b { color: var(--ink-soft); font-weight: 600; }
+  .primer span { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+  .kicker { display: flex; align-items: baseline; gap: 0.9rem; margin-bottom: 1.3rem; }
+  .kicker .num {
+    font-family: "JetBrains Mono", monospace; font-size: 0.78rem; color: var(--sig-h);
+    border: 1px solid var(--line-strong); border-radius: 999px; padding: 0.12rem 0.58rem;
+  }
+  h2.title { font-size: clamp(1.55rem, 3.4vw, 2.05rem); }
+  h3.subtitle { font-size: 1.12rem; margin-bottom: 0.5rem; font-family: "Archivo", sans-serif; font-weight: 600; color: var(--ink); }
+
+  p { margin: 0 0 1.05rem; max-width: 68ch; }
+  p:last-child { margin-bottom: 0; }
+  .lede { font-size: 1.06rem; color: var(--ink-soft); }
+  ul.plain { margin: 0 0 1.05rem; padding-left: 1.2rem; }
+  ul.plain li { margin-bottom: 0.5rem; max-width: 62ch; }
+  ul.plain li::marker { color: var(--sig-h); }
+
+  .eqn { font-size: 0.95rem; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 1rem; display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; margin: 0.4rem 0 1rem; color: var(--ink); }
+  .eqn .katex-display { margin: 0.45em 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+  .katex { text-transform: none; letter-spacing: normal; }
+
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .cols2 > * { min-width: 0; }   /* let wide equations scroll inside their column instead of widening it */
+  @media (max-width: 700px) { .cols2 { grid-template-columns: 1fr; } }
+
+  /* ---------- widgets ---------- */
+  .widget {
+    margin: 1.6rem 0; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: var(--shadow); overflow: hidden;
+  }
+  .widget-head {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem 1.2rem;
+    padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--line); background: var(--surface-2);
+  }
+  .widget-title { font-family: "JetBrains Mono", monospace; font-size: 0.78rem; letter-spacing: 0.03em; color: var(--ink); }
+  .widget-controls { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; flex-wrap: wrap; }
+  .btn {
+    font-family: "JetBrains Mono", monospace; font-size: 0.85rem; cursor: pointer;
+    background: var(--surface); color: var(--ink-soft); border: 1px solid var(--line-strong);
+    border-radius: 6px; padding: 0.3rem 0.6rem; line-height: 1;
+  }
+  .btn:hover { border-color: var(--sig-h); color: var(--sig-h); }
+  .btn.kernel-active { background: var(--sig-h); color: var(--surface); border-color: var(--sig-h); }
+  input[type="range"].scrub { width: 130px; accent-color: var(--sig-h); }
+  .readout { font-size: 0.8rem; color: var(--muted); min-width: 6.5rem; }
+  .readout b { color: var(--ink); font-weight: 600; }
+
+  .widget-body { padding: 0.9rem 1.1rem 1.1rem; }
+  .panel-label {
+    display: flex; align-items: center; gap: 0.45rem; font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem; color: var(--muted); margin: 0.5rem 0 0.25rem;
+  }
+  .panel-label .dim { color: var(--muted); opacity: 0.75; font-style: italic; }
+  .panel-label i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+  canvas.cv { width: 100%; display: block; border-radius: 6px; }
+  canvas.cv.top { height: clamp(150px, 24vw, 190px); }
+  canvas.cv.bottom { height: clamp(112px, 17vw, 140px); }
+  canvas.cv.single { height: clamp(190px, 30vw, 250px); }
+  canvas.cv.strip { height: 50px; }
+  .widget-caption { margin-top: 0.75rem; font-size: 0.86rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 0.65rem; }
+  .widget-caption b { color: var(--ink-soft); font-weight: 600; }
+
+  /* ---------- analogy cards ---------- */
+  .analogy-grid { display: grid; grid-template-columns: 1fr; gap: 1.4rem; margin-top: 1.6rem; }
+  .analogy-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
+  .analogy-card .a-head { padding: 1rem 1.1rem 0.2rem; }
+  .analogy-card .a-head h3 { font-size: 1.15rem; }
+  .analogy-card .a-head p { color: var(--muted); font-size: 0.94rem; margin-top: 0.3rem; }
+
+  /* ---------- table ---------- */
+  .tablewrap { overflow-x: auto; margin: 1.4rem 0; }
+  table.picture { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.9rem; }
+  table.picture th, table.picture td { text-align: left; padding: 0.65rem 0.8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.picture th { font-family: "JetBrains Mono", monospace; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line-strong); }
+  table.picture td.lens { font-family: "Archivo", sans-serif; font-weight: 600; color: var(--ink); white-space: nowrap; }
+  table.picture td.x { color: var(--sig-x); } table.picture td.h { color: var(--sig-h); } table.picture td.y { color: var(--sig-y); }
+
+  .refs { font-family: "JetBrains Mono", monospace; font-size: 0.78rem; color: var(--muted); line-height: 1.9; }
+  .refs li { margin-bottom: 0.2rem; }
+
+  footer {
+    padding: 2.4rem 0 3.6rem; font-family: "JetBrains Mono", monospace; font-size: 0.76rem; color: var(--muted);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem;
+  }
+
+  blockquote {
+    margin: 1.5rem 0; padding: 0.15rem 0 0.15rem 1.1rem; border-left: 2px solid var(--sig-h);
+    font-family: "Instrument Serif", serif; font-style: italic; font-size: 1.15rem; color: var(--ink-soft); max-width: 56ch;
+  }
+</style>
+<!--ai:head--><link rel="stylesheet" href="../assets/site.css?v=3bd065aa"><!--/ai:head-->
+</head>
+<body>
+<!--ai:nav--><nav class="ai-nav" aria-label="Course navigation"><div class="ai-nav-in"><a class="ai-brand" href="../index.html" title="Speech and Audio Processing"><span class="ai-logo" aria-hidden="true">◖◗</span><span class="ai-brand-full">Speech and Audio Processing</span><span class="ai-brand-short">SAP</span></a><span class="ai-where">Toolbox &middot; Convolution, animated</span><details class="ai-menu"><summary>All pages</summary><ul><li><a href="../speech/spectrogram.html">1. Seeing sound: the spectrogram</a></li><li><a href="../speech/sounds_language.html">2. The sounds of language: from sound to phoneme</a></li><li><a href="../speech/phoneme_inventories.html">2. Phoneme inventories: India and the world</a></li><li><a href="../speech/source_filter.html">3. A buzz and a tube</a></li><li><a href="../speech/vocal_tract.html">3. Vocal tract, live</a></li><li><a href="../speech/linear_prediction.html">4. Guessing the next sample</a></li><li><a href="../speech/ar_model.html">5. The all-pole vocal tract</a></li><li><a href="../speech/codecs.html">6. Squeezing speech</a></li><li><a href="../speech/decibels.html">Why does audio live in decibels?</a></li><li><a href="index.html" aria-current="page">Convolution, animated</a></li></ul></details><a class="ai-step ai-prev" href="../speech/decibels.html" title="Why does audio live in decibels?">← prev</a><span class="ai-step ai-next ai-off">next →</span></div></nav><!--/ai:nav-->
+<div class="topbar">
+  <span class="brand">AUDIO INTELLIGENCE · CONVOLUTION LAB</span>
+  <nav>
+    <a class="navlink" href="#bridge">Sampling &amp; the Sum</a>
+    <a class="navlink" href="#impulse">Impulse Response</a>
+    <a class="navlink" href="#analogies">Analogies</a>
+    <a class="navlink" href="#ai">Data Science &amp; AI</a>
+    <a class="navlink" href="#picture">Big Picture</a>
+  </nav>
+  <span class="spacer"></span>
+  <div class="legend-chip">
+    <span><i class="dot-x"></i>\(x\) — input</span>
+    <span><i class="dot-h"></i>\(h\) — kernel / impulse response</span>
+    <span><i class="dot-y"></i>\(y\) — output</span>
+  </div>
+  <button class="theme-btn" id="themeToggle" type="button" aria-label="Toggle dark mode">◐</button>
+</div>
+
+<main>
+
+  <section class="hero">
+    <span class="eyebrow">One Operation, Four Ways of Seeing It</span>
+    <h1>Convolution, animated.</h1>
+    <p class="dek">Slide one function under another, multiply where they overlap, add it all up — and you've just modeled how a system responds to an input, blurred an image, smoothed a time series, and run one layer of a convolutional network. This page walks through all four, with the animation running the whole time.</p>
+
+    <div class="hero-visual">
+      <canvas id="heroCanvas"></canvas>
+      <div class="cap">a pulse \(x(\tau)\), sliding past a decaying impulse response \(h(t-\tau)\) — looping continuously below</div>
+    </div>
+
+    <div class="primer">
+      <span><b>Reading these panels:</b> <i class="dot-x" style="width:8px;height:8px;border-radius:50%;background:var(--sig-x);display:inline-block;"></i>\(x\) = input, <i class="dot-h" style="width:8px;height:8px;border-radius:50%;background:var(--sig-h);display:inline-block;"></i>\(h\) = kernel / impulse response, <i class="dot-y" style="width:8px;height:8px;border-radius:50%;background:var(--sig-y);display:inline-block;"></i>\(y\) = output</span>
+      <span>▶ Play animates it · drag the slider to scrub by hand · faded bars = not reached yet</span>
+    </div>
+  </section>
+
+  <section id="bridge">
+    <div class="kicker"><span class="num">01</span><span class="eyebrow">Sampling &amp; the Sum</span></div>
+    <h2 class="title">A continuous signal is, in the limit, a train of impulses.</h2>
+    <p class="lede">Every real measurement — a voltage, a sound wave, a sensor reading — starts out continuous. A computer can't store a continuous function, so the first move in any signal-processing pipeline is always the same: chop it into samples spaced \(\Delta t\) apart. Watch what that actually does to the curve.</p>
+
+    <div class="widget" data-widget="sampling">
+      <div class="widget-head">
+        <span class="widget-title">Shrink \(\Delta t\) and the blocks become impulses</span>
+        <div class="widget-controls">
+          <button class="btn play-btn" type="button">▶ Play</button>
+          <button class="btn reset-btn" type="button">⟲ Reset</button>
+          <input type="range" class="scrub" min="4" max="100" value="8">
+          <span class="readout mono">\(N =\) <b class="t-val">8</b>, \(\Delta t =\) <b class="dt-val">0.750</b></span>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="panel-label"><i class="dot-x"></i>true signal \(x(t)\) &amp; <i class="dot-h"></i>its \(N\)-sample approximation, width \(\Delta t\)</div>
+        <canvas class="cv single"></canvas>
+      </div>
+      <div class="widget-caption"><b>Why it matters:</b> each block has width \(\Delta t = 6/N\) and height \(x(t_i)\) — a little rectangle of area \(x(t_i)\cdot\Delta t\). Slide \(N\) up and the blocks visibly hug the curve tighter. Push \(N\) further and each block becomes a sliver so thin it stops being a rectangle at all — it becomes a weighted <em>impulse</em> sitting at \(t_i\) with area \(x(t_i)\cdot\Delta t\). A sampled signal, in other words, isn't an approximation of a train of impulses — in the limit \(\Delta t \to 0\), it <em>is</em> one. That's the exact object §02 needs to predict a system's output.</div>
+    </div>
+
+    <p>Sample too coarsely (drag \(N\) down toward 4) and the blocks miss what the curve does <em>between</em> samples — the oscillation itself can vanish. Exactly how finely you need to sample to avoid that is its own question (the sampling theorem), covered in full in Notebook 5. Here we only need the picture: sampling turns a function into a sequence, and sequences are exactly what the sum below operates on.</p>
+
+    <h3 class="subtitle">Two units of measure for the same operation</h3>
+    <p>Continuous convolution replaces a sum with an integral. Discrete convolution replaces the integral with a sum over samples. On a computer they're the same computation — the "continuous" plot below is just the discrete sum evaluated at a much finer step size, exactly like shrinking \(\Delta t\) above.</p>
+
+    <div class="eqn">$$\text{continuous:}\quad (x * h)(t) = \int x(\tau)\, h(t-\tau)\, d\tau$$
+      $$\text{discrete:}\quad y[n] = \sum_{k} x[k]\, h[n-k]$$</div>
+
+    <div class="widget" data-widget="continuous">
+      <div class="widget-head">
+        <span class="widget-title">Fine-grained sum \(\approx\) continuous integral</span>
+        <div class="widget-controls">
+          <button class="btn play-btn" type="button">▶ Play</button>
+          <button class="btn reset-btn" type="button">⟲ Reset</button>
+          <input type="range" class="scrub" min="0" max="0" value="0">
+          <span class="readout mono">\(t =\) <b class="t-val">0.00</b></span>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="panel-label"><i class="dot-x"></i>\(x(\tau)\) &amp; <i class="dot-h"></i>\(h(t-\tau)\) flipped &amp; shifted <span class="dim">— shaded = the product being integrated</span></div>
+        <canvas class="cv top"></canvas>
+        <div class="panel-label"><i class="dot-y"></i>\(y(t) \approx \Delta t \cdot \sum x(\tau)\, h(t-\tau)\) — accumulated so far</div>
+        <canvas class="cv bottom"></canvas>
+      </div>
+      <div class="widget-caption"><b>Reading it:</b> a rectangular pulse \(x(\tau)\) (an idealized short input) meets a decaying-exponential impulse response \(h(\tau)\) (an idealized leaky system, like an RC circuit). As \(t\) sweeps, \(h\) flips in time, slides across \(x\), and the shaded overlap — multiplied and summed, then weighted by \(\Delta t\) — traces out the "charge, then discharge" curve \(y(t)\) below. That \(\Delta t\) weighting is exactly the sampling picture above, applied at every point of the sweep.</div>
+    </div>
+
+    <div class="widget" data-widget="discrete">
+      <div class="widget-head">
+        <span class="widget-title">Six samples, three-tap kernel — step by step</span>
+        <div class="widget-controls">
+          <button class="btn play-btn" type="button">▶ Play</button>
+          <button class="btn reset-btn" type="button">⟲ Reset</button>
+          <input type="range" class="scrub" min="0" max="0" value="0">
+          <span class="readout mono">\(n =\) <b class="t-val">0</b></span>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="panel-label"><i class="dot-x"></i>\(x[k]\) &amp; <i class="dot-h"></i>\(h[n-k]\) flipped &amp; shifted</div>
+        <canvas class="cv top"></canvas>
+        <div class="panel-label"><i class="dot-y"></i>\(y[n] = \sum_{k} x[k]\, h[n-k]\)</div>
+        <canvas class="cv bottom"></canvas>
+      </div>
+      <div class="widget-caption"><b>Same mechanism, coarser grid:</b> \(x = [1, 3, 2, 0, 4, 1]\) is a short measured sequence; \(h = [1, 0.6, 0.3]\) is a 3-sample decaying response. Every output sample \(y[n]\) is still "flip \(h\), slide it to position \(n\), multiply, add" — just with six dots instead of a curve.</div>
+    </div>
+  </section>
+
+  <section id="impulse">
+    <div class="kicker"><span class="num">02</span><span class="eyebrow">Impulse Response &amp; LTI Systems</span></div>
+    <h2 class="title">Why convolution predicts a system's output at all.</h2>
+    <p class="lede">You just watched a continuous signal get chopped into impulses in §01. Here's the payoff: under one specific assumption about the system, that same decomposition is exactly what you need to predict what the system does to <em>any</em> input, once you know how it reacts to a single sharp poke.</p>
+
+    <div class="cols2">
+      <div>
+        <h3 class="subtitle">The assumption: linear &amp; time-invariant (LTI)</h3>
+        <ul class="plain">
+          <li><b>Linear:</b> scale the input, the output scales the same way; add two inputs, the outputs add. No saturation, no cross-terms.</li>
+          <li><b>Time-invariant:</b> the system doesn't change its behavior over time — poke it now or poke it later, you get the same response, just shifted.</li>
+        </ul>
+        <p>Neither is exactly true of any real system, but an RC filter, a room's acoustics, or a camera lens's blur are all close enough to be useful.</p>
+      </div>
+      <div>
+        <h3 class="subtitle">The consequence: superposition of impulses</h3>
+        <p>Every one of the little blocks from §01 is a weighted, time-shifted impulse. LTI says the system's response to that whole train is just the sum of its response to each impulse separately — each one scaled and delayed exactly like the piece that produced it. If \(h(t)\) is the response to <em>one</em> unit impulse, the response to all of them together is:</p>
+        <div class="eqn" style="margin-top:0.4rem;">$$y(t) \approx \sum_{i} x(\tau_i)\, h(t-\tau_i)\,\Delta\tau \;\xrightarrow{\;\Delta\tau \to 0\;}\; \int x(\tau)\, h(t-\tau)\, d\tau$$</div>
+      </div>
+    </div>
+
+    <div class="widget" data-widget="decomp">
+      <div class="widget-head">
+        <span class="widget-title">Decompose \(x\) into impulses → sum their individual responses → get \(y\)</span>
+        <div class="widget-controls">
+          <button class="btn play-btn" type="button">▶ Play</button>
+          <button class="btn reset-btn" type="button">⟲ Reset</button>
+          <input type="range" class="scrub" min="0" max="0" value="0">
+          <span class="readout mono">impulses = <b class="t-val">0</b></span>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="panel-label"><i class="dot-x"></i>each impulse of \(x\), and its faint <i class="dot-h"></i>scaled copy of \(h\)</div>
+        <canvas class="cv top"></canvas>
+        <div class="panel-label"><i class="dot-y"></i>running sum — this is \(y(t)\) taking shape</div>
+        <canvas class="cv bottom"></canvas>
+      </div>
+      <div class="widget-caption">Every added impulse contributes one more faint decaying-exponential "echo" of \(h\), scaled by that impulse's height — this is the sampling widget from §01, run one system response at a time. Add them all up and the bold trace below is <em>exactly</em> the \(y(t)\) from §01's continuous widget — same convolution, rebuilt impulse by impulse instead of by sliding.</div>
+    </div>
+
+    <blockquote>The output of an LTI system is fully determined by its impulse response — measure \(h\) once, and you can predict the response to any input by convolving.<cite class="mono" style="display:block;margin-top:0.4rem;font-size:0.75rem;font-style:normal;color:var(--muted);">— the working assumption behind circuit analysis, room acoustics, and control theory alike</cite></blockquote>
+  </section>
+
+  <section id="analogies">
+    <div class="kicker"><span class="num">03</span><span class="eyebrow">Analogies</span></div>
+    <h2 class="title">Three everyday versions of the same slide-multiply-sum.</h2>
+    <p class="lede">Every kernel below is really just somebody's impulse response — a room's, a smoothing rule's, a lens's. Once you can see the mechanism from §01–02, it starts showing up everywhere. Three concrete cases:</p>
+
+    <div class="analogy-grid">
+      <div class="analogy-card" data-widget="echo">
+        <div class="a-head">
+          <h3>The echo machine</h3>
+          <p>A short "clap" \(x\) meets an echo kernel \(h\) with copies of itself at increasing delay and decreasing loudness. The output is literally the sound of the room.</p>
+        </div>
+        <div class="widget-head" style="border-top:1px solid var(--line);">
+          <div class="widget-controls" style="margin-left:0;">
+            <button class="btn play-btn" type="button">▶ Play</button>
+            <button class="btn reset-btn" type="button">⟲ Reset</button>
+            <input type="range" class="scrub" min="0" max="0" value="0">
+            <span class="readout mono">\(n =\) <b class="t-val">0</b></span>
+          </div>
+        </div>
+        <div class="widget-body">
+          <div class="panel-label"><i class="dot-x"></i>\(x[k]\) clap &amp; <i class="dot-h"></i>\(h[n-k]\) room response</div>
+          <canvas class="cv top"></canvas>
+          <div class="panel-label"><i class="dot-y"></i>\(y[n]\) — what you actually hear</div>
+          <canvas class="cv bottom"></canvas>
+        </div>
+      </div>
+
+      <div class="analogy-card" data-widget="avg">
+        <div class="a-head">
+          <h3>The moving average</h3>
+          <p>\(h = [\tfrac{1}{3}, \tfrac{1}{3}, \tfrac{1}{3}]\) is a box that just averages its 3 neighbors. Convolving a noisy reading with it is exactly a rolling mean — smoothing is convolution with a flat kernel.</p>
+        </div>
+        <div class="widget-head" style="border-top:1px solid var(--line);">
+          <div class="widget-controls" style="margin-left:0;">
+            <button class="btn play-btn" type="button">▶ Play</button>
+            <button class="btn reset-btn" type="button">⟲ Reset</button>
+            <input type="range" class="scrub" min="0" max="0" value="0">
+            <span class="readout mono">\(n =\) <b class="t-val">0</b></span>
+          </div>
+        </div>
+        <div class="widget-body">
+          <div class="panel-label"><i class="dot-x"></i>\(x[k]\) daily readings &amp; <i class="dot-h"></i>\(h[n-k]\) 3-tap average</div>
+          <canvas class="cv top"></canvas>
+          <div class="panel-label"><i class="dot-y"></i>\(y[n]\) — smoothed series</div>
+          <canvas class="cv bottom"></canvas>
+        </div>
+      </div>
+
+      <div class="analogy-card" data-widget="blur">
+        <div class="a-head">
+          <h3>Image blur, in one dimension</h3>
+          <p>Treat a row of pixel brightness as a signal and slide a 5-tap averaging kernel across it. The bright block softens at both edges exactly where the kernel window straddles the boundary.</p>
+        </div>
+        <div class="widget-head" style="border-top:1px solid var(--line);">
+          <div class="widget-controls" style="margin-left:0;">
+            <button class="btn play-btn" type="button">▶ Play</button>
+            <button class="btn reset-btn" type="button">⟲ Reset</button>
+            <input type="range" class="scrub" min="0" max="0" value="0">
+            <span class="readout mono">\(n =\) <b class="t-val">0</b></span>
+          </div>
+        </div>
+        <div class="widget-body">
+          <div class="panel-label"><i class="dot-x"></i>input row (bright block on dark background)</div>
+          <canvas class="cv strip top"></canvas>
+          <div class="panel-label"><i class="dot-y"></i>output row — after the 5-tap blur kernel</div>
+          <canvas class="cv strip bottom"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ai">
+    <div class="kicker"><span class="num">04</span><span class="eyebrow">Data Science &amp; AI</span></div>
+    <h2 class="title">The kernel is a learned impulse response.</h2>
+    <p class="lede">Swap the physics for statistics and nothing about the mechanism changes. A convolutional filter still slides across data, multiplies, and sums — the only difference is that instead of deriving \(h\) from circuit equations, you let gradient descent choose it.</p>
+
+    <div class="widget" data-widget="cnn">
+      <div class="widget-head">
+        <span class="widget-title">A "sensor" time series, three candidate kernels</span>
+        <div class="widget-controls">
+          <button class="btn kernel-btn kernel-active" data-kernel="edge" type="button">edge \([-1, 0, 1]\)</button>
+          <button class="btn kernel-btn" data-kernel="blur" type="button">blur [5-tap avg]</button>
+          <button class="btn kernel-btn" data-kernel="sharpen" type="button">sharpen \([-0.5, 2, -0.5]\)</button>
+        </div>
+      </div>
+      <div class="widget-head" style="border-top:1px dashed var(--line);">
+        <div class="widget-controls" style="margin-left:0;">
+          <button class="btn play-btn" type="button">▶ Run</button>
+          <button class="btn reset-btn" type="button">⟲ Reset</button>
+          <input type="range" class="scrub" min="0" max="0" value="0">
+          <span class="readout mono">\(n =\) <b class="t-val">0</b></span>
+        </div>
+      </div>
+      <div class="widget-body">
+        <div class="panel-label"><i class="dot-x"></i>\(x[k]\) input series &amp; <i class="dot-h"></i>\(h[n-k]\) the kernel in place</div>
+        <canvas class="cv top"></canvas>
+        <div class="panel-label"><i class="dot-y"></i>\(y[n]\) — the resulting feature map</div>
+        <canvas class="cv bottom"></canvas>
+      </div>
+      <div class="widget-caption">Switch kernels and watch the <em>same</em> input produce a completely different feature map: the edge kernel lights up where the signal jumps, the blur kernel flattens it, the sharpen kernel exaggerates the jump. A trained CNN filter is just a kernel like these, except its numbers came from data instead of from a formula.</div>
+    </div>
+
+    <div class="cols2" style="margin-top:1.6rem;">
+      <div>
+        <h3 class="subtitle">Impulse response as feature</h3>
+        <p>In signals-and-systems, \(h(t)\) is the system's fingerprint — everything worth knowing about how it reacts. In a CNN, a trained kernel plays exactly that role for a <em>pattern</em>: it's the "impulse response" of a detector for edges, textures, or motifs, discovered by fitting instead of by measuring a circuit. Stacking layers of these detectors grows the receptive field the same way cascading two physical filters combines their impulse responses.</p>
+      </div>
+      <div>
+        <h3 class="subtitle">A technical footnote worth knowing</h3>
+        <p>Strictly, a "true" convolution flips the kernel before sliding (as in every widget on this page); most deep-learning frameworks implement <code class="mono">Conv1d</code>/<code class="mono">Conv2d</code> as <em>cross-correlation</em> — no flip. It makes no practical difference, because the kernel is learned: if flipping would have helped, training just learns the flipped version instead.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="picture">
+    <div class="kicker"><span class="num">05</span><span class="eyebrow">Big Picture</span></div>
+    <h2 class="title">Four lenses, one operation.</h2>
+    <div class="tablewrap">
+      <table class="picture">
+        <tr><th>Lens</th><th>"Convolving" means</th><th>\(x\) plays</th><th>\(h\) plays</th><th>\(y\) plays</th></tr>
+        <tr>
+          <td class="lens">Pure math</td>
+          <td>Sliding integral / sum of a product</td>
+          <td class="x">any function or sequence</td>
+          <td class="h">any function or sequence</td>
+          <td class="y">the resulting function</td>
+        </tr>
+        <tr>
+          <td class="lens">Signals &amp; systems</td>
+          <td>Predicting an LTI system's output</td>
+          <td class="x">the input signal</td>
+          <td class="h">the impulse response</td>
+          <td class="y">the system's output</td>
+        </tr>
+        <tr>
+          <td class="lens">Image processing</td>
+          <td>Sliding a small weighted window over pixels</td>
+          <td class="x">the image / a row</td>
+          <td class="h">a hand-designed kernel</td>
+          <td class="y">the filtered image</td>
+        </tr>
+        <tr>
+          <td class="lens">Data science &amp; AI</td>
+          <td>Sliding a <em>learned</em> weighted window to extract features</td>
+          <td class="x">the input tensor</td>
+          <td class="h">a trained filter</td>
+          <td class="y">a feature map</td>
+        </tr>
+      </table>
+    </div>
+    <p style="margin-top:1rem;">Every widget on this page is the same eight lines of code: flip, slide, multiply, sum. What changes is only what you decide to call \(x\), \(h\), and \(y\).</p>
+  </section>
+
+  <section aria-label="References">
+    <div class="kicker"><span class="num">↳</span><span class="eyebrow">Continue in the Course</span></div>
+    <ul class="refs">
+      <li>See Notebook 4 — circular vs. linear convolution, and computing convolution via the DFT.</li>
+      <li>See Notebook 9 — the multiplication ↔ convolution duality, verified numerically.</li>
+      <li>Oppenheim &amp; Willsky, <em>Signals and Systems</em> — the standard LTI / impulse-response treatment.</li>
+      <li>Goodfellow, Bengio &amp; Courville, <em>Deep Learning</em>, ch. 9 — convolution as used in neural networks.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>Speech and Audio Processing — Convolution Lab</span>
+    <span>IIT Guwahati</span>
+  </footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('themeToggle');
+  var saved = null;
+  try { saved = localStorage.getItem('conv-theme'); } catch (e) {}
+  if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
+  themeBtn.addEventListener('click', function () {
+    var cur = root.getAttribute('data-theme');
+    var next = cur === 'dark' ? 'light' : (cur === 'light' ? 'dark' : (matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark'));
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('conv-theme', next); } catch (e) {}
+  });
+
+  var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function css(varName) {
+    return getComputedStyle(root).getPropertyValue(varName).trim();
+  }
+
+  function convolve(x, h) {
+    var nx = x.length, nh = h.length, ny = nx + nh - 1;
+    var y = new Array(ny).fill(0);
+    for (var n = 0; n < ny; n++) {
+      var s = 0;
+      var kLo = Math.max(0, n - nh + 1);
+      var kHi = Math.min(nx - 1, n);
+      for (var k = kLo; k <= kHi; k++) s += x[k] * h[n - k];
+      y[n] = s;
+    }
+    return y;
+  }
+
+  function fitCanvas(canvas) {
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var w = Math.max(1, Math.round(rect.width));
+    var h = Math.max(1, Math.round(rect.height));
+    var needW = Math.round(w * dpr), needH = Math.round(h * dpr);
+    if (canvas.width !== needW || canvas.height !== needH) {
+      canvas.width = needW; canvas.height = needH;
+    }
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    return { ctx: ctx, w: w, h: h };
+  }
+
+  function panelRect(w, h, pad) {
+    return { x: pad.l, y: pad.t, w: w - pad.l - pad.r, h: h - pad.t - pad.b };
+  }
+
+  function scaleFns(rect, len, maxAbs, signed) {
+    var xAt = function (i) { return rect.x + (len <= 1 ? 0 : (i / (len - 1))) * rect.w; };
+    var baselineY = signed ? rect.y + rect.h / 2 : rect.y + rect.h - 6;
+    var usable = signed ? rect.h / 2 * 0.8 : rect.h * 0.8;
+    var yAt = function (v) { return baselineY - (v / (maxAbs || 1)) * usable; };
+    return { xAt: xAt, yAt: yAt, baselineY: baselineY };
+  }
+
+  function drawBaseline(ctx, rect, y) {
+    ctx.strokeStyle = css('--line-strong'); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(rect.x, y); ctx.lineTo(rect.x + rect.w, y); ctx.stroke();
+  }
+
+  function drawStems(ctx, rect, arr, opts) {
+    var color = opts.color, maxAbs = opts.maxAbs, signed = !!opts.signed;
+    var upTo = opts.upTo === undefined ? arr.length : opts.upTo;
+    var f = scaleFns(rect, arr.length, maxAbs, signed);
+    ctx.save();
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+    ctx.globalAlpha = opts.dim ? 0.3 : 1;
+    for (var i = 0; i < Math.min(upTo, arr.length); i++) {
+      var x = f.xAt(i), y = f.yAt(arr[i]);
+      ctx.beginPath(); ctx.moveTo(x, f.baselineY); ctx.lineTo(x, y); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+    return f;
+  }
+
+  function drawLine(ctx, rect, arr, opts) {
+    var color = opts.color, maxAbs = opts.maxAbs, signed = !!opts.signed;
+    var upTo = opts.upTo === undefined ? arr.length : opts.upTo;
+    var n = Math.min(upTo, arr.length);
+    var f = scaleFns(rect, arr.length, maxAbs, signed);
+    if (n < 1) return f;
+    ctx.save();
+    if (opts.fill) {
+      ctx.beginPath(); ctx.moveTo(f.xAt(0), f.yAt(arr[0]));
+      for (var i = 1; i < n; i++) ctx.lineTo(f.xAt(i), f.yAt(arr[i]));
+      ctx.lineTo(f.xAt(n - 1), f.baselineY); ctx.lineTo(f.xAt(0), f.baselineY); ctx.closePath();
+      ctx.fillStyle = color; ctx.globalAlpha = 0.16; ctx.fill(); ctx.globalAlpha = 1;
+    }
+    ctx.beginPath(); ctx.moveTo(f.xAt(0), f.yAt(arr[0]));
+    for (var j = 1; j < n; j++) ctx.lineTo(f.xAt(j), f.yAt(arr[j]));
+    ctx.strokeStyle = color; ctx.lineWidth = opts.lineWidth || 2.2; ctx.stroke();
+    if (opts.dot) {
+      ctx.beginPath(); ctx.arc(f.xAt(n - 1), f.yAt(arr[n - 1]), 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill();
+    }
+    ctx.restore();
+    return f;
+  }
+
+  function drawStrip(ctx, rect, arr, opts) {
+    var maxV = opts.maxV, minV = opts.minV || 0;
+    var cw = rect.w / arr.length;
+    for (var i = 0; i < arr.length; i++) {
+      var t = (arr[i] - minV) / (maxV - minV);
+      t = Math.min(1, Math.max(0, t));
+      var g = Math.round(t * 210 + 20);
+      ctx.fillStyle = 'rgb(' + g + ',' + g + ',' + g + ')';
+      ctx.fillRect(rect.x + i * cw, rect.y, Math.ceil(cw) + 1, rect.h);
+    }
+    ctx.strokeStyle = css('--line-strong'); ctx.lineWidth = 1;
+    ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1);
+  }
+
+  function maxAbsOf(arr) {
+    var m = 0;
+    for (var i = 0; i < arr.length; i++) m = Math.max(m, Math.abs(arr[i]));
+    return m * 1.15 || 1;
+  }
+
+  /* ---------------- generic slide/flip/sum widget (stem or line mode) ---------------- */
+  function buildSlideWidget(container, x, h, opts) {
+    opts = opts || {};
+    var mode = opts.mode || 'stem';
+    var y = convolve(x, h);
+    if (opts.dt) y = y.map(function (v) { return v * opts.dt; });
+    var ny = y.length;
+    var topCv = container.querySelector('canvas.top');
+    var botCv = container.querySelector('canvas.bottom');
+    var playBtn = container.querySelector('.play-btn');
+    var resetBtn = container.querySelector('.reset-btn');
+    var slider = container.querySelector('.scrub');
+    var readout = container.querySelector('.t-val');
+    slider.max = String(ny - 1);
+    var n = 0;
+    var timer = null;
+
+    var xMax = maxAbsOf(x);
+    var yMax = maxAbsOf(y);
+
+    function hShifted(nIdx) {
+      var arr = new Array(x.length).fill(0);
+      for (var k = 0; k < x.length; k++) {
+        var hi = nIdx - k;
+        if (hi >= 0 && hi < h.length) arr[k] = h[hi];
+      }
+      return arr;
+    }
+    function productAt(nIdx) {
+      var hs = hShifted(nIdx);
+      var p = new Array(x.length).fill(0);
+      for (var k = 0; k < x.length; k++) p[k] = x[k] * hs[k];
+      return { hs: hs, p: p };
+    }
+
+    function render() {
+      var top = fitCanvas(topCv);
+      var bot = fitCanvas(botCv);
+      var padTop = { l: 10, r: 10, t: 14, b: 14 };
+      var padBot = { l: 10, r: 10, t: 14, b: 14 };
+      var rTop = panelRect(top.w, top.h, padTop);
+      var rBot = panelRect(bot.w, bot.h, padBot);
+
+      var hs = hShifted(n).length ? hShifted(n) : [];
+      var pp = productAt(n);
+
+      drawBaseline(top.ctx, rTop, scaleFns(rTop, x.length, xMax, false).baselineY);
+      drawBaseline(bot.ctx, rBot, scaleFns(rBot, ny, yMax, opts.signed).baselineY);
+
+      if (mode === 'stem') {
+        drawStems(top.ctx, rTop, pp.p, { color: css('--sig-y'), maxAbs: xMax, signed: false, dim: false });
+        drawStems(top.ctx, rTop, x, { color: css('--sig-x'), maxAbs: xMax, signed: false });
+        drawStems(top.ctx, rTop, pp.hs, { color: css('--sig-h'), maxAbs: xMax, signed: false });
+        drawStems(bot.ctx, rBot, y, { color: css('--sig-y'), maxAbs: yMax, signed: opts.signed, upTo: ny, dim: true });
+        drawStems(bot.ctx, rBot, y, { color: css('--sig-y'), maxAbs: yMax, signed: opts.signed, upTo: n + 1 });
+      } else {
+        drawLine(top.ctx, rTop, x, { color: css('--sig-x'), maxAbs: xMax, fill: true });
+        drawLine(top.ctx, rTop, pp.hs, { color: css('--sig-h'), maxAbs: xMax });
+        drawLine(top.ctx, rTop, pp.p, { color: css('--sig-y'), maxAbs: xMax, fill: true, lineWidth: 1.4 });
+        drawLine(bot.ctx, rBot, y, { color: css('--sig-y'), maxAbs: yMax, upTo: ny, lineWidth: 1.4, dim: true });
+        drawLine(bot.ctx, rBot, y, { color: css('--sig-y'), maxAbs: yMax, upTo: n + 1, fill: true, dot: true });
+      }
+
+      readout.textContent = mode === 'stem' ? String(n) : (n * (opts.dt || 1)).toFixed(2);
+      slider.value = String(n);
+    }
+
+    function step() {
+      n = (n + 1) % ny;
+      render();
+    }
+    function play() {
+      if (timer) return;
+      playBtn.textContent = mode === 'stem' ? '⏸ Pause' : '⏸ Pause';
+      timer = setInterval(step, opts.intervalMs || 220);
+    }
+    function pause() {
+      if (timer) { clearInterval(timer); timer = null; }
+      playBtn.textContent = playBtn.dataset.label || '▶ Play';
+    }
+    playBtn.dataset.label = playBtn.textContent;
+    playBtn.addEventListener('click', function () { timer ? pause() : play(); });
+    resetBtn.addEventListener('click', function () { pause(); n = 0; render(); });
+    slider.addEventListener('input', function () { pause(); n = parseInt(slider.value, 10) || 0; render(); });
+
+    render();
+    window.addEventListener('resize', render);
+    return { render: render, pause: pause };
+  }
+
+  /* ---------------- strip (image-row) widget ---------------- */
+  function buildStripWidget(container, x, h, opts) {
+    var y = convolve(x, h);
+    var ny = y.length;
+    var topCv = container.querySelector('canvas.top');
+    var botCv = container.querySelector('canvas.bottom');
+    var playBtn = container.querySelector('.play-btn');
+    var resetBtn = container.querySelector('.reset-btn');
+    var slider = container.querySelector('.scrub');
+    var readout = container.querySelector('.t-val');
+    slider.max = String(ny - 1);
+    var n = 0, timer = null;
+    var maxV = Math.max.apply(null, x.concat(y)) * 1.05;
+
+    function render() {
+      var top = fitCanvas(topCv);
+      var bot = fitCanvas(botCv);
+      var rTop = { x: 6, y: 6, w: top.w - 12, h: top.h - 12 };
+      var rBot = { x: 6, y: 6, w: bot.w - 12, h: bot.h - 12 };
+      drawStrip(top.ctx, rTop, x, { maxV: maxV });
+      var revealed = y.slice(0, n + 1).concat(new Array(Math.max(0, ny - n - 1)).fill(NaN));
+      var stripVal = revealed.map(function (v) { return isNaN(v) ? 0 : v; });
+      drawStrip(bot.ctx, rBot, stripVal, { maxV: maxV });
+      var cw = rBot.w / ny;
+      bot.ctx.fillStyle = css('--surface');
+      bot.ctx.globalAlpha = 0.82;
+      bot.ctx.fillRect(rBot.x + (n + 1) * cw, rBot.y, rBot.w - (n + 1) * cw, rBot.h);
+      bot.ctx.globalAlpha = 1;
+
+      var kw = h.length;
+      var cwTop = rTop.w / x.length;
+      var kx = rTop.x + Math.max(0, n - kw + 1) * cwTop;
+      var kwPx = Math.min(kw, n + 1) * cwTop;
+      top.ctx.strokeStyle = css('--sig-h'); top.ctx.lineWidth = 2.5;
+      top.ctx.strokeRect(kx + 1, rTop.y + 1, kwPx - 2, rTop.h - 2);
+
+      readout.textContent = String(n);
+      slider.value = String(n);
+    }
+
+    function step() { n = (n + 1) % ny; render(); }
+    function play() {
+      if (timer) return;
+      timer = setInterval(step, opts && opts.intervalMs || 260);
+    }
+    function pause() { if (timer) { clearInterval(timer); timer = null; } }
+    playBtn.addEventListener('click', function () { timer ? (pause(), playBtn.textContent = '▶ Play') : (play(), playBtn.textContent = '⏸ Pause'); });
+    resetBtn.addEventListener('click', function () { pause(); playBtn.textContent = '▶ Play'; n = 0; render(); });
+    slider.addEventListener('input', function () { pause(); playBtn.textContent = '▶ Play'; n = parseInt(slider.value, 10) || 0; render(); });
+
+    render();
+    window.addEventListener('resize', render);
+  }
+
+  /* ---------------- sampling widget: continuous curve -> N impulses ---------------- */
+  function buildSamplingWidget(container) {
+    var domain = 6;
+    var minN = 4, maxN = 100;
+    function s(t) { return Math.exp(-0.55 * t) * Math.cos(2 * Math.PI * 0.85 * t); }
+    var fineLen = 361;
+    var fineCurve = [];
+    for (var i = 0; i < fineLen; i++) fineCurve.push(s((i / (fineLen - 1)) * domain));
+    var sMax = 0;
+    for (var j = 0; j < fineCurve.length; j++) sMax = Math.max(sMax, Math.abs(fineCurve[j]));
+    sMax *= 1.25;
+
+    var cv = container.querySelector('canvas.single');
+    var playBtn = container.querySelector('.play-btn');
+    var resetBtn = container.querySelector('.reset-btn');
+    var slider = container.querySelector('.scrub');
+    var readout = container.querySelector('.t-val');
+    var dtOut = container.querySelector('.dt-val');
+    slider.min = String(minN); slider.max = String(maxN); slider.step = '1';
+    var N = 8, timer = null;
+
+    function render() {
+      var top = fitCanvas(cv);
+      var rect = panelRect(top.w, top.h, { l: 12, r: 12, t: 16, b: 16 });
+      var f = scaleFns(rect, fineCurve.length, sMax, true);
+      drawBaseline(top.ctx, rect, f.baselineY);
+
+      var dt = domain / N;
+      var ctx = top.ctx;
+      for (var i2 = 0; i2 < N; i2++) {
+        var tMid = (i2 + 0.5) * dt;
+        var val = s(tMid);
+        var xLeft = rect.x + (i2 / N) * rect.w;
+        var xRight = rect.x + ((i2 + 1) / N) * rect.w;
+        var yVal = f.yAt(val);
+        ctx.fillStyle = css('--sig-h'); ctx.globalAlpha = 0.3;
+        ctx.fillRect(xLeft, Math.min(yVal, f.baselineY), Math.max(1, xRight - xLeft - 1), Math.abs(f.baselineY - yVal) || 1);
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = css('--sig-h'); ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(xLeft, yVal); ctx.lineTo(xRight - 1, yVal); ctx.stroke();
+        ctx.fillStyle = css('--sig-h');
+        ctx.beginPath(); ctx.arc(rect.x + ((i2 + 0.5) / N) * rect.w, yVal, 2.2, 0, Math.PI * 2); ctx.fill();
+      }
+
+      drawLine(top.ctx, rect, fineCurve, { color: css('--sig-x'), maxAbs: sMax, signed: true, lineWidth: 1.8 });
+
+      readout.textContent = String(N);
+      if (dtOut) dtOut.textContent = dt.toFixed(3);
+      slider.value = String(N);
+    }
+
+    function step() { N = (N + 2) > maxN ? minN : N + 2; render(); }
+    function play() { if (timer) return; timer = setInterval(step, 140); playBtn.textContent = '⏸ Pause'; }
+    function pause() { if (timer) { clearInterval(timer); timer = null; } playBtn.textContent = '▶ Play'; }
+    playBtn.addEventListener('click', function () { timer ? pause() : play(); });
+    resetBtn.addEventListener('click', function () { pause(); N = 8; render(); });
+    slider.addEventListener('input', function () { pause(); N = parseInt(slider.value, 10) || minN; render(); });
+
+    render();
+    window.addEventListener('resize', render);
+  }
+
+  /* ---------------- impulse decomposition widget ---------------- */
+  function buildDecompWidget(container, dt) {
+    var impulseTimes = [0, 3, 6, 9, 12, 15, 18, 21];
+    var impulseAmp = 1;
+    var alpha = 1.4;
+    var hLen = 130;
+    var domainLen = impulseTimes[impulseTimes.length - 1] + hLen;
+    function hAt(k) { return k < 0 ? 0 : Math.exp(-alpha * k * dt); }
+
+    var topCv = container.querySelector('canvas.top');
+    var botCv = container.querySelector('canvas.bottom');
+    var playBtn = container.querySelector('.play-btn');
+    var resetBtn = container.querySelector('.reset-btn');
+    var slider = container.querySelector('.scrub');
+    var readout = container.querySelector('.t-val');
+    slider.max = String(impulseTimes.length);
+    var count = 0, timer = null;
+
+    var yFull = new Array(domainLen).fill(0);
+    for (var idx = 0; idx < domainLen; idx++) {
+      var s = 0;
+      for (var j = 0; j < impulseTimes.length; j++) {
+        var d = idx - impulseTimes[j];
+        if (d >= 0) s += impulseAmp * hAt(d);
+      }
+      yFull[idx] = s;
+    }
+    var yMax = maxAbsOf(yFull);
+
+    function render() {
+      var top = fitCanvas(topCv);
+      var bot = fitCanvas(botCv);
+      var rTop = panelRect(top.w, top.h, { l: 10, r: 10, t: 14, b: 14 });
+      var rBot = panelRect(bot.w, bot.h, { l: 10, r: 10, t: 14, b: 14 });
+      var fTop = scaleFns(rTop, domainLen, 1.05, false);
+      drawBaseline(top.ctx, rTop, fTop.baselineY);
+
+      for (var i = 0; i < count; i++) {
+        var t0 = impulseTimes[i];
+        top.ctx.save();
+        top.ctx.strokeStyle = css('--sig-h'); top.ctx.globalAlpha = 0.32; top.ctx.lineWidth = 1.6;
+        top.ctx.beginPath();
+        for (var k = t0; k < domainLen; k++) {
+          var xx = fTop.xAt(k), yy = fTop.yAt(hAt(k - t0));
+          if (k === t0) top.ctx.moveTo(xx, yy); else top.ctx.lineTo(xx, yy);
+        }
+        top.ctx.stroke();
+        top.ctx.restore();
+
+        top.ctx.strokeStyle = css('--sig-x'); top.ctx.fillStyle = css('--sig-x'); top.ctx.lineWidth = 2;
+        var ix = fTop.xAt(t0), iy = fTop.yAt(1);
+        top.ctx.beginPath(); top.ctx.moveTo(ix, fTop.baselineY); top.ctx.lineTo(ix, iy); top.ctx.stroke();
+        top.ctx.beginPath(); top.ctx.arc(ix, iy, 3, 0, Math.PI * 2); top.ctx.fill();
+      }
+
+      var fBot = scaleFns(rBot, domainLen, yMax, false);
+      drawBaseline(bot.ctx, rBot, fBot.baselineY);
+      var upToIdx = count === 0 ? 0 : (impulseTimes[Math.min(count, impulseTimes.length) - 1] + hLen);
+      upToIdx = Math.min(upToIdx, domainLen);
+      if (count > 0) {
+        var partial = new Array(domainLen).fill(0);
+        for (var p = 0; p < domainLen; p++) {
+          var ps = 0;
+          for (var q = 0; q < count; q++) {
+            var dd = p - impulseTimes[q];
+            if (dd >= 0) ps += impulseAmp * hAt(dd);
+          }
+          partial[p] = ps;
+        }
+        drawLine(bot.ctx, rBot, partial, { color: css('--sig-y'), maxAbs: yMax, fill: true, lineWidth: 2.2 });
+      }
+
+      readout.textContent = String(count);
+      slider.value = String(count);
+    }
+
+    function step() { count = (count + 1) > impulseTimes.length ? 0 : count + 1; render(); }
+    function play() { if (timer) return; timer = setInterval(step, 480); playBtn.textContent = '⏸ Pause'; }
+    function pause() { if (timer) { clearInterval(timer); timer = null; } playBtn.textContent = '▶ Play'; }
+    playBtn.addEventListener('click', function () { timer ? pause() : play(); });
+    resetBtn.addEventListener('click', function () { pause(); count = 0; render(); });
+    slider.addEventListener('input', function () { pause(); count = parseInt(slider.value, 10) || 0; render(); });
+
+    render();
+    window.addEventListener('resize', render);
+  }
+
+  /* ---------------- CNN kernel-select widget ---------------- */
+  function buildCnnWidget(container) {
+    var x = [10, 10, 10, 10, 10, 10, 60, 60, 60, 60, 60, 60, 60, 15, 15, 40, 40, 15, 15, 15];
+    var kernels = {
+      edge: [-1, 0, 1],
+      blur: [0.2, 0.2, 0.2, 0.2, 0.2],
+      sharpen: [-0.5, 2, -0.5]
+    };
+    var signedKernel = { edge: true, blur: false, sharpen: true };
+    var current = 'edge';
+
+    var topCv = container.querySelector('canvas.top');
+    var botCv = container.querySelector('canvas.bottom');
+    var playBtn = container.querySelector('.play-btn');
+    var resetBtn = container.querySelector('.reset-btn');
+    var slider = container.querySelector('.scrub');
+    var readout = container.querySelector('.t-val');
+    var kernelBtns = container.querySelectorAll('.kernel-btn');
+    var n = 0, timer = null, y, ny, xMax, yMax;
+
+    function recompute() {
+      var h = kernels[current];
+      y = convolve(x, h);
+      ny = y.length;
+      slider.max = String(ny - 1);
+      xMax = maxAbsOf(x);
+      yMax = maxAbsOf(y);
+      n = Math.min(n, ny - 1);
+    }
+
+    function hShifted(nIdx) {
+      var h = kernels[current];
+      var arr = new Array(x.length).fill(0);
+      for (var k = 0; k < x.length; k++) {
+        var hi = nIdx - k;
+        if (hi >= 0 && hi < h.length) arr[k] = h[hi];
+      }
+      return arr;
+    }
+
+    function render() {
+      var top = fitCanvas(topCv);
+      var bot = fitCanvas(botCv);
+      var rTop = panelRect(top.w, top.h, { l: 10, r: 10, t: 14, b: 14 });
+      var rBot = panelRect(bot.w, bot.h, { l: 10, r: 10, t: 14, b: 14 });
+      var signed = signedKernel[current];
+
+      drawBaseline(top.ctx, rTop, scaleFns(rTop, x.length, xMax, true).baselineY);
+      drawStems(top.ctx, rTop, x, { color: css('--sig-x'), maxAbs: xMax, signed: true });
+      var hs = hShifted(n);
+      var kernelPeak = maxAbsOf(kernels[current]) / 1.15;
+      var hsScaled = hs.map(function (v) { return (v / kernelPeak) * (xMax * 0.7); });
+      drawStems(top.ctx, rTop, hsScaled, { color: css('--sig-h'), maxAbs: xMax, signed: true });
+
+      drawBaseline(bot.ctx, rBot, scaleFns(rBot, ny, yMax, signed).baselineY);
+      drawStems(bot.ctx, rBot, y, { color: css('--sig-y'), maxAbs: yMax, signed: signed, upTo: ny, dim: true });
+      drawStems(bot.ctx, rBot, y, { color: css('--sig-y'), maxAbs: yMax, signed: signed, upTo: n + 1 });
+
+      readout.textContent = String(n);
+      slider.value = String(n);
+    }
+
+    function step() { n = (n + 1) % ny; render(); }
+    function play() { if (timer) return; timer = setInterval(step, 200); playBtn.textContent = '⏸ Pause'; }
+    function pause() { if (timer) { clearInterval(timer); timer = null; } playBtn.textContent = '▶ Run'; }
+
+    kernelBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        pause();
+        kernelBtns.forEach(function (b) { b.classList.remove('kernel-active'); });
+        btn.classList.add('kernel-active');
+        current = btn.dataset.kernel;
+        n = 0;
+        recompute();
+        render();
+      });
+    });
+    playBtn.addEventListener('click', function () { timer ? pause() : play(); });
+    resetBtn.addEventListener('click', function () { pause(); n = 0; render(); });
+    slider.addEventListener('input', function () { pause(); n = parseInt(slider.value, 10) || 0; render(); });
+
+    recompute();
+    render();
+    window.addEventListener('resize', render);
+  }
+
+  /* ---------------- hero ambient loop ---------------- */
+  function buildHero() {
+    var cv = document.getElementById('heroCanvas');
+    var dt = 0.045, alpha = 1.35;
+    var Lx = 22, Lh = 110;
+    var x = new Array(Lx).fill(1);
+    var h = new Array(Lh).fill(0).map(function (_, i) { return Math.exp(-alpha * i * dt); });
+    var y = convolve(x, h);
+    var ny = y.length;
+    var n = 0;
+
+    function render() {
+      var top = fitCanvas(cv);
+      var rTop = panelRect(top.w, top.h, { l: 8, r: 8, t: 8, b: 8 });
+      var hs = new Array(x.length).fill(0);
+      for (var k = 0; k < x.length; k++) { var hi = n - k; if (hi >= 0 && hi < h.length) hs[k] = h[hi]; }
+      var p = x.map(function (v, i) { return v * hs[i]; });
+      drawLine(top.ctx, rTop, x, { color: css('--sig-x'), maxAbs: 1.1, fill: true, lineWidth: 1.6 });
+      drawLine(top.ctx, rTop, hs, { color: css('--sig-h'), maxAbs: 1.1, lineWidth: 1.6 });
+      drawLine(top.ctx, rTop, p, { color: css('--sig-y'), maxAbs: 1.1, fill: true, lineWidth: 1.2 });
+    }
+    render();
+    if (reduceMotion) return;
+    setInterval(function () { n = (n + 2) % ny; render(); }, 60);
+    window.addEventListener('resize', render);
+  }
+
+  buildHero();
+
+  document.querySelectorAll('.widget[data-widget="continuous"]').forEach(function (el) {
+    var dt = 0.045, alpha = 1.4;
+    var Lx = 24, Lh = 130;
+    var x = new Array(Lx).fill(1);
+    var h = new Array(Lh).fill(0).map(function (_, i) { return Math.exp(-alpha * i * dt); });
+    buildSlideWidget(el, x, h, { mode: 'line', dt: dt, intervalMs: 35 });
+  });
+
+  document.querySelectorAll('.widget[data-widget="discrete"], .analogy-card[data-widget="echo"], .analogy-card[data-widget="avg"]').forEach(function (el) {
+    var kind = el.getAttribute('data-widget');
+    var x, h;
+    if (kind === 'discrete') { x = [1, 3, 2, 0, 4, 1]; h = [1, 0.6, 0.3]; }
+    else if (kind === 'echo') {
+      x = [1, 0.6, 0.2, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      h = new Array(12).fill(0); h[0] = 1; h[4] = 0.55; h[8] = 0.3; h[11] = 0.15;
+    } else {
+      x = [21, 23, 30, 22, 24, 29, 25, 26, 31, 24, 20, 27];
+      h = [1 / 3, 1 / 3, 1 / 3];
+    }
+    buildSlideWidget(el, x, h, { mode: 'stem', intervalMs: kind === 'discrete' ? 260 : 220 });
+  });
+
+  document.querySelectorAll('.analogy-card[data-widget="blur"]').forEach(function (el) {
+    var x = [30, 30, 30, 30, 30, 220, 220, 220, 220, 220, 30, 30, 30, 30, 30, 30];
+    var h = [0.2, 0.2, 0.2, 0.2, 0.2];
+    buildStripWidget(el, x, h, { intervalMs: 220 });
+  });
+
+  document.querySelectorAll('.widget[data-widget="decomp"]').forEach(function (el) {
+    buildDecompWidget(el, 0.045);
+  });
+
+  document.querySelectorAll('.widget[data-widget="sampling"]').forEach(function (el) {
+    buildSamplingWidget(el);
+  });
+
+  document.querySelectorAll('.widget[data-widget="cnn"]').forEach(function (el) {
+    buildCnnWidget(el);
+  });
+})();
+</script>
+
+<!--ai:foot--><footer class="ai-foot"><a href="../index.html">Speech and Audio Processing</a> &middot; Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati &middot; <a href="../index.html#credits">data credits</a></footer><!--/ai:foot-->
+</body>
+</html>

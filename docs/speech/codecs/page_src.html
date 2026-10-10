@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squeezing Speech</title>
+<meta name="description" content="Speech coding from first principles: bitrate, quantisation and sampling, mu-law, predictive coding (ADPCM), and the LPC vocoder, with listening examples at real bitrates.">
+<!--HEAD-->
+<style>
+<!--STYLE-->
+  .chain svg { width: 100%; height: auto; display: block; }
+  .agrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .agrid .card { padding: 12px 14px; }
+  .agrid .card h4 { margin: 0 0 2px; font-size: 0.92rem; }
+  .agrid .card .rate { font-family: "JetBrains Mono", monospace; font-size: 0.82rem; color: var(--accent); }
+  .agrid .card p { font-size: 0.82rem; margin: 4px 0 6px; color: var(--muted); }
+  .agrid audio { width: 100%; height: 32px; }
+  .tag { display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 999px; padding: 1px 8px; border: 1.5px solid currentColor; margin-left: 4px; }
+  .live { display: grid; grid-template-columns: 260px 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 760px) { .live { grid-template-columns: 1fr; } }
+  .live select { width: 100%; font: inherit; font-size: 0.88rem; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .live label.lbl { display: block; font-size: 0.8rem; color: var(--muted); margin: 10px 0 3px; }
+  .bigrate { font-family: "JetBrains Mono", monospace; font-size: 1.6rem; font-weight: 600; color: var(--ink); }
+  table.budget { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+  table.budget td, table.budget th { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+  table.budget th { color: var(--ink); }
+  table.budget td.n { text-align: right; font-family: "JetBrains Mono", monospace; }
+  .svgm { font-size: 15px; line-height: 28px; text-align: center; color: var(--ink); white-space: nowrap; }
+  #snrderiv .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+  #dpcmstart .katex-display, #predictor .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker">Speech and Audio Processing &middot; Module 6</div>
+  <h1>Squeezing speech through a wire.</h1>
+  <p class="lede">
+    Every phone call, voice message and video meeting sends your voice as a stream of bits, and every bit costs radio spectrum, network capacity, battery and money.
+    <strong>Speech coding</strong> is the art of sending as few bits as possible while the person at the other end still hears <em>you</em>. This page starts from the most obvious
+    ways to save bits, shows where they break down, and then uses the LPC model of modules 4&ndash;5 to go down from <strong>256&nbsp;kbit/s to under 3&nbsp;kbit/s</strong>. Every step
+    comes with audio you can listen to.
+  </p>
+  <div class="roadmap">
+    <strong style="color:var(--ink);">The path through this page</strong>
+    <ol>
+      <li><a href="#why">Why coding matters</a>: from mouth to ear, and what a bit rate is</li>
+      <li><a href="#knobs">The two obvious knobs</a>: fewer bits per sample, fewer samples per second (live demo)</li>
+      <li><a href="#mulaw">A first clever trick</a>: \(\mu\)-law, the 64&nbsp;kbit/s telephone standard, and <a href="#why255">why \(\mu = 255\)</a></li>
+      <li><a href="#better">Can we do better?</a> Speech is predictable</li>
+      <li><a href="#adpcm">Trick 2: code only the surprise</a> (ADPCM, 32&nbsp;kbit/s)</li>
+      <li><a href="#vocoder">Trick 3: send the model, not the waveform</a> (LPC vocoder, 2.85&nbsp;kbit/s)</li>
+    </ol>
+  </div>
+  <div class="meta-line">Module 6 of Speech and Audio Processing: <a href="source_filter.html">3 · A buzz and a tube</a> &middot; <a href="linear_prediction.html">4 · Guessing the next sample</a> &middot; <a href="ar_model.html">5 · The all-pole vocal tract</a> &middot; 6 · this page &middot; extra: <a href="decibels.html">why decibels?</a> &middot; use headphones for the listening examples</div>
+</header>
+
+<!-- ============================================================ 1. WHY -->
+<section id="why">
+  <div class="kicker">01 &middot; Why coding matters</div>
+  <h2>From one mouth to another ear.</h2>
+  <p>Follow your voice on a phone call. It is turned into numbers, squeezed, sent, unsqueezed and turned back into sound:</p>
+  <figure>
+    <div class="card chain" style="padding:12px;">
+      <svg viewBox="0 0 900 250" role="img" aria-label="Speaker, microphone, ADC, encoder, channel, decoder, DAC, loudspeaker, listener">
+        <defs><marker id="ca" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+        <!-- speaker person -->
+        <g transform="translate(40,80)">
+          <circle cx="0" cy="0" r="22" fill="#F2C9A0" stroke="var(--ink)" stroke-width="1.5"/>
+          <path d="M-22,-4 q0,-26 22,-26 q22,0 22,26 q-6,-14 -22,-14 q-16,0 -22,14z" fill="#3a2a20"/>
+          <circle cx="8" cy="-3" r="2" fill="var(--ink)"/>
+          <path d="M10,9 q8,2 10,-2" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+          <path d="M-26,70 q0,-42 26,-42 q26,0 26,42z" fill="var(--accent)"/>
+          <g stroke="var(--accent-2)" stroke-width="1.8" fill="none"><path d="M28,0 q6,8 0,16"/><path d="M34,-6 q10,14 0,28"/></g>
+          <text x="0" y="96" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)" font-family="Inter, sans-serif">talker</text>
+        </g>
+        <!-- listener person -->
+        <g transform="translate(860,80)">
+          <circle cx="0" cy="0" r="22" fill="#D9A77A" stroke="var(--ink)" stroke-width="1.5"/>
+          <path d="M-22,-2 q0,-28 22,-28 q22,0 22,28 l-4,6 q-2,-18 -18,-20 q-16,2 -18,20z" fill="#5a3a22"/>
+          <circle cx="-8" cy="-3" r="2" fill="var(--ink)"/>
+          <path d="M-12,10 q-6,3 -9,0" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+          <path d="M-26,70 q0,-42 26,-42 q26,0 26,42z" fill="var(--teal)"/>
+          <text x="0" y="96" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)" font-family="Inter, sans-serif">listener</text>
+        </g>
+        <g font-family="Inter, sans-serif" font-size="11.5" text-anchor="middle">
+          <!-- blocks -->
+          <rect x="100" y="60" width="70" height="44" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="135" y="80" fill="var(--ink)" font-weight="600">mic</text><text x="135" y="95" fill="var(--muted)" font-size="10">pressure → volts</text>
+          <rect x="190" y="60" width="74" height="44" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="227" y="80" fill="var(--ink)" font-weight="600">ADC</text><text x="227" y="95" fill="var(--muted)" font-size="10">sample + quantise</text>
+          <rect x="284" y="52" width="96" height="60" rx="8" fill="color-mix(in srgb, var(--accent) 16%, var(--surface))" stroke="var(--accent)" stroke-width="1.8"/><text x="332" y="78" fill="var(--accent)" font-weight="700">ENCODER</text><text x="332" y="94" fill="var(--ink)" font-size="10">squeeze the bits</text>
+          <rect x="520" y="52" width="96" height="60" rx="8" fill="color-mix(in srgb, var(--accent) 16%, var(--surface))" stroke="var(--accent)" stroke-width="1.8"/><text x="568" y="78" fill="var(--accent)" font-weight="700">DECODER</text><text x="568" y="94" fill="var(--ink)" font-size="10">rebuild the samples</text>
+          <rect x="636" y="60" width="74" height="44" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="673" y="80" fill="var(--ink)" font-weight="600">DAC</text><text x="673" y="95" fill="var(--muted)" font-size="10">numbers → volts</text>
+          <rect x="730" y="60" width="74" height="44" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="767" y="80" fill="var(--ink)" font-weight="600">speaker</text><text x="767" y="95" fill="var(--muted)" font-size="10">volts → pressure</text>
+          <!-- channel -->
+          <path d="M400,82 C420,40 520,40 500,82" fill="none" stroke="none"/>
+          <rect x="400" y="66" width="100" height="32" rx="16" fill="var(--surface)" stroke="var(--accent-3)" stroke-width="1.8" stroke-dasharray="5 4"/>
+          <text x="450" y="86" fill="var(--ink)" font-weight="600">channel</text>
+          <text x="450" y="128" fill="var(--muted)" font-size="10">radio, cable, internet</text>
+          <text x="450" y="141" fill="var(--muted)" font-size="10">(limited, shared, costly)</text>
+          <g stroke="var(--accent-3)" stroke-width="1.6" fill="none"><path d="M425,58 q25,-22 50,0"/><path d="M415,50 q35,-32 70,0"/></g>
+          <text x="450" y="22" fill="var(--accent-3)" font-family="JetBrains Mono, monospace" font-size="11">0110100111010…</text>
+        </g>
+        <g stroke="var(--muted)" stroke-width="1.5">
+          <line x1="80" y1="82" x2="98" y2="82" marker-end="url(#ca)"/><line x1="170" y1="82" x2="188" y2="82" marker-end="url(#ca)"/><line x1="264" y1="82" x2="282" y2="82" marker-end="url(#ca)"/>
+          <line x1="380" y1="82" x2="398" y2="82" marker-end="url(#ca)"/><line x1="500" y1="82" x2="518" y2="82" marker-end="url(#ca)"/><line x1="616" y1="82" x2="634" y2="82" marker-end="url(#ca)"/>
+          <line x1="710" y1="82" x2="728" y2="82" marker-end="url(#ca)"/><line x1="804" y1="82" x2="830" y2="82" marker-end="url(#ca)"/>
+        </g>
+        <!-- bitrate annotations -->
+        <g font-family="Inter, sans-serif" font-size="11" text-anchor="middle">
+          <line x1="227" y1="170" x2="227" y2="112" stroke="var(--line-strong)" stroke-dasharray="3 3"/>
+          <text x="227" y="186" fill="var(--ink)" font-weight="600">raw: 256 kbit/s</text><foreignObject x="107" y="186" width="240" height="20"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:11px;line-height:20px;text-align:center;color:var(--muted);font-weight:400;white-space:nowrap;font-family:Inter,sans-serif;pointer-events:none;">\(16\,000\)&nbsp;samples/s \(\times\) 16 bits</div></foreignObject>
+          <line x1="450" y1="170" x2="450" y2="146" stroke="var(--line-strong)" stroke-dasharray="3 3"/>
+          <text x="450" y="186" fill="var(--accent-2)" font-weight="700">coded: 2–64 kbit/s</text><text x="450" y="200" fill="var(--muted)">the codec decides</text>
+          <text x="450" y="236" fill="var(--muted)" font-size="10.5">codec = encoder + decoder (“coder–decoder”)</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Figure 1.</b> The speech communication chain. The ADC turns the voice into numbers. The <b>encoder</b> squeezes them into as few bits as it can, the channel carries the bits,
+    and the <b>decoder</b> rebuilds a signal from them. The decoder only ever sees the bits, so whatever the encoder throws away is gone for good.</figcaption>
+  </figure>
+
+  <h3>What is a bit rate?</h3>
+  <p>A digital audio signal is a sequence of numbers: <em>samples</em>, taken \(f_s\) times per second, each stored with \(b\) bits. The bits per second needed to send it raw is simply</p>
+  <div class="eq">$$\text{bit rate} = f_s \times b \times \text{channels}$$
+    <span class="note">this page's speech sample, resampled to 16&nbsp;kHz: \(16\,000 \times 16 \times 1 = 256\,000\) bits/s = 256&nbsp;kbit/s. (The raw recording, at 48&nbsp;kHz and 32 bits, was \(1536\) kbit/s.) A music CD: \(44\,100 \times 16 \times 2 = 1411\) kbit/s.</span></div>
+  <div class="grid3">
+    <div class="card"><h4>📶 Radio spectrum is finite</h4><p style="font-size:0.88rem;margin:0;">A cell tower has a fixed slice of spectrum to share among everyone nearby. Halve the bits per call and roughly twice as many people can talk at once.</p></div>
+    <div class="card"><h4>🔋 Bits cost energy</h4><p style="font-size:0.88rem;margin:0;">Transmitting is one of the most power-hungry things a phone does. Fewer bits means less time with the radio on, and longer battery life.</p></div>
+    <div class="card"><h4>🌐 Weak links and storage</h4><p style="font-size:0.88rem;margin:0;">A low bit rate still gets through on a poor connection, a satellite link or a crowded network. An hour of raw 16&nbsp;kHz speech is 115&nbsp;MB; at 8&nbsp;kbit/s it is 3.6&nbsp;MB.</p></div>
+  </div>
+  <p style="margin-top:16px;">
+    The catch: the listener must still understand the words, recognise the speaker, and not be annoyed. Engineers use rough quality classes: <strong>toll quality</strong> (as good as a traditional phone line),
+    <strong>communication quality</strong> (clearly intelligible, noticeably degraded) and <strong>synthetic quality</strong> (intelligible, but robotic). The rest of this page is a race down
+    the bit rate while trying to stay in the best class possible.
+  </p>
+</section>
+
+<!-- ============================================================ 2. KNOBS -->
+<section id="knobs">
+  <div class="kicker">02 &middot; The two obvious knobs</div>
+  <h2>Fewer bits per sample, or fewer samples per second.</h2>
+  <p>
+    The formula has two knobs that don't need any knowledge of speech at all. Both work on the <strong>waveform</strong> directly: they try to reproduce the exact shape of the signal, sample by sample.
+  </p>
+
+  <h3>Knob 1: fewer bits per sample (quantisation)</h3>
+  <p>
+    With \(b\) bits, each sample must be rounded to one of \(2^b\) levels. Fewer bits means fewer, coarser levels, and the rounding error becomes audible as a hiss, then a crackle, then distortion.
+  </p>
+  <figure>
+    <div class="frame"><img src="codecs/fig/01_quantisation.png?v=2" alt="10 ms of speech rounded to 8, 4 and 2 bits" loading="lazy"></div>
+    <figcaption><b>Figure 2.</b> 10&nbsp;ms of a vowel from our recording, rounded to 256, 16 and 4 levels. <b>Top:</b> the red staircase is what gets sent. At 8 bits the steps are too fine to see at full scale,
+    hence the \(\times 20\) zoom. <b>Bottom:</b> the quantisation error (sent minus original), each on its own scale. It always stays within half a step, \(\pm\Delta/2\), and every bit removed doubles that bound: \(\pm 0.004\) at 8 bits, \(\pm 0.06\) at 4 bits, \(\pm 0.25\) at 2 bits.</figcaption>
+  </figure>
+  <p>Each extra bit doubles the number of levels, which halves the step size and therefore halves the typical rounding error. Halving an amplitude is −6&nbsp;dB, so:</p>
+  <div class="eq">$$\text{SNR} \approx 6.02\,b + 1.76\ \text{dB} \qquad\text{(full-scale sinusoid, uniform quantiser)}$$
+    <span class="note">every extra bit per sample buys about 6&nbsp;dB of signal-to-noise ratio, and every bit removed costs about 6&nbsp;dB. Derivation below.</span></div>
+
+  <div class="card" id="snrderiv" style="margin-top:14px;">
+    <h4 style="margin:0 0 6px;">Deriving \(\text{SNR} \approx 6.02\,b + 1.76\) dB</h4>
+    <p style="font-size:0.93rem;margin:6px 0;"><b>Step 1: the step size.</b> A uniform quantiser with \(b\) bits splits the full range \([-1, 1)\) into \(2^b\) equal steps:</p>
+    $$\Delta = \frac{2}{2^b} = 2^{1-b}$$
+    <p style="font-size:0.93rem;margin:6px 0;">
+      <b>Step 2: the noise power.</b> Rounding to the centre of a step leaves an error \(q\) that always lies within \(\pm\Delta/2\) (Figure 2, bottom row). When the step is small compared with the signal's
+      wiggles, every value in that interval is equally likely, so the error is <em>uniformly distributed</em> on \([-\Delta/2, \Delta/2]\) with density \(1/\Delta\). Its power is its mean square:
+    </p>
+    $$\sigma_q^2 = \int_{-\Delta/2}^{\Delta/2} q^2\,\frac{1}{\Delta}\,dq = \frac{1}{\Delta}\left[\frac{q^3}{3}\right]_{-\Delta/2}^{\Delta/2} = \frac{1}{\Delta}\cdot\frac{2}{3}\cdot\frac{\Delta^3}{8} = \frac{\Delta^2}{12}$$
+    <figure style="margin:10px 0;">
+      <div class="frame"><img src="codecs/fig/01b_error_histogram.png?v=1" alt="Histograms of the quantisation error of the recording at 8, 4 and 2 bits, compared with a uniform distribution" loading="lazy"></div>
+      <figcaption><b>Figure 3.</b> Checking the assumption on our recording. Each panel is a histogram of the error (sent minus original) of every sample, divided by the step \(\Delta\) so that all three share one axis.
+      The dashed box is the uniform density the derivation assumes. <b>8 bits:</b> flat, and \(\sigma_q^2/\Delta^2 = 0.0837\), within 0.5&nbsp;% of \(1/12\). <b>4 bits:</b> the step (0.125) is now larger than many quiet samples, and errors
+      pile up near \(\pm\Delta/2\): a sample close to zero is always rounded to the first level, \(\pm\Delta/2\), so its error is nearly that level. The noise power is 38&nbsp;% above \(\Delta^2/12\), which costs
+      1.4&nbsp;dB (measured 8.6&nbsp;dB, formula 10.0&nbsp;dB). <b>2 bits:</b> most of the signal fits inside one step and the error is mostly the signal itself, so the formula no longer applies.</figcaption>
+    </figure>
+    <p style="font-size:0.93rem;margin:6px 0;"><b>Step 3: the signal power.</b> A sinusoid that just fills the range, \(x(t) = \sin(\omega t)\), has power equal to its mean square, \(\overline{\sin^2} = \tfrac12\).</p>
+    <p style="font-size:0.93rem;margin:6px 0;"><b>Step 4: the ratio.</b></p>
+    $$\text{SNR} = \frac{1/2}{\Delta^2/12} = \frac{6}{\Delta^2} = \frac{6}{2^{2-2b}} = \frac{3}{2}\cdot 2^{2b}$$
+    <p style="font-size:0.93rem;margin:6px 0;"><b>Step 5: in decibels</b>, the product becomes a sum (see the <a href="decibels.html">decibels page</a>):</p>
+    $$10\log_{10}\text{SNR} = \underbrace{20\log_{10}2}_{6.02}\cdot b \;+\; \underbrace{10\log_{10}\tfrac32}_{1.76} \;\approx\; 6.02\,b + 1.76\ \text{dB}$$
+    <p style="font-size:0.93rem;margin:6px 0;">
+      The 6.02 is &ldquo;halving the step halves the error amplitude&rdquo;, \(20\log_{10}2\). The 1.76 depends only on the signal's shape: it is the sinusoid's power of \(\tfrac12\) compared with the \(\tfrac{1}{12}\) in the noise.
+      For 16-bit audio this gives the familiar 98&nbsp;dB, and for 8 bits about 50&nbsp;dB. A quick simulation with a full-scale sinusoid gives 49.8&nbsp;dB at 8 bits.
+    </p>
+    <p style="font-size:0.93rem;margin:6px 0;">
+      <b>For any signal</b>, Step 3 changes. A signal with rms value \(\sigma_x\) (full scale = 1) has power \(\sigma_x^2\), and the same algebra gives
+    </p>
+    $$\text{SNR} \approx 6.02\,b + 4.77 + 20\log_{10}\sigma_x\ \text{dB}$$
+    <p style="font-size:0.93rem;margin:6px 0;">
+      The last term is the signal's level in dBFS, and it is negative. A full-scale sine has \(\sigma_x = 1/\sqrt2\) (−3.01&nbsp;dB), which gives back 1.76. Our recording's rms level is only about −19&nbsp;dBFS,
+      because speech has tall peaks and long quiet stretches. That predicts \(6.02 \times 8 + 4.77 - 18.9 \approx 34.0\) dB at 8 bits, and quantising the recording gives 34.0&nbsp;dB. That is <em>15&nbsp;dB worse than a sinusoid with the same number of bits</em>.
+      The segmental SNR of Figure 6 is lower still (27.9&nbsp;dB at 8 bits), because the quiet frames sit far below that average level. This penalty for quiet speech is exactly what \(\mu\)-law, in the next section, removes.
+    </p>
+    <p class="note" style="font-size:0.85rem;color:var(--muted);margin:6px 0 0;">The uniform-error assumption fails when the signal is smaller than a few steps (Figure 3). At 1&ndash;2 bits, or for very quiet passages, the error becomes correlated with the signal and the formula is only a rough guide.</p>
+  </div>
+
+  <h3>Knob 2: fewer samples per second (sampling rate)</h3>
+  <p>
+    A signal sampled at \(f_s\) can only contain frequencies up to \(f_s/2\) (the Nyquist limit). Lowering \(f_s\) therefore cuts off the high frequencies: first the hiss of /s/ and /f/,
+    then the upper formants, until the speech sounds muffled, as if through a wall.
+  </p>
+  <figure>
+    <div class="frame"><img src="codecs/fig/03_sampling_rates.png?v=2" alt="Spectrograms of the same speech sampled at 16, 8, 4 and 2 kHz" loading="lazy"></div>
+    <figcaption><b>Figure 3.</b> 0.9&nbsp;s of our recording, including a fricative (the bright hiss high up near 0.4&nbsp;s), at four sampling rates. At 8&nbsp;kHz (the telephone) everything above 4&nbsp;kHz is gone, and with it most of that hiss.
+    That is why &ldquo;s&rdquo; and &ldquo;f&rdquo; are hard to tell apart on the phone, and why people spell names as &ldquo;S for Sierra&rdquo;. At 2&nbsp;kHz only the lowest formant survives.</figcaption>
+  </figure>
+
+  <h3>Try both knobs</h3>
+  <p>Choose a sampling rate, a number of bits and a quantiser. The recording is processed live in your browser. Watch the bit rate, and listen.</p>
+  <div class="card">
+    <div class="live">
+      <div>
+        <label class="lbl" for="lvFs">Sampling rate</label>
+        <select id="lvFs"><option value="1">16 kHz (wideband)</option><option value="2" selected>8 kHz (telephone)</option><option value="4">4 kHz</option><option value="8">2 kHz</option></select>
+        <label class="lbl" for="lvBits">Bits per sample</label>
+        <select id="lvBits"><option>16</option><option>12</option><option>10</option><option selected>8</option><option>6</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+        <label class="lbl" for="lvQ">Quantiser</label>
+        <select id="lvQ"><option value="u" selected>uniform</option><option value="mu">μ-law (see section 03)</option></select>
+        <div style="margin-top:14px;font-size:0.8rem;color:var(--muted);">bit rate</div>
+        <div class="bigrate" id="lvRate"></div>
+        <div class="readout" id="lvRead" style="margin-top:6px;"></div>
+        <div class="ctlrow" style="margin-top:10px;"><button id="lvPlayO">▶ original</button><button id="lvPlayP" class="on">▶ processed</button></div>
+      </div>
+      <div>
+        <div class="plotlabel">Waveform, 20 ms: <span style="color:var(--line-strong)">&#9632;</span> original <span style="color:var(--accent-2)">&#9632;</span> processed</div>
+        <canvas id="lvWave" class="plot" height="150"></canvas>
+        <div class="plotlabel">Spectrogram of the processed recording (0&ndash;8 kHz)</div>
+        <canvas id="lvSpec" class="plot" height="170"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <h3>Listening examples</h3>
+  <p>All examples on this page use one recording of an Indian-English speaker, at a range of bit rates. Segmental SNR (average SNR over 20&nbsp;ms frames, higher is better) is given where the waveform is meant to match the original.</p>
+  <div class="agrid" id="pcmGrid"></div>
+  <p style="margin-top:14px;">
+    Both knobs work up to a point, and then the price in quality becomes steep. To get from 256 down to 32&nbsp;kbit/s you must either accept heavy noise (4 bits at 8&nbsp;kHz) or a badly muffled voice (2&nbsp;kHz sampling).
+    <strong>Neither knob knows anything about speech or about hearing.</strong>
+  </p>
+</section>
+
+<!-- ============================================================ 3. MU-LAW -->
+<section id="mulaw">
+  <div class="kicker">03 &middot; A first clever trick</div>
+  <h2>\(\mu\)-law: spend the levels where the signal actually is.</h2>
+  <p>
+    A uniform quantiser treats every amplitude the same: its levels are evenly spaced from \(-1\) to \(+1\). Two facts about speech and hearing say that is a waste. We'll take them one at a time.
+  </p>
+
+  <h4>Fact 1 · Most speech samples are small</h4>
+  <p>
+    Make a histogram of every sample in our recording (Figure 5a). It is a tall, narrow spike around zero: <strong>75&nbsp;%</strong> of all samples lie within \(\pm 0.1\), a tenth of the full range.
+    Loud peaks are rare; quiet consonants, the tails of syllables, pauses and soft passages are common. Now look at where a 4-bit uniform quantiser puts its 16 levels (grey ticks under the histogram):
+    spread evenly across the whole range, so <strong>only 2 of the 16 levels</strong> fall where nearly all the samples are. Most of the levels sit out at large amplitudes that hardly ever occur.
+  </p>
+
+  <h4>Fact 2 · The ear judges noise relative to loudness</h4>
+  <p>
+    A uniform quantiser adds noise of the same absolute size (up to \(\pm\Delta/2\)) everywhere. In a loud vowel, a little hiss is masked by the speech. In a quiet consonant or a soft-spoken word, the
+    <em>same</em> hiss is relatively much bigger and clearly audible. What matters to a listener is roughly the <em>ratio</em> of signal to noise in each moment, not the absolute noise level. (This is the same
+    relative sensitivity that makes us measure sound in decibels.)
+  </p>
+
+  <h4>The fix · fine steps for small values, coarse steps for big ones</h4>
+  <p>
+    Both facts point the same way: put the quantiser levels <strong>close together near zero</strong> and <strong>further apart for large amplitudes</strong>. Ideally the step size grows in proportion to the amplitude,
+    so the noise stays a fixed fraction of the signal. That is a <em>logarithmic</em> spacing. The neat trick is that we don't need a new quantiser to get it. We bend the signal first and keep the simple uniform one:
+  </p>
+  <div class="grid3">
+    <div class="card"><h4>1 · compress</h4><p style="font-size:0.88rem;margin:0;">Pass each sample through a log-like curve \(F(x)\). Small values are stretched apart, large values squeezed together.</p></div>
+    <div class="card"><h4>2 · quantise uniformly</h4><p style="font-size:0.88rem;margin:0;">Round \(F(x)\) to \(b\) bits with ordinary equal steps, and send those bits.</p></div>
+    <div class="card"><h4>3 · expand</h4><p style="font-size:0.88rem;margin:0;">The decoder applies the inverse curve \(F^{-1}\), turning the equal steps back into small steps near zero and big steps for loud values.</p></div>
+  </div>
+  <p style="margin-top:14px;">The curve used in North American and Japanese telephony is <strong>\(\mu\)-law</strong>:</p>
+  <div class="eq">$$F(x) = \operatorname{sgn}(x)\,\frac{\ln(1 + \mu|x|)}{\ln(1 + \mu)}, \qquad F^{-1}(y) = \operatorname{sgn}(y)\,\frac{(1+\mu)^{|y|} - 1}{\mu}, \qquad \mu = 255,\ |x| \le 1$$
+    <span class="note">\(\mu\) sets how strongly the curve bends: \(\mu \to 0\) gives a straight line (plain uniform quantisation); \(\mu = 255\) stretches the bottom of the range enormously. For \(\mu|x| \gg 1\) the curve is logarithmic, giving the constant relative step we wanted; near zero it becomes linear, so it stays well-behaved at silence.</span></div>
+  <figure>
+    <div class="frame"><img src="codecs/fig/02b_mulaw_explained.png?v=2" alt="Histogram of speech sample values with uniform and mu-law quantiser levels, the mu-law compression curve, and per-frame SNR against loudness" loading="lazy"></div>
+    <figcaption><b>Figure 4.</b> \(\mu\)-law, step by step, on our recording at 8&nbsp;kHz. <b>(a)</b> The sample values pile up near zero. Uniform levels (grey) ignore that; \(\mu\)-law levels (blue) crowd into the busy region.
+    <b>(b)</b> The compression curve: equally spaced levels on the vertical (compressed) axis land at very unequal spacings on the input axis, tiny near zero and large near \(\pm 1\).
+    <b>(c)</b> The payoff, measured on every 20&nbsp;ms frame: with 8-bit uniform PCM the SNR falls one-for-one as the frame gets quieter (a frame 40&nbsp;dB down has almost no SNR left). With 8-bit \(\mu\)-law
+    the SNR stays above about 30&nbsp;dB (mostly 35&ndash;39&nbsp;dB) for loud and quiet frames alike.</figcaption>
+  </figure>
+
+  <h3>Try it: bend the levels yourself</h3>
+  <p>The histogram of our recording's samples, with the quantiser's levels drawn on top. Raise \(\mu\) from 0 (uniform) and watch the levels migrate towards zero, where the samples are.</p>
+  <div class="card">
+    <div class="ctlrow" style="margin-top:0;">
+      <label for="muMu">\(\mu\): <span class="valpill" id="muMuV"></span></label>
+      <input type="range" id="muMu" min="0" max="100" value="80" style="flex:1;min-width:150px;">
+      <span>bits:</span><span class="seg" id="muBits"><button data-b="3">3</button><button data-b="4" class="on">4</button><button data-b="5">5</button><button data-b="8">8</button></span>
+    </div>
+    <div class="plotlabel">Sample histogram (zoomed to \(\pm 0.5\)) with the quantiser's reconstruction levels (blue lines)</div>
+    <canvas id="muHist" class="plot" height="170"></canvas>
+    <div class="readout" id="muRead" style="margin-top:8px;"></div>
+    <div class="ctlrow"><button id="muPlay" class="on">▶ Hear the recording with these levels (16 kHz)</button><span id="muNote" style="flex:1;font-size:0.84rem;color:var(--muted);"></span></div>
+  </div>
+
+  <figure style="margin-top:22px;">
+    <div class="frame"><img src="codecs/fig/02_snr_vs_bits.png?v=2" alt="Segmental SNR against bits per sample for uniform and mu-law PCM" loading="lazy"></div>
+    <figcaption><b>Figure 5.</b> The overall effect across bit depths (segmental SNR, our recording at 8&nbsp;kHz). Both lines climb about 6&nbsp;dB per bit, but \(\mu\)-law sits about 10&nbsp;dB higher: <b>8-bit \(\mu\)-law \(\approx\) 10-bit uniform</b>,
+    roughly 2 bits per sample saved for free. (The curves flatten at the top only because segmental SNR is conventionally capped at 40&nbsp;dB per frame.)</figcaption>
+  </figure>
+  <p>
+    This is <strong>G.711</strong> (1972): \(8000 \times 8\) bits/s with \(\mu\)-law (North America, Japan) or the very similar <strong>A-law</strong> (Europe, India and most of the world), giving 64&nbsp;kbit/s.
+    In the standard the smooth curve is approximated by 8 straight-line segments per polarity, cheap to build in 1970s hardware. G.711 has been the backbone of digital telephone networks for half a century, and it
+    is the reference that &ldquo;toll quality&rdquo; is measured against. Compare 8-bit uniform with 8-bit \(\mu\)-law in the listening grid, and 4-bit uniform with 4-bit \(\mu\)-law in section 05: same bit rate, very different noise.
+  </p>
+  <h3 id="why255">Why \(\mu = 255\)? An engineering compromise</h3>
+  <p>
+    \(\mu\) is a dial between two goals that pull against each other. A telephone network has to serve <em>soft</em> talkers and <em>loud</em> talkers, on short and long lines. Their levels differ by
+    tens of dB, and every one of them should get a decent SNR. Measure the SNR of an 8-bit coder as the input level is swept from very soft to full scale (Figure 7):
+  </p>
+  <figure>
+    <div class="frame"><img src="codecs/fig/02c_mu_tradeoff.png?v=2" alt="SNR against input level for 8-bit companding with mu = 0, 15, 100, 255 and 1000" loading="lazy"></div>
+    <figcaption><b>Figure 6.</b> 8-bit coding of a speech-like (Laplacian) signal at different input levels. <b>Uniform</b> (\(\mu = 0\)) is superb for loud talkers but falls one dB per dB as they get softer, staying above
+    30&nbsp;dB for only 22&nbsp;dB of levels. Raising \(\mu\) flattens the curve, widening the usable range (\(\mu = 255\): 52&nbsp;dB), but it lowers the ceiling (38&nbsp;dB instead of 49). \(\mu = 1000\) is flatter still, at an even lower peak.</figcaption>
+  </figure>
+  <p>So the choice of \(\mu\) answers a practical question: <em>how wide a range of talker levels must be served, and how much peak quality are we willing to give up for it?</em> The history, as usually told:</p>
+  <ul>
+    <li><strong>1957: the family.</strong> Bernard Smith at Bell Labs analysed &ldquo;instantaneous companding&rdquo; and formulated the logarithmic \(\mu\)-law curves, showing how \(\mu\) trades dynamic range against peak SNR, the trade-off of Figure 7.</li>
+    <li><strong>1962: \(\mu = 100\), 7 bits.</strong> The first commercial digital telephone system, Bell's T1 carrier, coded speech with 7-bit \(\mu\)-law and \(\mu = 100\).</li>
+    <li><strong>Around 1970: \(\mu = 255\), 8 bits.</strong> The next generation of equipment moved to 8 bits. With one more bit, a stronger curve could keep an SNR in the mid-30s of dB across the full range of talker levels found in the network.
+      There was also a hardware reason. The smooth curve is built from 8 straight-line segments per polarity, each twice as long as the one before, and with \(\mu = 2^8 - 1 = 255\) the segment boundaries fall on
+      binary-friendly values. A logarithm could then be computed with simple 1970s digital logic: a 3-bit &ldquo;which segment&rdquo; (exponent) and a 4-bit &ldquo;where in the segment&rdquo; (mantissa), a tiny floating-point number.</li>
+    <li><strong>A-law.</strong> European engineers chose a slightly different curve with \(A = 87.6\), also built from straight segments. It is very close to \(\mu\)-law in performance.</li>
+  </ul>
+  <p>
+    Note what drove the choice: measured talker levels, SNR targets and what hardware could build cheaply. These were engineering numbers, checked against the listening experience of telephone engineers.
+    Formal, large-scale listening tests with panels of ordinary listeners became the centrepiece of codec selection later.
+  </p>
+
+  <details style="margin-top:12px;">
+    <summary>Is \(\mu\)-law perfectly invertible?</summary>
+    <p style="font-size:0.93rem;">
+      <strong>The curve, yes. The coder, no.</strong> \(F(x)\) is strictly increasing, and \(F^{-1}\) undoes it exactly: compressing and expanding a million random values reproduces them to within \(10^{-15}\) (floating-point rounding).
+      But the decoder computes \(\hat{x} = F^{-1}\bigl(Q(F(x))\bigr)\), and the expander cannot undo the <em>rounding</em> \(Q\) in the middle: every input within one step maps to the same 8-bit code. \(\mu\)-law is lossy; it just
+      places the loss cleverly. At 8 bits and \(\mu = 255\) the steps (in \(x\)) range from 0.00017 near zero to 0.042 near full scale, about 243 times wider. Near zero that is as fine as a uniform quantiser with about 13.5 bits
+      (G.711 \(\mu\)-law is indeed specified as an 8-bit code for a 14-bit linear signal), while for \(|x| &gt; 0.1\) the error never exceeds about 2.3&nbsp;% of the value.
+    </p>
+    <p style="font-size:0.93rem;">
+      A useful bonus: decoding and then re-encoding gives back <em>exactly the same codes</em>, because every decoded value sits on a reconstruction level, inside its own rounding interval. A call that passes through several
+      \(\mu\)-law encode/decode stages in the network therefore suffers no extra loss after the first one.
+    </p>
+  </details>
+
+  <div class="keyidea">
+    \(\mu\)-law doesn't use fewer bits. It <strong>spends the same bits more wisely</strong>, matching the quantiser to how speech amplitudes are distributed and to how loudly we perceive noise.
+    It is the first example on this page of a theme that runs to the end: the more a coder knows about speech and hearing, the fewer bits it needs.
+  </div>
+</section>
+
+<!-- ============================================================ 4. BETTER -->
+<section id="better">
+  <div class="kicker">04 &middot; Can we do better?</div>
+  <h2>A waveform coder treats every sample as a surprise. Speech isn't.</h2>
+  <p>
+    PCM, even with \(\mu\)-law, sends every sample in full, as if it were completely new information. But module 4 showed that speech is highly <strong>predictable</strong>: a weighted sum of the last 10 samples
+    guesses the next one very well. On this recording at 8&nbsp;kHz, a 10th-order predictor leaves an error <strong>13&nbsp;dB weaker</strong> than the signal itself. That redundancy is pure waste for a waveform coder.
+  </p>
+  <div class="card" style="border-left:3px solid var(--accent-3);">
+    <h4>Recap: prediction gain</h4>
+    <p style="font-size:0.9rem;margin:6px 0;">
+      The <strong>prediction gain</strong> compares the energy of the signal with the energy of the error a predictor leaves:
+    </p>
+    $$G_p = 10\log_{10}\frac{\sum_n x[n]^2}{\sum_n e[n]^2}\ \text{dB}, \qquad e[n] = x[n] - \sum_{k=1}^{p} a_k\,x[n-k]$$
+    <p style="font-size:0.9rem;margin:6px 0;">
+      13&nbsp;dB means the error carries only about 5&nbsp;% of the signal's energy. Why it converts into bits: a quantiser's noise depends on its step size, and the step needed depends on how big the values to be coded are.
+      Values about \(10^{13/20} \approx 4.5\) times smaller in amplitude need about \(\log_2 4.5 \approx 2.2\) fewer bits for the same noise.
+      (Full explanation, with more examples and what the number depends on: <a href="linear_prediction.html#gain">module 4, &ldquo;What is prediction gain?&rdquo;</a>.)
+    </p>
+  </div>
+  <p style="margin-top:14px;">Combine that with the 6-dB-per-bit rule from section 02:</p>
+  <div class="eq">$$\text{bits saved per sample} \approx \frac{\text{prediction gain (dB)}}{6.02\ \text{dB/bit}} = \frac{13.3}{6.02} \approx 2.2\ \text{bits/sample} \;\Rightarrow\; \approx 18\ \text{kbit/s saved at } 8\ \text{kHz}$$</div>
+  <p>
+    And there is more structure to exploit than that. Module 5 showed that speech is a <em>source</em> (pulses or noise) through a <em>filter</em> (a few formants), both changing slowly, every 10&ndash;20&nbsp;ms. If the receiver
+    already knows that model, maybe we only need to send its <em>settings</em>. The next three sections climb that ladder of ideas, one trick at a time.
+  </p>
+</section>
+
+<!-- ============================================================ 5. ADPCM -->
+<section id="adpcm">
+  <div class="kicker">05 &middot; Trick 2: code only the surprise</div>
+  <h2>Predictive coding (DPCM / ADPCM).</h2>
+  <p>
+    Don't send the sample. Send the <strong>prediction error</strong>, the part the receiver couldn't have guessed. Because the error is much smaller than the signal, the same quantiser step gives far
+    less noise, or the same noise needs fewer bits.
+  </p>
+  <figure>
+    <div class="frame"><img src="codecs/fig/04_prediction_error.png?v=2" alt="Speech and its LPC prediction error on the same scale, and their amplitude histograms" loading="lazy"></div>
+    <figcaption><b>Figure 5.</b> 120&nbsp;ms of speech (grey) and the error left by a 10-weight predictor (red), on the same scale. The error is much smaller and its values are concentrated near zero, so fewer quantiser levels cover it.</figcaption>
+  </figure>
+  <figure>
+    <div class="card chain" style="padding:12px;">
+      <svg viewBox="0 0 900 280" role="img" aria-label="DPCM encoder and decoder: the encoder subtracts a prediction, quantises the error and rebuilds the decoded signal; the decoder runs the same predictor on the same decoded signal">
+        <defs><marker id="da" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+        <!-- encoder / decoder panels -->
+        <rect x="4" y="30" width="418" height="244" rx="10" fill="none" stroke="var(--line)" stroke-dasharray="4 4"/>
+        <rect x="540" y="30" width="356" height="244" rx="10" fill="none" stroke="var(--line)" stroke-dasharray="4 4"/>
+        <g font-family="Inter, sans-serif" font-size="12" text-anchor="middle">
+          <text x="213" y="20" font-weight="700" fill="var(--accent)" letter-spacing="0.08em">ENCODER (transmitter)</text>
+          <text x="718" y="20" font-weight="700" fill="var(--accent)" letter-spacing="0.08em">DECODER (receiver)</text>
+          <!-- blocks -->
+          <rect x="170" y="60" width="96" height="40" rx="6" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="218" y="84" fill="var(--ink)">quantiser</text>
+          <rect x="150" y="214" width="110" height="40" rx="6" fill="color-mix(in srgb, var(--accent) 14%, var(--surface))" stroke="var(--accent)"/><text x="205" y="238" fill="var(--ink)">predictor</text>
+          <rect x="432" y="64" width="98" height="32" rx="16" fill="var(--surface)" stroke="var(--accent-3)" stroke-dasharray="5 4"/><text x="481" y="84" fill="var(--ink)">channel</text>
+          <rect x="640" y="150" width="110" height="40" rx="6" fill="color-mix(in srgb, var(--accent) 14%, var(--surface))" stroke="var(--accent)"/><text x="695" y="174" fill="var(--ink)">same predictor</text>
+          <text x="420" y="58" fill="var(--accent-2)" font-weight="600" font-size="11">few bits / sample</text>
+          <text x="140" y="270" fill="var(--muted)" font-size="10.5" text-anchor="start">fed with <tspan font-style="italic">decoded</tspan> samples, like the decoder</text>
+          <!-- summing nodes -->
+          <circle cx="110" cy="80" r="15" fill="var(--surface)" stroke="var(--ink)"/><text x="110" y="85" fill="var(--ink)" font-size="15">Σ</text>
+          <circle cx="330" cy="170" r="15" fill="var(--surface)" stroke="var(--ink)"/><text x="330" y="175" fill="var(--ink)" font-size="15">Σ</text>
+          <circle cx="600" cy="80" r="15" fill="var(--surface)" stroke="var(--ink)"/><text x="600" y="85" fill="var(--ink)" font-size="15">Σ</text>
+          <text x="88" y="72" fill="var(--ink)" font-size="13" font-weight="700">+</text><text x="98" y="113" fill="var(--accent-2)" font-size="15" font-weight="700">−</text>
+          <text x="320" y="146" fill="var(--ink)" font-size="13" font-weight="700">+</text><text x="306" y="164" fill="var(--ink)" font-size="13" font-weight="700">+</text>
+          <text x="578" y="72" fill="var(--ink)" font-size="13" font-weight="700">+</text><text x="590" y="112" fill="var(--ink)" font-size="13" font-weight="700">+</text>
+        </g>
+        <!-- wires -->
+        <g stroke="var(--muted)" stroke-width="1.6" fill="none">
+          <line x1="50" y1="80" x2="93" y2="80" marker-end="url(#da)"/>
+          <line x1="125" y1="80" x2="168" y2="80" marker-end="url(#da)"/>
+          <line x1="266" y1="80" x2="430" y2="80" marker-end="url(#da)"/>
+          <line x1="330" y1="80" x2="330" y2="153" marker-end="url(#da)"/>
+          <polyline points="330,185 330,234 262,234" marker-end="url(#da)"/>
+          <polyline points="150,234 110,234 110,97" marker-end="url(#da)"/>
+          <line x1="110" y1="170" x2="313" y2="170" marker-end="url(#da)"/>
+          <line x1="530" y1="80" x2="583" y2="80" marker-end="url(#da)"/>
+          <line x1="615" y1="80" x2="880" y2="80" marker-end="url(#da)"/>
+          <polyline points="790,80 790,170 752,170" marker-end="url(#da)"/>
+          <polyline points="640,170 600,170 600,97" marker-end="url(#da)"/>
+        </g>
+        <g fill="var(--muted)"><circle cx="330" cy="80" r="3.5"/><circle cx="110" cy="170" r="3.5"/><circle cx="790" cy="80" r="3.5"/></g>
+        <!-- signal labels (KaTeX) -->
+        <foreignObject x="2" y="66" width="50" height="28"><div xmlns="http://www.w3.org/1999/xhtml" class="svgm">\(x[n]\)</div></foreignObject>
+        <foreignObject x="120" y="50" width="54" height="28"><div xmlns="http://www.w3.org/1999/xhtml" class="svgm">\(e[n]\)</div></foreignObject>
+        <foreignObject x="268" y="50" width="60" height="28"><div xmlns="http://www.w3.org/1999/xhtml" class="svgm" style="color:var(--accent-2)">\(\hat e[n]\)</div></foreignObject>
+        <foreignObject x="336" y="196" width="70" height="28"><div xmlns="http://www.w3.org/1999/xhtml" class="svgm">\(\tilde x[n]\)</div></foreignObject>
+        <foreignObject x="44" y="186" width="64" height="28"><div xmlns="http://www.w3.org/1999/xhtml" class="svgm">\(\hat x[n]\)</div></foreignObject>
+        <foreignObject x="534" y="122" width="64" height="28"><div xmlns="http://www.w3.org/1999/xhtml" class="svgm">\(\hat x[n]\)</div></foreignObject>
+        <foreignObject x="796" y="50" width="100" height="28"><div xmlns="http://www.w3.org/1999/xhtml" class="svgm">\(\tilde x[n]\) ▸ 🔊</div></foreignObject>
+      </svg>
+    </div>
+    <div class="eq" style="margin-top:10px;">$$e[n] = x[n] - \hat x[n], \qquad \hat e[n] = Q\bigl(e[n]\bigr), \qquad \tilde x[n] = \hat x[n] + \hat e[n] \;\Rightarrow\; \tilde x[n] - x[n] = \hat e[n] - e[n]$$
+      <span class="note">\(\hat x[n] = \sum_k a_k\,\tilde x[n-k]\) is the prediction, made from past <em>decoded</em> samples \(\tilde x\). The last identity is the point of the design: the decoder's error is exactly the quantiser's error for that sample, so errors never pile up.</span></div>
+    <figcaption><b>Figure 6.</b> DPCM. The encoder subtracts a prediction \(\hat x[n]\), quantises the small error \(e[n]\) and sends \(\hat e[n]\). It also rebuilds the decoded sample \(\tilde x[n]\) exactly as the decoder will, and feeds <em>that</em>, not the original, to its predictor.
+    Both sides therefore make exactly the same prediction from the same numbers. &ldquo;Adaptive&rdquo; DPCM (ADPCM) also re-fits the predictor and the
+    quantiser's step size as the speech changes, again only from already-decoded data, so <em>no extra side information</em> needs to be sent.</figcaption>
+  </figure>
+  <div class="card" id="predictor" style="margin-top:16px;">
+    <h4 style="margin:0 0 6px;">What exactly is the predictor?</h4>
+    <p style="font-size:0.93rem;margin:6px 0;">
+      It is <strong>linear prediction</strong>, the same as in modules 4&ndash;5: a weighted sum of the last \(p\) samples,
+    </p>
+    $$\hat x[n] = a_1\,\tilde x[n-1] + a_2\,\tilde x[n-2] + \dots + a_p\,\tilde x[n-p].$$
+    <p style="font-size:0.93rem;margin:6px 0;">
+      Two things differ from the LP analysis of module 4. First, it runs on the <strong>decoded</strong> samples \(\tilde x\), not the originals, so the encoder and the decoder make the same guess
+      (the DPCM diagram above). Second, the weights \(a_k\) have to reach the decoder somehow. There are three ways to arrange that:
+    </p>
+    <div style="overflow-x:auto;">
+      <table class="budget" style="font-size:0.9rem;">
+        <tr><th>approach</th><th>where the weights come from</th><th>sent as side information?</th><th>example</th></tr>
+        <tr><td><strong>Fixed</strong> (plain DPCM)</td><td>Designed once from the average statistics of speech and never changed. The simplest is first order,
+          \(\hat x[n] = 0.9\,\tilde x[n-1]\): neighbouring samples of 8&nbsp;kHz speech are highly correlated.</td><td>no</td><td>early DPCM systems</td></tr>
+        <tr><td><strong>Forward adaptive</strong></td><td>The encoder runs LPC (Levinson&ndash;Durbin) on each frame of the <em>original</em> speech, quantises the weights and sends them, like the
+          vocoder's 45 filter bits in section 06.</td><td>yes, every frame</td><td>adaptive predictive coding (APC)</td></tr>
+        <tr><td><strong>Backward adaptive</strong></td><td>Encoder and decoder both re-estimate the weights from the <em>past decoded</em> signal, with the same rule, so they arrive at the same values
+          independently.</td><td>no</td><td>ADPCM (G.726, and ours)</td></tr>
+      </table>
+    </div>
+    <p style="font-size:0.93rem;margin:10px 0 6px;">
+      The &ldquo;A&rdquo; in ADPCM can adapt two things, and usually both: the <strong>quantiser step</strong> (Jayant's rule: after a large error code, make the step bigger; after a small one,
+      smaller) and the <strong>predictor weights</strong>, which follow the speech from one sound to the next.
+    </p>
+    <ul style="font-size:0.93rem;margin:4px 0;">
+      <li><strong>Our coder</strong> (<code>adpcm()</code> in <code>codecs/make_assets.py</code>): an order-10 predictor. Every 10&nbsp;ms, both sides run Levinson&ndash;Durbin on the last
+        256 decoded samples (32&nbsp;ms) to get fresh weights; the step follows Jayant's multipliers. Only the error codes are transmitted. The &ldquo;adaptive step, no prediction&rdquo;
+        clips below switch the predictor off (\(\hat x[n] = 0\)), so you can hear what prediction alone adds.</li>
+      <li><strong>G.726</strong> does not refit on blocks. Its predictor has 2 feedback (pole) and 6 feed-forward (zero) weights, and nudges them a tiny step after <em>every sample</em> with a
+        simple gradient rule (a sign&ndash;sign LMS update).</li>
+    </ul>
+    <p style="font-size:0.93rem;margin:6px 0 0;">
+      In one line: the predictor is an LP filter, and in ADPCM its coefficients are <em>learned from the decoded signal</em> by encoder and decoder in step, instead of being transmitted.
+    </p>
+  </div>
+
+  <p>Listen to four coders at <strong>the same 32&nbsp;kbit/s</strong> (\(8000 \times 4\) bits/s), each adding one idea:</p>
+  <div class="agrid" id="adpcmGrid"></div>
+  <p style="margin-top:14px;">
+    Prediction plus an adaptive step turns an unusable 4-bit coder (segmental SNR about 4&nbsp;dB) into one that comes within about 4&nbsp;dB of 8-bit uniform PCM, at half the bit rate. This is the idea of <strong>G.726 ADPCM</strong> (32&nbsp;kbit/s, also 16&ndash;40),
+    long used in cordless phones (DECT) and on international trunk lines. Our implementation is simpler than the standard, and its prediction delivers about 4&nbsp;dB of the theoretical 13. The gap is the last point in module 4's list: the decoder can only refit the predictor from
+    <em>decoded</em>, noisy samples (with 4 bits, those are quite noisy), and the ideal 13&nbsp;dB was measured with the weights fitted to the clean original. The principle is the same.
+  </p>
+  <div class="card" id="dpcmstart" style="margin-top:16px;">
+    <h4 style="margin:0 0 6px;">How does it start? The first sample</h4>
+    <p style="font-size:0.93rem;margin:6px 0;">
+      The very first prediction has no past to use. Encoder and decoder simply agree on a starting state, usually <strong>empty memory</strong>: all decoded samples before the start count as zero. Then
+    </p>
+    $$\tilde x[-1] = \tilde x[-2] = \dots = 0 \;\Rightarrow\; \hat x[0] = 0 \;\Rightarrow\; e[0] = x[0], \qquad \tilde x[0] = Q\bigl(x[0]\bigr)$$
+    <p style="font-size:0.93rem;margin:6px 0;">
+      The first sample is coded as its own &ldquo;error&rdquo; through the same quantiser, and nothing extra is sent. For a \(p\)-th order predictor, the first \(p\) samples are predicted from partial history padded with zeros. This is harmless for three reasons:
+    </p>
+    <ul style="font-size:0.93rem;margin:4px 0;">
+      <li><strong>Speech usually starts in silence</strong>, where predicting 0 is correct.</li>
+      <li><strong>The loop is closed.</strong> The encoder predicts from \(\tilde x\), the decoded signal, so it tracks the decoder's state exactly from \(n = 0\). A crude start costs a little quality for a few milliseconds and never accumulates: \(\tilde x[n] - x[n] = \hat e[n] - e[n]\) holds for every \(n\).</li>
+      <li><strong>The real start-up cost is the step size.</strong> ADPCM's adaptive step also starts from an agreed value. If speech begins loudly, the first few samples overload the quantiser until the step has grown, which takes a few milliseconds. Standards such as G.726 define exact reset values so every implementation starts identically.</li>
+    </ul>
+    <p style="font-size:0.93rem;margin:6px 0;">
+      <strong>When the state is sent explicitly.</strong> Block-based ADPCM files (IMA ADPCM in WAV files, for example) start every block of a few hundred samples with a small header: the first sample at full 16-bit precision and the starting step size.
+      A player can then begin decoding at any block. On noisy channels the same idea gives robustness: a corrupted bit makes the decoder's memory differ from the encoder's, and periodic resets, or a slight
+      &ldquo;leak&rdquo; that makes the decoder gradually forget old values, bring the two back into step.
+    </p>
+    <p style="font-size:0.85rem;color:var(--muted);margin:6px 0 0;">Our implementation (<code>adpcm()</code> in <code>codecs/make_assets.py</code>) predicts 0 until it has \(p\) samples, and uses no predictor for the first 256 samples (32&nbsp;ms) because its first fit needs that much decoded history. The recording begins in near-silence, so this start-up is inaudible.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 6. VOCODER -->
+<section id="vocoder">
+  <div class="kicker">06 &middot; Trick 3: send the model, not the waveform</div>
+  <h2>The LPC vocoder: 57 bits every 20 ms.</h2>
+  <p>
+    ADPCM still sends something for every single sample. Module 5 suggested a far more radical idea: speech = <em>source</em> through an <em>all-pole filter</em>, and both change slowly. So, every 20&nbsp;ms,
+    the encoder just measures the <strong>model's settings</strong> and sends those. The decoder, which knows the model, rebuilds speech from them: pulses at the right pitch (or noise), through the right filter, at the right loudness.
+  </p>
+  <div class="card">
+    <h4>Bit budget per 20 ms frame (our implementation, 8 kHz, order 10)</h4>
+    <table class="budget">
+      <tr><th>parameter</th><th>what it describes</th><th style="text-align:right">bits</th></tr>
+      <tr><td>10 reflection coefficients (as log-area ratios)</td><td>the vocal-tract filter: formants</td><td class="n">45</td></tr>
+      <tr><td>pitch period</td><td>the buzz rate, 60&ndash;400 Hz on a log scale</td><td class="n">6</td></tr>
+      <tr><td>voiced / unvoiced flag</td><td>pulses or noise?</td><td class="n">1</td></tr>
+      <tr><td>gain</td><td>loudness (dB)</td><td class="n">5</td></tr>
+      <tr><th colspan="2">total per frame &nbsp;·&nbsp; \(\times\, 50\) frames per second</th><th style="text-align:right">57 bits → <span style="color:var(--accent-2)">2 850 bit/s</span></th></tr>
+    </table>
+  </div>
+  <p style="margin-top:14px;">That is <strong>90 times less</strong> than the 256&nbsp;kbit/s original, and 11 times less than ADPCM. Two small tricks make the filter cheap to send:</p>
+  <ul>
+    <li><strong>Send reflection coefficients, not the weights.</strong> The predictor weights \(a_k\) are fragile: a tiny rounding error can push a pole outside the unit circle and make the decoder's filter unstable (module 5).
+      The equivalent <em>reflection coefficients</em> \(k_i\) (one per joint in the tube model) are always between \(-1\) and \(+1\), and the filter is stable as long as they stay there. So they can be rounded safely.</li>
+    <li><strong>Quantise them on a warped scale.</strong> The important values of \(k\) crowd near \(\pm 1\), so they are quantised as <em>log-area ratios</em>, \(\ln\frac{1+k}{1-k}\) (literally the log of the area ratio between neighbouring tube sections), which spreads them out. Fewer bits go to the higher, less important coefficients.</li>
+  </ul>
+  <div class="agrid" id="vocGrid"></div>
+  <p style="margin-top:14px;">
+    The words are clear and the voice is recognisably the same speaker, but it is unmistakably robotic: the real glottal waveform has been replaced by clicks, and voiced/unvoiced is a hard switch. This is
+    &ldquo;synthetic quality&rdquo;, the sound of <strong>LPC-10</strong> (2.4&nbsp;kbit/s, US Federal Standard 1015, 1984), of military secure telephones, and of Texas Instruments' <strong>Speak &amp; Spell</strong>.
+    Note that removing the quantisation (left) changes little: the loss of quality comes from the <em>model's</em> crude source, not from the rounding.
+  </p>
+  <h3>Check your understanding</h3>
+  <details><summary>1. A podcast is recorded at 48 kHz, 24 bits, stereo. What is its raw bit rate, and how big is one hour?</summary>
+    <p style="font-size:0.93rem;">\(48\,000 \times 24 \times 2 = 2304\) kbit/s; one hour is \(2.304 \times 10^6 \times 3600 / 8 \approx 1.04\) GB. A typical speech podcast is distributed at 64&ndash;128 kbit/s, 20&ndash;35 times smaller.</p></details>
+  <details><summary>2. Why does ADPCM's predictor use the decoded samples rather than the original ones?</summary>
+    <p style="font-size:0.93rem;">The decoder only has the decoded samples. If the encoder predicted from the originals, the two predictions would differ by the quantisation errors, which would accumulate at the decoder and drift away from the speech. Predicting from decoded samples keeps both sides in lock-step.</p></details>
+  <details><summary>3. The LPC vocoder's SNR is not shown. Why is SNR meaningless for it?</summary>
+    <p style="font-size:0.93rem;">It makes no attempt to reproduce the waveform: its pulses are at the right rate but not at the original's exact instants, and its noise is a different random signal. The output can sound similar while being completely uncorrelated sample by sample, so its SNR would be near or below 0 dB.</p></details>
+  <details><summary>4. Why are reflection coefficients (or log-area ratios) transmitted instead of the predictor weights?</summary>
+    <p style="font-size:0.93rem;">Rounding the weights can move a pole outside the unit circle and make the decoder's filter unstable. Reflection coefficients guarantee stability as long as each stays inside \((-1, 1)\), which is easy to enforce after quantisation, and their sensitivity is better handled on the log-area-ratio scale.</p></details>
+  <details><summary>5. Telephone speech is band-limited to 3.4 kHz. Which sounds suffer most, and how do listeners cope?</summary>
+    <p style="font-size:0.93rem;">Fricatives such as /s/, /f/ and /θ/, whose energy lies mostly above 4 kHz, become hard to tell apart. Listeners lean on context, and spelling alphabets (&ldquo;S for Sierra&rdquo;) exist for exactly this reason. Wideband (&ldquo;HD voice&rdquo;) codecs at 16 kHz bring these cues back.</p></details>
+</section>
+
+<footer>
+  Speech and Audio Processing &middot; Module 6 &middot; all coders here are teaching implementations in <code>codecs/make_assets.py</code> (not standards-compliant); the speech sample is <code>data/real_sample_speech.wav</code> (an Indian-English speaker), resampled to 16&nbsp;kHz; the live demo uses the same recording via <code>codecs/speech16k.js</code>.
+  <ul class="refs" style="margin-top:12px;">
+    <li>B. Smith, &ldquo;Instantaneous companding of quantized signals,&rdquo; <em>Bell Syst. Tech. J.</em> 36, 1957.</li>
+    <li>H. Kaneko, &ldquo;A unified formulation of segment companding laws and synthesis of codecs and digital compandors,&rdquo; <em>Bell Syst. Tech. J.</em> 49, 1970.</li>
+    <li>N. S. Jayant &amp; P. Noll, <em>Digital Coding of Waveforms</em>, Prentice-Hall, 1984.</li>
+    <li>A. S. Spanias, &ldquo;Speech coding: a tutorial review,&rdquo; <em>Proc. IEEE</em> 82(10), 1994.</li>
+    <li>T. E. Tremain, &ldquo;The government standard linear predictive coding algorithm: LPC-10,&rdquo; <em>Speech Technology</em>, 1982.</li>
+    <li>ITU-T Recommendations G.711 (1972) and G.726 (1990).</li>
+  </ul>
+</footer>
+
+<script src="codecs/speech16k.js?v=2"></script>
+<script src="codecs/page.js?v=6"></script>
+</body>
+</html>

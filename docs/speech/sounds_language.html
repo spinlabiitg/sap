@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The sounds of language</title>
+<meta name="description" content="Phones and phonemes with real Indian-English speech (CMU ARCTIC ksp): minimal pairs, allophones, classifying consonants by place, manner and voicing and vowels by height, backness and rounding, the IPA chart, distinctive features, an English-vs-Hindi quiz, and how spelling relates to sound.">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+<script defer src="../assets/katex/katex.min.js"></script>
+<script defer src="../assets/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, { delimiters: [ { left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false } ], throwOnError: false });"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #F5F7FA; --bg-grid: #E7ECF2; --surface: #FFFFFF; --surface-2: #EAF0F7;
+    --ink: #10233F; --ink-soft: #24344F; --muted: #5C6B80; --line: #D7DEE8; --line-strong: #AEB9CB;
+    --accent: #14508C; --accent-2: #C1272D; --accent-3: #C9971B; --accent-4: #5B7083; --teal: #1D7A8C;
+    --shadow: 0 1px 0 rgba(16,35,63,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+      --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+      --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+      --shadow: 0 1px 0 rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1220; --bg-grid: #121B2E; --surface: #121B2E; --surface-2: #1B263B;
+    --ink: #F2F5FA; --ink-soft: #D7E0EC; --muted: #90A0B7; --line: #253247; --line-strong: #33455E;
+    --accent: #5B9BD5; --accent-2: #EF6B6B; --accent-3: #F2C14E; --accent-4: #8FA3B8; --teal: #4FC3D1;
+    --shadow: 0 1px 0 rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background:
+      repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+      var(--bg);
+    color: var(--ink-soft);
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: 17px; line-height: 1.7; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: #fff; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1, h2, h3, h4 { font-family: "Poppins", ui-sans-serif, system-ui, sans-serif; color: var(--ink); font-weight: 600; }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.3rem); line-height: 1.08; margin: 0 0 0.35em; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; margin: 0 0 0.5em; }
+  h3 { font-size: 1.22rem; margin: 2em 0 0.3em; }
+  h4 { font-size: 1rem; margin: 0.2em 0 0.3em; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.88em; }
+
+  header.hero, section, footer { max-width: 900px; margin: 0 auto; padding: 56px 20px; }
+  section { border-top: 1px solid var(--line); }
+  header.hero { padding-top: 72px; }
+  .kicker { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.74rem; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+  .lede { font-size: 1.12rem; }
+  .meta-line { font-size: 0.85rem; color: var(--muted); margin-top: 18px; }
+
+  .roadmap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin-top: 26px; font-size: 0.92rem; }
+  .roadmap ol { margin: 6px 0 0; padding-left: 20px; }
+  .roadmap li { margin: 3px 0; }
+  .roadmap .later { color: var(--muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; box-shadow: var(--shadow); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  .intuition { border-left: 3px solid var(--accent-3); background: var(--surface-2); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 0.97rem; }
+  .keyidea { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface); padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .keyidea::before { content: "Key idea"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .try { border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 16px; margin: 16px 0; font-size: 0.93rem; }
+  .try::before { content: "Try this yourself"; display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-bottom: 2px; }
+  .eq { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.95rem; background: var(--surface); border: 1px solid var(--line);
+        border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; overflow-x: auto; color: var(--ink); line-height: 2; }
+
+  figure { margin: 22px 0 26px; }
+  figure .frame { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 0.86rem; color: var(--muted); margin-top: 8px; line-height: 1.55; }
+  figcaption b { color: var(--ink-soft); }
+
+  button { font-family: inherit; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--line-strong);
+           background: var(--surface); color: var(--ink-soft); padding: 6px 12px; transition: all 0.15s ease; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .ctlrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 10px 0; font-size: 0.85rem; color: var(--muted); }
+  .valpill { font-family: "JetBrains Mono", monospace; color: var(--accent); font-weight: 600; }
+  input[type=range] { accent-color: var(--accent); }
+  canvas.plot { width: 100%; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .plotlabel { font-size: 0.75rem; color: var(--muted); margin: 8px 0 3px; }
+
+  /* slab rack */
+  .rack { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .rack { grid-template-columns: repeat(2, 1fr); } }
+  .slab { background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 6px 6px 10px; cursor: pointer; text-align: center; transition: border-color 0.15s; font: inherit; color: inherit; }
+  .slab:hover, .slab.sel { border-color: var(--accent); }
+  .slab svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .slab .name { font-weight: 600; color: var(--ink); font-size: 0.92rem; }
+  .slab .hint { font-size: 0.72rem; color: var(--muted); }
+  .mallet { transform-origin: 150px 12px; transform: rotate(22deg); transition: transform 0.12s ease-in; }
+  .slab.hit .mallet { transform: rotate(0deg); transition: transform 0.07s ease-in; }
+  .slab.ring .body { animation: shake 0.35s linear; }
+  @keyframes shake { 0%,100% { transform: translateY(0); } 20% { transform: translateY(1.6px); } 40% { transform: translateY(-1.2px); } 60% { transform: translateY(0.8px); } 80% { transform: translateY(-0.4px); } }
+  @media (prefers-reduced-motion: reduce) { .slab.ring .body { animation: none; } .mallet { transition: none; } }
+
+  .examples { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .examples { grid-template-columns: 1fr; } }
+  .examples .card p { font-size: 0.88rem; margin: 0; }
+  .examples .emoji { font-size: 1.5rem; line-height: 1; }
+  .examples audio { width: 100%; height: 32px; margin-top: 8px; }
+
+  /* voice grid */
+  .vgrid { display: grid; grid-template-columns: 120px repeat(4, 1fr); gap: 6px; align-items: stretch; font-size: 0.85rem; }
+  .vgrid .hdr { font-weight: 600; color: var(--ink); text-align: center; padding: 6px 2px; font-size: 0.8rem; }
+  .vgrid .rowh { font-weight: 600; color: var(--ink); display: flex; align-items: center; font-size: 0.8rem; }
+  .vgrid button { padding: 10px 4px; }
+  @media (max-width: 600px) { .vgrid { grid-template-columns: 78px repeat(4, 1fr); } .vgrid button { font-size: 0.72rem; } }
+
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram text { font-family: "Inter", sans-serif; }
+  .players { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 10px 0; }
+  .player { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+  .player audio { height: 34px; max-width: 250px; width: 100%; }
+  ul.refs li { font-size: 0.9rem; margin-bottom: 5px; }
+  footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); }
+  .scatterwrap { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 700px) { .scatterwrap { grid-template-columns: 1fr; } }
+  .bigr { font-family: "JetBrains Mono", monospace; font-size: 1.5rem; font-weight: 600; color: var(--ink); }
+  .timeline { position: relative; margin: 10px 0 0 8px; padding-left: 26px; border-left: 2px solid var(--line-strong); }
+  .timeline .ev { position: relative; margin: 0 0 16px; }
+  .timeline .ev::before { content: ""; position: absolute; left: -33px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--accent); }
+  .timeline .ev.speech::before { border-color: var(--accent-2); }
+  .timeline .yr { font-family: "JetBrains Mono", monospace; font-weight: 600; color: var(--accent); font-size: 0.9rem; }
+  .timeline .ev.speech .yr { color: var(--accent-2); }
+  .timeline p { margin: 2px 0 0; font-size: 0.92rem; }
+  .score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .score div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; font-size: 0.78rem; color: var(--muted); }
+  .score b { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.95rem; color: var(--ink); }
+  .readout { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .readout div { background: var(--surface-2); border-radius: 8px; padding: 6px 10px; font-size: 0.75rem; color: var(--muted); }
+  .eq { font-family: inherit; white-space: normal; line-height: 1.5; }
+  .eq .katex-display { margin: 0.4em 0; overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+  .eq .note, .note { display: block; font-family: "Inter", sans-serif; font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .card .katex-display { margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
+  .budget { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 58px; padding: 6px 8px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; }
+  .budget small { font-weight: 400; font-size: 0.7rem; color: var(--muted); }
+  .budget.f { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border: 1px solid var(--accent); color: var(--accent); }
+  .budget.f::after { content: "2 weights"; font-size: 0.66rem; font-weight: 400; color: var(--ink-soft); }
+  .budget.t { background: color-mix(in srgb, var(--accent-3) 18%, var(--surface)); border: 1px solid var(--accent-3); color: var(--ink); }
+  .budget.t::after { content: "2 weights"; font-size: 0.66rem; font-weight: 400; color: var(--ink-soft); }
+  .readout b { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.95rem; color: var(--ink); }
+  table.budget { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+  table.budget td, table.budget th { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  table.budget th { color: var(--ink); }
+  .ipa-font, .ipaglyphs, .ipx { font-family: "Noto Sans", "Charis SIL", "Doulos SIL", "Gentium Plus", "DejaVu Sans", "Segoe UI", "Arial Unicode MS", sans-serif; }
+  .ipx { font-size: 1.05em; }
+  .demo select { font: inherit; font-size: 0.9rem; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); max-width: 100%; }
+  .demo .seg button { padding: 4px 9px; font-size: 0.8rem; }
+  .ipawrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 8px; }
+  .ipanote { font-size: 0.82rem; color: var(--muted); margin: 6px 0 0; }
+  .ipanote .ipaglyphs { color: var(--ink); font-size: 0.98rem; }
+  .demohead { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+  .warn { font-size: 0.82rem; color: var(--muted); }
+  /* 01: a sentence sound by sound; 02: minimal pairs */
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+  .chip { font: inherit; font-size: 1rem; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer; }
+  .chip small { font-family: "JetBrains Mono", monospace; font-size: 0.65rem; color: var(--muted); margin-left: 3px; }
+  .chip.on { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .chip.c-vowel { border-color: var(--accent); } .chip.c-stop { border-color: var(--accent-2); } .chip.c-fricative { border-color: var(--accent-3); }
+  .chip.c-nasal { border-color: var(--teal); } .chip.c-approximant, .chip.c-affricate { border-color: var(--accent-4); }
+  .chip.w { font-size: 0.92rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .mpgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 12px; }
+  .mpcard { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface); }
+  .mpcard .ct { font-size: 1.15rem; color: var(--ink); }
+  .mpcard .what { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; }
+  .mpword { display: flex; align-items: baseline; gap: 8px; margin: 5px 0; flex-wrap: wrap; }
+  .mpword button { padding: 2px 9px; }
+  .mpword b { color: var(--ink); }
+  .mpword .m { font-size: 0.72rem; color: var(--muted); width: 100%; padding-left: 2px; }
+  /* 03: classification table, IPA chart */
+  table.classes { border-collapse: collapse; width: 100%; min-width: 600px; font-size: 0.88rem; }
+  table.classes th { color: var(--ink); text-align: left; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 8px; border-bottom: 2px solid var(--line-strong); }
+  table.classes td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.classes td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+  table.ipachart { border-collapse: collapse; font-size: 1.05rem; }
+  table.ipachart th { font-family: "Inter", sans-serif; font-size: 0.64rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 5px; text-align: left; white-space: nowrap; }
+  table.ipachart td { border: 1px solid var(--line); padding: 3px 5px; text-align: center; min-width: 3.4em; white-space: nowrap; }
+  table.ipachart td.na { background: repeating-linear-gradient(135deg, transparent 0 4px, var(--line) 4px 5px); }
+  .sym { display: inline-block; min-width: 1.15em; padding: 0 2px; border-radius: 4px; color: var(--muted); }
+  .sym.en { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--ink); }
+  .sym.hi { background: color-mix(in srgb, var(--accent-2) 22%, transparent); color: var(--ink); }
+  .sym.both { background: color-mix(in srgb, var(--accent-3) 38%, transparent); color: var(--ink); }
+  .sym.mg { text-decoration: underline dotted; }
+  .vquad { width: 100%; max-width: 420px; display: block; }
+  /* 03: feature strip */
+  table.fstrip { border-collapse: collapse; font-size: 0.8rem; }
+  table.fstrip th { font-family: "Inter", sans-serif; font-weight: 600; color: var(--muted); font-size: 0.66rem; writing-mode: vertical-rl; transform: rotate(180deg); padding: 4px 2px; white-space: nowrap; text-align: left; }
+  table.fstrip td { border: 1px solid var(--line); width: 1.7em; height: 1.9em; text-align: center; font-family: "JetBrains Mono", monospace; color: var(--ink); }
+  table.fstrip td.rowh { width: auto; padding: 0 8px; font-family: "Noto Sans", sans-serif; font-size: 1.05rem; border: none; text-align: right; }
+  table.fstrip td.p { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+  table.fstrip td.z { color: var(--muted); }
+  table.fstrip td.d { outline: 2px solid var(--accent-2); outline-offset: -2px; font-weight: 700; }
+  /* 04: one phoneme or two? */
+  .tqgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  .tqgrid .side { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; background: var(--surface); }
+  .tqgrid .lang { font-weight: 600; color: var(--ink); }
+  .tqgrid .src { font-size: 0.72rem; color: var(--muted); }
+  .tqgrid .ans { font-size: 0.88rem; margin-top: 8px; color: var(--ink-soft); }
+  .tqgrid .ans .ok { color: var(--teal); font-weight: 600; } .tqgrid .ans .bad { color: var(--accent-2); font-weight: 600; }
+  .tqhead { font-size: 1.3rem; margin: 8px 0 0; color: var(--ink); }
+  /* 05: graphemes */
+  .tiles { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tile { display: flex; flex-direction: column; text-align: center; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; min-width: 2.8em; }
+  .tile .g { padding: 5px 9px; background: var(--surface-2); font-size: 1.2rem; color: var(--ink); }
+  .tile .p { padding: 5px 9px; font-size: 1.15rem; color: var(--accent); }
+  .tile .p.silent { color: var(--muted); }
+  .g2pstats { font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+  .pairhead { font-size: 1.3rem; margin: 8px 0 0; color: var(--ink); }
+  table.varga { border-collapse: collapse; margin: 4px 0 8px; font-size: 0.95rem; }
+  table.varga th { font-family: "Inter", sans-serif; font-size: 0.68rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 4px 8px; text-align: left; }
+  table.varga td { border: 1px solid var(--line); padding: 5px 12px; text-align: center; line-height: 1.3; }
+  table.varga td b { display: block; font-size: 1.3rem; font-weight: 400; color: var(--ink); }
+  table.varga td span { font-size: 0.92rem; color: var(--accent); }
+  table.varga tr.rx td { background: color-mix(in srgb, var(--accent-2) 10%, transparent); }
+  .wide { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  @media (max-width: 560px) { .tqgrid { grid-template-columns: 1fr; } }
+</style>
+<!--ai:head--><link rel="stylesheet" href="../assets/site.css?v=3bd065aa"><!--/ai:head-->
+</head>
+<body>
+<!--ai:nav--><nav class="ai-nav" aria-label="Course navigation"><div class="ai-nav-in"><a class="ai-brand" href="../index.html" title="Speech and Audio Processing"><span class="ai-logo" aria-hidden="true">◖◗</span><span class="ai-brand-full">Speech and Audio Processing</span><span class="ai-brand-short">SAP</span></a><span class="ai-where">Module 2 &middot; The sounds of language</span><details class="ai-menu"><summary>All pages</summary><ul><li><a href="spectrogram.html">1. Seeing sound: the spectrogram</a></li><li><a href="sounds_language.html" aria-current="page">2. The sounds of language: from sound to phoneme</a></li><li><a href="phoneme_inventories.html">2. Phoneme inventories: India and the world</a></li><li><a href="source_filter.html">3. A buzz and a tube</a></li><li><a href="vocal_tract.html">3. Vocal tract, live</a></li><li><a href="linear_prediction.html">4. Guessing the next sample</a></li><li><a href="ar_model.html">5. The all-pole vocal tract</a></li><li><a href="codecs.html">6. Squeezing speech</a></li><li><a href="decibels.html">Why does audio live in decibels?</a></li><li><a href="../convolution/index.html">Convolution, animated</a></li></ul></details><a class="ai-step ai-prev" href="spectrogram.html" title="Seeing sound: the spectrogram">← prev</a><a class="ai-step ai-next" href="phoneme_inventories.html" title="Phoneme inventories: India and the world">next →</a></div></nav><!--/ai:nav-->
+
+<header class="hero">
+  <div class="kicker">Speech and Audio Processing &middot; Module 2 &middot; page 1</div>
+  <h1>The sounds of language</h1>
+  <p class="lede">
+    Speech is a continuous sound wave that never repeats exactly, yet every listener hears it as a string of a few dozen sound categories, the
+    <strong>phonemes</strong> of their language. This page builds that idea with real Indian-English speech: the discrete sounds (<strong>phones</strong>) a listener hears in a
+    sentence, the minimal pairs that prove two sounds are different phonemes, and allophones.
+  </p>
+  <p class="lede">
+    Then it sorts the sounds. Consonants are classified by <strong>place</strong>, <strong>manner</strong> and <strong>voicing</strong>, vowels by <strong>height</strong>,
+    <strong>backness</strong> and <strong>rounding</strong>; the <strong>IPA</strong> chart is that classification drawn as a map, and <strong>distinctive features</strong> refine it
+    into binary properties. With the chart in hand, a quiz asks which differences count in English and which in Hindi, and a last section contrasts the IPA with ordinary
+    spelling, in English and in Indian scripts.
+  </p>
+  <div class="roadmap">
+    <strong style="color:var(--ink);">The path through this page</strong>
+    <ol>
+      <li><a href="#speech">Speech sounds</a>: a continuous signal heard as discrete phones, one real sentence sound by sound</li>
+      <li><a href="#phonemes">Phonemes</a>: phones vs phonemes, minimal pairs in real speech, and allophones (one phoneme, several pronunciations)</li>
+      <li><a href="#classify">Classifying phonemes</a>: place, manner, voicing; height, backness, rounding; the IPA chart; distinctive features</li>
+      <li><a href="#contrast">One phoneme or two?</a>: English vs Hindi</li>
+      <li><a href="#writing">Writing sounds down</a>: graphemes, Indian scripts, spelling vs sound</li>
+      <li><a href="#quiz">Check your understanding</a></li>
+    </ol>
+  </div>
+  <div class="meta-line">Module 2 of Speech and Audio Processing, page 1 of 2 &middot; before: <a href="spectrogram.html">Seeing sound: the spectrogram</a> &middot; next:
+    <a href="phoneme_inventories.html">Phoneme inventories: India and the world</a> &middot; speech: CMU ARCTIC speaker ksp (Indian-English male, 16&nbsp;kHz) &middot;
+    English and Hindi inventories and feature vectors: PHOIBLE 2.0, CC BY 4.0 &middot; demo data computed by <code>sounds_language/make_intro.py</code> &middot; headphones help</div>
+</header>
+
+<!-- ============================================================ 1. SPEECH SOUNDS -->
+<section id="speech">
+  <div class="kicker">01 &middot; Speech sounds</div>
+  <h2>A continuous signal, heard as discrete sounds.</h2>
+  <p>
+    Say &ldquo;ten&rdquo; five times and record it. The <a href="spectrogram.html">spectrograms</a> will all differ: one is longer, one higher in pitch, one was said with a smile. A child, a
+    woman and a man differ even more, because their vocal tracts have different sizes. In a sentence there are not even gaps between the words. Physically, speech is a
+    <strong>continuous, never-repeating stream</strong>. Yet every English listener hears &ldquo;ten&rdquo; every time, as three sounds in a row, and hears at once that &ldquo;den&rdquo; is a
+    different word. To do that, the listener throws away almost all of the variation (speaker, speed, pitch, mood) and keeps a short string of discrete sounds. An actual speech sound,
+    as one speaker produced it at one moment, is called a <strong>phone</strong>, and it is written in square brackets: [t], [ɛ], [n].
+  </p>
+
+  <h3>A real sentence, sound by sound</h3>
+  <p>
+    Below is a sentence read by <strong>ksp</strong>, an Indian-English speaker in the CMU ARCTIC corpus (Kominek &amp; Black 2004): &ldquo;Tom Spink has a harpoon.&rdquo; (utterance
+    a0480, 2.1 s). The corpus comes with phone labels made by an automatic aligner, which places a dictionary pronunciation on the audio. Three views of the
+    same signal: the raw signal (waveform and spectrogram), the string of 18 phones, and the phones grouped into 5 words.
+  </p>
+  <div class="card demo" id="lexDemo">
+    <h4 style="margin:0 0 6px;">Signal, phones, words</h4>
+    <div class="ctlrow" style="margin-top:4px;"><button type="button" id="lexPlay">▶ play the sentence</button><span>click a phone or a word (on the plot or below) to hear it</span></div>
+    <canvas class="plot" id="lexCv" height="250" aria-label="Waveform, spectrogram, phone labels and word labels of the sentence"></canvas>
+    <div class="legend" id="lexLegend"></div>
+    <div class="plotlabel">phones (one IPA symbol per phone; the small text is the ARPAbet label in the corpus)</div>
+    <div class="chips" id="lexPhones"></div>
+    <div class="plotlabel">grouped into words</div>
+    <div class="chips" id="lexWords"></div>
+  </div>
+  <p>
+    Two lessons hide in this demo. First, the boundaries are fuzzy: play a single phone and it often sounds clipped or carries a trace of its neighbours, because the sounds overlap.
+    Second, the labels were produced with a <em>General American</em> dictionary, so they are that dictionary's (the /ɑ/ of <em>Tom</em>, the /ɹ/ of <em>harpoon</em>), not
+    necessarily what ksp says. The aligner can only use symbols its dictionary has: it has no symbol for a retroflex [ʈ], however the speaker pronounces /t/.
+  </p>
+</section>
+
+<!-- ============================================================ 2. PHONEMES -->
+<section id="phonemes">
+  <div class="kicker">02 &middot; Phonemes</div>
+  <h2>The smallest sound that can change a word.</h2>
+  <p>
+    The listener does not keep every phone apart, only the differences that can turn one word into another. Those categories are the <strong>phonemes</strong> of a language. Two kinds
+    of unit need two notations. A <strong>phone</strong> is an actual sound, written in square brackets: [pʰ] is a p with a puff of air. A <strong>phoneme</strong> is a category of
+    a particular language, written between slashes: English /p/ covers both [pʰ] and [p]. (Spellings go in angle brackets: ⟨ph⟩.) The test that decides whether two sounds are different
+    phonemes is the <strong>minimal pair</strong>: two words that differ in exactly one sound and mean different things. <em>pin</em> and <em>bin</em> make /p/ and /b/ two English phonemes;
+    <em>pin</em>, <em>pen</em> and <em>pan</em> do the same for /ɪ/, /ɛ/ and /æ/.
+  </p>
+
+  <h3>Minimal pairs from one speaker</h3>
+  <p>
+    ksp reads 1132 sentences containing 2747 different words. Comparing their dictionary pronunciations finds 2492 pairs of words that differ in exactly
+    one phoneme. Here are eight, cut from the recordings (each word with 40&nbsp;ms of context, faded in and out). The small print under each word is a measurement on that very token, as a check
+    that the audio really carries the contrast the labels claim.
+  </p>
+  <div class="card demo" id="mpDemo">
+    <h4 style="margin:0 0 2px;">Eight minimal pairs, spoken by ksp</h4>
+    <div class="mpgrid" id="mpGrid"></div>
+    <p class="warn" style="margin:10px 0 0;">VOT = time from the release burst to the start of voicing. \(F_1, F_2\) = first two formants (LPC, middle half of the vowel). Noise centroid = centre of gravity of the
+      fricative's spectrum. Transcriptions are the corpus dictionary's (General American); the clips are ksp's own pronunciations.</p>
+  </div>
+  <p>
+    The checks show the contrasts are real in his speech, sometimes with a different recipe from American English. His /b/ and /ɡ/ are voiced right through the closure (<em>pre-voiced</em>,
+    as voiced stops are in Hindi), while his /p/ and /k/ start voicing soon after the release. His /v/ in <em>very</em> has almost no hiss: it is closer to the approximant [ʋ] of Hindi
+    <span lang="hi">व</span> than to an English fricative, and still clearly different from the voiceless /f/ of <em>ferry</em>. His <em>steel</em>/<em>still</em> and <em>men</em>/<em>man</em>
+    vowels differ more in <em>length</em> than in formants (his /æ/ is not lower than his /ɛ/ in these tokens), and /s/ versus /ʃ/ differ in noise centroid by only a few hundred hertz:
+    listen for the difference in the hiss. Contrasts survive; the cues that carry them vary from speaker to speaker.
+  </p>
+
+  <h3>Phonemes and allophones: one category, several pronunciations</h3>
+  <p>
+    A phoneme is not one sound. It is a <strong>category</strong> in the listener's mind, and in real speech it comes out in several slightly different ways depending on its
+    neighbours. Each of those ways is an <strong>allophone</strong> of the phoneme. The surprising part is that native speakers use them all the time without noticing.
+  </p>
+  <p>
+    Take English /t/. Say these words slowly, with a hand in front of your mouth:
+  </p>
+  <ul>
+    <li><em>top</em>: a clear puff of air after the t, an <strong>aspirated</strong> [tʰ];</li>
+    <li><em>stop</em>: no puff after the s, a <strong>plain</strong> [t];</li>
+    <li><em>butter</em> in American English: a quick tap of the tongue, almost a d, a <strong>flap</strong> [ɾ];</li>
+    <li><em>button</em> in many British accents: no tongue contact at all, a catch in the throat, a <strong>glottal stop</strong> [ʔ].</li>
+  </ul>
+  <p>
+    Four physically different sounds, and an English listener hears &ldquo;t&rdquo; every time. Swap them around (say <em>stop</em> with a puff of air) and the word sounds odd or foreign,
+    but it is still <em>stop</em>. That is the mark of allophones: they are variants of one phoneme, and <strong>which one you get is predictable from the context</strong>. An
+    <strong>allophone rule</strong> states the pattern, for example &ldquo;/t/ is aspirated at the start of a stressed syllable, plain after /s/&rdquo; (Hayes 2009).
+  </p>
+  <p>
+    Now compare a language that draws the line in a different place. Hindi keeps the plain and the aspirated stop apart: <span lang="hi">ताल</span> /t̪aːl/ &lsquo;rhythm&rsquo; and
+    <span lang="hi">थाल</span> /t̪ʰaːl/ &lsquo;plate&rsquo; are different words. The same puff of air that English ignores is, in Hindi, the whole difference between two phonemes:
+  </p>
+  <figure>
+    <div class="card scrollx" style="padding:10px;overflow-x:auto;">
+      <svg viewBox="0 0 760 268" role="img" aria-label="English groups aspirated and plain t, a flap and a glottal stop into one phoneme /t/; Hindi puts plain and aspirated dental t into two different phonemes" style="width:100%;min-width:600px;height:auto;display:block;font-family:Inter,sans-serif;">
+        <text x="190" y="22" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ink)">English: one phoneme</text>
+        <text x="572" y="22" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ink)">Hindi: two phonemes</text>
+        <rect x="10" y="36" width="360" height="190" rx="14" fill="color-mix(in srgb, var(--accent) 8%, var(--surface))" stroke="var(--accent)" stroke-width="2"/>
+        <text x="190" y="66" text-anchor="middle" font-size="22" font-weight="700" fill="var(--accent)">/t/</text>
+        <g font-size="13" fill="var(--ink)" text-anchor="middle">
+          <rect x="26" y="84" width="160" height="62" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+          <text x="106" y="108" font-size="17" font-weight="700">[tʰ]</text><text x="106" y="130"><tspan font-style="italic">top</tspan>: stressed start</text>
+          <rect x="194" y="84" width="160" height="62" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+          <text x="274" y="108" font-size="17" font-weight="700">[t]</text><text x="274" y="130"><tspan font-style="italic">stop</tspan>: after /s/</text>
+          <rect x="26" y="152" width="160" height="62" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+          <text x="106" y="176" font-size="17" font-weight="700">[ɾ]</text><text x="106" y="198"><tspan font-style="italic">butter</tspan> (American)</text>
+          <rect x="194" y="152" width="160" height="62" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+          <text x="274" y="176" font-size="17" font-weight="700">[ʔ]</text><text x="274" y="198"><tspan font-style="italic">button</tspan> (many British)</text>
+        </g>
+        <rect x="400" y="36" width="168" height="190" rx="14" fill="color-mix(in srgb, var(--accent-2) 8%, var(--surface))" stroke="var(--accent-2)" stroke-width="2"/>
+        <rect x="582" y="36" width="168" height="190" rx="14" fill="color-mix(in srgb, var(--accent-3) 10%, var(--surface))" stroke="var(--accent-3)" stroke-width="2"/>
+        <text x="484" y="66" text-anchor="middle" font-size="22" font-weight="700" fill="var(--accent-2)">/t̪/</text>
+        <text x="666" y="66" text-anchor="middle" font-size="22" font-weight="700" fill="var(--accent-3)">/t̪ʰ/</text>
+        <g font-size="13" fill="var(--ink)" text-anchor="middle">
+          <rect x="414" y="84" width="140" height="62" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+          <text x="484" y="108" font-size="17" font-weight="700">[t̪]</text><text x="484" y="130">ताल &lsquo;rhythm&rsquo;</text>
+          <rect x="596" y="84" width="140" height="62" rx="10" fill="var(--surface)" stroke="var(--line-strong)"/>
+          <text x="666" y="108" font-size="17" font-weight="700">[t̪ʰ]</text><text x="666" y="130">थाल &lsquo;plate&rsquo;</text>
+          <text x="575" y="124" font-size="26" font-weight="700" fill="var(--ink)">&#8800;</text>
+          <text x="575" y="250" font-size="12" fill="var(--muted)">swap them and the word changes: two different phonemes</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Figure 1.</b> The same kind of difference (a puff of air or not) is sorted differently by two languages. In English, [tʰ] and [t] (and, depending on the accent, [ɾ] and
+    [ʔ]) are allophones of one phoneme /t/, chosen by context. In Hindi, plain and aspirated stops are separate phonemes that distinguish words. (Hindi's t is also dental, tongue on the
+    teeth, where English t is alveolar; section 3 explains place.)</figcaption>
+  </figure>
+  <p>Three quick tests tell the two situations apart:</p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>test</th><th>two different phonemes</th><th>allophones of one phoneme</th></tr>
+      <tr><td>Swap one for the other: does the word change?</td><td><strong>Yes</strong>: <em>time</em> &rarr; <em>dime</em> (/t/ vs /d/); <span lang="hi">ताल</span> &rarr; <span lang="hi">थाल</span> in Hindi</td><td><strong>No</strong>: <em>stop</em> said with a puff is odd, but still <em>stop</em></td></tr>
+      <tr><td>Can you predict which one appears from its neighbours?</td><td><strong>No</strong>: both occur in the same position (<em>_ime</em>)</td><td><strong>Yes</strong>: [tʰ] starts stressed syllables, [t] follows /s/</td></tr>
+      <tr><td>Do native speakers notice the difference?</td><td><strong>Yes</strong>, at once</td><td>Usually <strong>not</strong>, until someone points it out</td></tr>
+    </table>
+  </div>
+
+  <div class="keyidea">
+    Phonemes are categories; phones are measurable sounds. A minimal pair proves that two sounds are different phonemes of a language, and an allophone rule says which phone a phoneme
+    becomes in which context. Both are properties of a <em>language</em> (or a speaker's variety of it), not of the sounds: the same [pʰ] is an allophone of /p/ in American English and a
+    phoneme of its own in Hindi.
+  </div>
+</section>
+
+<!-- ============================================================ 3. CLASSIFYING -->
+<section id="classify">
+  <div class="kicker">03 &middot; Classifying phonemes</div>
+  <h2>Where, how, and with or without voice.</h2>
+  <p>
+    A language has a few dozen phonemes, and they are not an unordered list. Every speech sound is made by pushing air from the lungs through the vocal tract and shaping it on the way,
+    so sounds can be sorted by <em>how</em> that shaping is done (Ladefoged &amp; Johnson 2015). The first split is between <strong>consonants</strong>, made by narrowing or closing the
+    tract somewhere, and <strong>vowels</strong>, made with the tract open and only the shape of the tongue and lips changing. (How the vocal folds and the tract turn air into sound is the
+    subject of <a href="source_filter.html">A buzz and a tube</a>; you can move a model tongue and lips yourself in <a href="vocal_tract.html">Vocal tract, live</a>.)
+  </p>
+
+  <figure>
+    <div class="card scrollx" style="padding:10px;overflow-x:auto;">
+      <svg viewBox="0 0 900 372" role="img" aria-label="Tree: phonemes split into consonants and vowels; consonants into obstruents (stops, fricatives, affricates) and sonorants (nasals, liquids, glides); vowels into monophthongs and diphthongs; place and voicing cut across the consonant classes" style="width:100%;min-width:720px;height:auto;display:block;font-family:Inter,sans-serif;">
+        <g stroke="var(--line-strong)" stroke-width="1.6" fill="none">
+          <path d="M450,44 V60 H230 V80 M450,60 H720 V80"/>
+          <path d="M230,128 V140 H120 V158 M230,140 H340 V158"/>
+          <path d="M720,128 V140 H640 V158 M720,140 H830 V158"/>
+          <path d="M120,204 V216 H44 V236 M120,216 H124 V236 M120,216 H204 V236"/>
+          <path d="M340,204 V216 H286 V236 M340,216 H366 V236 M340,216 H446 V236"/>
+          <path d="M640,204 V236 M830,204 V236"/>
+        </g>
+        <g text-anchor="middle" fill="var(--ink)">
+          <rect x="385" y="10" width="130" height="34" rx="17" fill="var(--ink)"/><text x="450" y="32" font-size="15" font-weight="700" fill="var(--surface)">Phonemes</text>
+          <rect x="140" y="80" width="180" height="48" rx="10" fill="color-mix(in srgb, var(--accent) 14%, var(--surface))" stroke="var(--accent)" stroke-width="1.6"/>
+          <text x="230" y="100" font-size="14" font-weight="700" fill="var(--accent)">Consonants</text><text x="230" y="118" font-size="11" fill="var(--muted)">tract narrowed or closed</text>
+          <rect x="630" y="80" width="180" height="48" rx="10" fill="color-mix(in srgb, var(--accent-2) 12%, var(--surface))" stroke="var(--accent-2)" stroke-width="1.6"/>
+          <text x="720" y="100" font-size="14" font-weight="700" fill="var(--accent-2)">Vowels</text><text x="720" y="118" font-size="11" fill="var(--muted)">tract open</text>
+          <g font-size="11" fill="var(--muted)">
+            <rect x="48" y="158" width="144" height="46" rx="9" fill="var(--surface)" stroke="var(--accent)"/><text x="120" y="176" font-size="13" font-weight="700" fill="var(--ink)">Obstruents</text><text x="120" y="194">air blocked or squeezed</text>
+            <rect x="268" y="158" width="144" height="46" rx="9" fill="var(--surface)" stroke="var(--accent)"/><text x="340" y="176" font-size="13" font-weight="700" fill="var(--ink)">Sonorants</text><text x="340" y="194">air flows freely, voiced</text>
+            <rect x="568" y="158" width="144" height="46" rx="9" fill="var(--surface)" stroke="var(--accent-2)"/><text x="640" y="176" font-size="13" font-weight="700" fill="var(--ink)">Monophthongs</text><text x="640" y="194">one steady quality</text>
+            <rect x="758" y="158" width="134" height="46" rx="9" fill="var(--surface)" stroke="var(--accent-2)"/><text x="825" y="176" font-size="13" font-weight="700" fill="var(--ink)">Diphthongs</text><text x="825" y="194">glide between two</text>
+          </g>
+          <g font-size="12">
+            <rect x="8" y="236" width="74" height="76" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="45" y="254" font-weight="700">Stops</text><text x="45" y="272">p b t d k ɡ</text><text x="45" y="290" fill="var(--muted)">Hindi also</text><text x="45" y="305" fill="var(--muted)">ʈ ɖ pʰ bʱ</text>
+            <rect x="88" y="236" width="74" height="76" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="125" y="254" font-weight="700">Fricatives</text><text x="125" y="272">f v s z</text><text x="125" y="290">ʃ h</text>
+            <rect x="168" y="236" width="74" height="76" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="205" y="254" font-weight="700">Affricates</text><text x="205" y="272">t͡ʃ d͡ʒ</text><text x="205" y="290" fill="var(--muted)">च ज</text>
+            <rect x="249" y="236" width="74" height="76" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="286" y="254" font-weight="700">Nasals</text><text x="286" y="272">m n ŋ</text><text x="286" y="290" fill="var(--muted)">Hindi also ɳ</text>
+            <rect x="329" y="236" width="74" height="76" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="366" y="254" font-weight="700">Liquids</text><text x="366" y="272">l (lateral)</text><text x="366" y="290">r ɹ ɾ</text>
+            <rect x="409" y="236" width="74" height="76" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="446" y="254" font-weight="700">Glides</text><text x="446" y="272">j w</text><text x="446" y="290" fill="var(--muted)">Hindi ʋ (व)</text>
+            <rect x="540" y="236" width="200" height="76" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="640" y="254" font-weight="700">by height × backness × rounding</text><text x="640" y="272">front: i ɪ e ɛ æ</text><text x="640" y="289">central: ə ʌ</text><text x="640" y="306">back: u ʊ o ɔ ɑ</text>
+            <rect x="770" y="236" width="120" height="76" rx="8" fill="var(--surface-2)" stroke="var(--line-strong)"/><text x="830" y="254" font-weight="700">examples</text><text x="830" y="272">aɪ (my)</text><text x="830" y="289">aʊ (now)</text><text x="830" y="306">ɔɪ (boy)</text>
+          </g>
+          <rect x="8" y="326" width="475" height="38" rx="8" fill="none" stroke="var(--accent)" stroke-dasharray="5 4"/>
+          <text x="245" y="342" font-size="12" fill="var(--ink)">Every consonant class is also split by <tspan font-weight="700">place</tspan> (lips &hellip; throat)</text>
+          <text x="245" y="358" font-size="12" fill="var(--ink)">and <tspan font-weight="700">voicing</tspan> (voiceless / voiced): the tables below</text>
+          <rect x="540" y="326" width="350" height="38" rx="8" fill="none" stroke="var(--accent-2)" stroke-dasharray="5 4"/>
+          <text x="715" y="342" font-size="12" fill="var(--ink)">Extra vowel properties in many languages:</text>
+          <text x="715" y="358" font-size="12" fill="var(--ink)"><tspan font-weight="700">length</tspan> (Tamil) and <tspan font-weight="700">nasalisation</tspan> (Hindi माँ)</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Figure 2.</b> A family tree of speech sounds. The first split is consonant vs vowel. Consonants divide by <em>manner</em>: <strong>obstruents</strong> block or squeeze the
+    air and make noise (stops, fricatives, affricates); <strong>sonorants</strong> let it flow freely (nasals, liquids, glides). Vowels divide into steady <strong>monophthongs</strong>, sorted by
+    tongue height, backness and lip rounding, and gliding <strong>diphthongs</strong>. Place and voicing cut across all the consonant classes, so the tree is only the first cut; the
+    tables and the IPA chart below give the full grid. Examples are English unless marked Hindi.</figcaption>
+  </figure>
+
+  <h3>Consonants: place, manner, voicing</h3>
+  <p>
+    Three questions describe almost any consonant. <strong>Where</strong> is the tract narrowed (the <strong>place</strong> of articulation)? <strong>How</strong> is it narrowed (the
+    <strong>manner</strong>)? And do the vocal folds vibrate (<strong>voicing</strong>)? The answers are a consonant's name: /b/ is a <em>voiced bilabial stop</em>, /s/ a
+    <em>voiceless alveolar fricative</em>, Hindi /ɳ/ (<span lang="hi">ण</span>) a <em>voiced retroflex nasal</em>.
+  </p>
+  <div class="card wide">
+    <table class="classes">
+      <tr><th>dimension</th><th>value</th><th>what happens</th><th>English</th><th>Hindi</th></tr>
+      <tr><td rowspan="8">place<br><span class="warn" style="font-weight:400">(lips &rarr; throat)</span></td><td>bilabial</td><td>both lips</td><td><span class="ipx">p b m</span> (<em>pit, bit, mat</em>)</td><td><span lang="hi">प ब म</span></td></tr>
+      <tr><td>labiodental</td><td>lower lip against upper teeth</td><td><span class="ipx">f v</span> (<em>fan, van</em>)</td><td><span lang="hi">व</span> [ʋ]</td></tr>
+      <tr><td>dental</td><td>tongue tip at the upper teeth</td><td><span class="ipx">θ ð</span> (<em>thin, this</em>)</td><td><span lang="hi">त द न</span> /t̪ d̪ n̪/</td></tr>
+      <tr><td>alveolar</td><td>tongue tip on the gum ridge behind the teeth</td><td><span class="ipx">t d n s z l</span></td><td><span lang="hi">स ल</span> /s l/ (often described as dental or dental–alveolar)</td></tr>
+      <tr><td>post-alveolar</td><td>tongue blade just behind the gum ridge</td><td><span class="ipx">ʃ t͡ʃ d͡ʒ</span> (<em>ship, chin, jam</em>)</td><td><span lang="hi">श च ज</span></td></tr>
+      <tr><td>retroflex</td><td>tongue tip curled back behind the gum ridge</td><td>none</td><td><span lang="hi">ट ड ण</span> /ʈ ɖ ɳ/</td></tr>
+      <tr><td>palatal / velar</td><td>tongue body against the hard palate / the soft palate</td><td><span class="ipx">j</span> (<em>yes</em>); <span class="ipx">k ɡ ŋ</span> (<em>sing</em>)</td><td><span lang="hi">य</span>; <span lang="hi">क ग</span></td></tr>
+      <tr><td>glottal</td><td>at the vocal folds themselves</td><td><span class="ipx">h</span> (<em>hat</em>)</td><td><span lang="hi">ह</span> /ɦ/ (breathy-voiced, unlike English [h])</td></tr>
+      <tr><td rowspan="6">manner</td><td>stop (plosive)</td><td>air fully blocked, then released with a burst</td><td><span class="ipx">p t k b d ɡ</span></td><td><span lang="hi">प त ट क</span> &hellip;</td></tr>
+      <tr><td>fricative</td><td>a narrow gap; the air becomes turbulent and hisses</td><td><span class="ipx">f s ʃ v z</span></td><td><span lang="hi">स श</span></td></tr>
+      <tr><td>affricate</td><td>a stop released into a fricative</td><td><span class="ipx">t͡ʃ d͡ʒ</span> (<em>church, judge</em>)</td><td><span lang="hi">च ज</span></td></tr>
+      <tr><td>nasal</td><td>mouth closed, soft palate lowered, air flows out through the nose</td><td><span class="ipx">m n ŋ</span></td><td><span lang="hi">म न ण</span></td></tr>
+      <tr><td>approximant, lateral</td><td>a narrowing too wide for hiss; a lateral lets air pass the sides of the tongue</td><td><span class="ipx">w j ɹ</span>; <span class="ipx">l</span></td><td><span lang="hi">य व</span>; <span lang="hi">ल</span></td></tr>
+      <tr><td>tap, trill</td><td>one quick flick of the tongue; several in a row</td><td>[ɾ] in American <em>butter</em></td><td><span lang="hi">र</span> [ɾ] or [r]; <span lang="hi">ड़</span> [ɽ]</td></tr>
+      <tr><td rowspan="2">voicing</td><td>voiceless</td><td>vocal folds apart, no buzz</td><td><span class="ipx">p t k f s</span></td><td><span lang="hi">प त क</span></td></tr>
+      <tr><td>voiced</td><td>vocal folds vibrating</td><td><span class="ipx">b d ɡ v z</span></td><td><span lang="hi">ब द ग</span></td></tr>
+    </table>
+    <p class="note" style="margin-top:6px;">Put a finger on your throat and say <em>sss</em>, then <em>zzz</em>: the buzz you feel in the second is voicing. Hindi refines the voicing
+      question further: a stop can also be <strong>aspirated</strong> (<span lang="hi">फ</span> /pʰ/, a puff of air after the release) or <strong>breathy-voiced</strong>
+      (<span lang="hi">भ</span> /bʱ/), so each place has four stops.</p>
+  </div>
+
+  <h3>Vowels: height, backness, rounding</h3>
+  <p>
+    Vowels have no closure to locate, so they are described by the position of the tongue and the shape of the lips. <strong>Height</strong>: is the tongue high in the mouth
+    (<em>close</em> vowels, /i/ of <em>see</em>, /u/ of <em>food</em>) or low with the jaw open (<em>open</em> vowels, /aː/ of Hindi <span lang="hi">आम</span>)? <strong>Backness</strong>: is the
+    highest point of the tongue at the front (/i e/), in the centre (/ə/, the first vowel of <em>about</em>, the inherent vowel of Hindi <span lang="hi">क</span>), or at the back (/u o/)?
+    <strong>Rounding</strong>: are the lips rounded (/u o/) or spread (/i a/)? So /i/ is a <em>close front unrounded</em> vowel and /u/ a <em>close back rounded</em> one. Two further
+    properties matter in many languages: <strong>length</strong> (Tamil /a/ vs /aː/) and <strong>nasalisation</strong> (Hindi <span lang="hi">माँ</span> /mãː/ &lsquo;mother&rsquo;).
+    Acoustically, height and backness show up as the first two formants: close vowels have a low \(F_1\), front vowels a high \(F_2\), which is why the minimal-pair cards of
+    section 2 measure \(F_1\) and \(F_2\).
+  </p>
+
+  <h3 id="ipa">The IPA chart: the classification as a map</h3>
+  <p>
+    To compare sounds across languages, linguists need a script whose symbols mean the same thing everywhere. That is the <strong>International Phonetic Alphabet</strong> (IPA),
+    published by the International Phonetic Association since 1888 (IPA 1999) on one principle: <em>one symbol for each distinctive sound</em>. Its consonant chart is exactly the
+    classification above laid out as a grid: <strong>place</strong> in the columns, from the lips on the left to the glottis on the right; <strong>manner</strong> in the rows; and where a cell
+    holds two symbols, the <strong>voiceless</strong> one comes first and the <strong>voiced</strong> one second. Hatched cells are articulations judged impossible or unused. Vowels go in a
+    quadrilateral, a stylised side view of the mouth: height vertically, backness horizontally. Below is a compact version, coloured by which symbols English and Hindi use (one PHOIBLE
+    inventory each, named under the chart; the same two inventories are used in <a href="#contrast">section 4</a>).
+  </p>
+  <div class="card demo" id="ipaDemo">
+    <h4 style="margin:0 0 6px;">The IPA chart: which cells do English and Hindi use?</h4>
+    <div class="ctlrow" style="margin-top:4px;"><span>highlight:</span><div class="seg" id="ipaView"></div></div>
+    <div class="legend"><span><i style="background:color-mix(in srgb, var(--accent) 35%, transparent)"></i>English only</span><span><i style="background:color-mix(in srgb, var(--accent-2) 35%, transparent)"></i>Hindi only</span><span><i style="background:color-mix(in srgb, var(--accent-3) 55%, transparent)"></i>both</span><span>grey: neither &middot; dotted underline: marginal &middot; hatched: impossible or unused cell</span></div>
+    <div class="ipawrap"><table class="ipachart ipx" id="ipaCons"></table></div>
+    <div class="plotlabel" style="margin-top:12px;">Vowels: front &larr;&rarr; back (horizontal), close &uarr; open &darr; (vertical); hover a symbol for the inventory phonemes behind it</div>
+    <div id="ipaVow"></div>
+    <p class="ipanote" id="ipaNote"></p>
+  </div>
+  <p>
+    Each cell pools the variants a language builds on one base symbol: Hindi's /p/ cell stands for <span class="ipx">p pʰ</span> and its /b/ cell for <span class="ipx">b bʱ</span>, so
+    the four-way Hindi stop system fits into two cells. The rest is done by <strong>diacritics</strong>, small marks that refine a symbol. The ones you will meet in this module:
+  </p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="budget">
+      <tr><th>mark</th><th>meaning</th><th>example</th></tr>
+      <tr><td class="ipx">◌ʰ</td><td>aspirated: a puff of air after the release</td><td><span class="ipx">pʰ</span> as in Hindi <span lang="hi">फल</span></td></tr>
+      <tr><td class="ipx">◌ʱ &nbsp; ◌̤</td><td>breathy voiced (murmured): voicing with a breathy, &ldquo;sighing&rdquo; quality</td><td><span class="ipx">bʱ</span> (also written <span class="ipx">b̤</span>) as in <span lang="hi">भार</span></td></tr>
+      <tr><td class="ipx">◌̪</td><td>dental: tongue tip against the upper teeth</td><td><span class="ipx">t̪</span> as in <span lang="hi">ताल</span></td></tr>
+      <tr><td class="ipx">ʈ ɖ ɳ ɭ ʂ ɽ</td><td>retroflex: tongue tip curled back behind the gum ridge (letters with a right-facing hook)</td><td><span class="ipx">ʈ</span> as in <span lang="hi">टाल</span></td></tr>
+      <tr><td class="ipx">◌ː</td><td>long</td><td><span class="ipx">aː</span> as in Tamil <span lang="ta">கால்</span> /kaːl/ &lsquo;leg&rsquo;</td></tr>
+      <tr><td class="ipx">◌̃</td><td>nasalised: air also flows through the nose</td><td><span class="ipx">ãː</span> as in Hindi <span lang="hi">माँ</span> /mãː/ &lsquo;mother&rsquo;</td></tr>
+    </table>
+  </div>
+
+  <h3 id="features">Distinctive features: the finer classification</h3>
+  <p>
+    Place, manner and voicing already show that phonemes are not unrelated symbols: /p/ and /b/ are made almost the same way, /p/ and /a/ very differently. Phonologists push the idea
+    further by describing each phoneme as a bundle of <strong>distinctive features</strong> (Jakobson, Fant &amp; Halle 1952;
+    Chomsky &amp; Halle 1968): binary properties such as <em>voice</em> (do the vocal folds vibrate?), <em>labial</em> (are the lips involved?), <em>continuant</em> (does air keep flowing?),
+    <em>nasal</em> or <em>spread glottis</em> (aspiration). In machine-learning terms, a phoneme symbol is a one-hot code, while its feature vector is a hand-made <em>embedding</em> in which
+    similar sounds sit close together. PHOIBLE (Moran &amp; McCloy 2019), the database of phoneme inventories that <a href="phoneme_inventories.html">page 2</a> explores, stores such a vector,
+    with values +, &minus; or 0 (not applicable), for every phoneme of every inventory. A natural distance is the <strong>Hamming distance</strong>, the number of features in which two phonemes differ:
+  </p>
+  <div class="eq">$$d_H(a,b) \;=\; \sum_{i=1}^{F} \big[\, f_i(a) \neq f_i(b) \,\big], \qquad f_i \in \{+,\,-,\,0\}$$
+    <span class="note">\(F = 27\) of PHOIBLE's 38 feature columns are used here; \([\cdot]\) is 1 when the statement is true and 0 otherwise.</span></div>
+  <p>
+    Minimal pairs usually differ in one or two features: /p/&ndash;/b/ in 1 (voice), /p/&ndash;/pʰ/ in 1 (spread glottis), Hindi /t̪/&ndash;/ʈ/ in
+    2 (anterior, distributed), /i/&ndash;/ɪ/ in 1 (tense). A consonant and a vowel such as /p/ and /a/ differ in 15. Features also explain why
+    sounds pattern together: English aspirates the [&minus;voice, &minus;continuant] consonants, /p t k/ and /tʃ/ (<em>chin</em>), with one rule over a class rather than four separate rules.
+  </p>
+  <div class="card demo" id="featDemo">
+    <h4 style="margin:0 0 6px;">Compare two phonemes feature by feature</h4>
+    <div class="demohead">
+      <label class="warn" for="featA">phoneme A</label><select id="featA" aria-label="Phoneme A"></select>
+      <label class="warn" for="featB">phoneme B</label><select id="featB" aria-label="Phoneme B"></select>
+    </div>
+    <div class="ctlrow"><span>try:</span><div class="seg" id="featQuick"></div></div>
+    <div class="ipawrap"><table class="fstrip" id="featTable"></table></div>
+    <div class="readout" id="featOut"></div>
+    <p class="warn" style="margin:8px 0 0;">Blue = +, white = &minus;, grey 0 = not applicable; red frame = the features that differ. Each vector is the most frequent one PHOIBLE gives that symbol across all
+      inventories. E / H after a symbol in the menus: in the English / Hindi inventory of the IPA chart above.</p>
+  </div>
+  <p>
+    Speech technology uses the same idea. Classical recognisers model each phone in the context of its neighbours and share data between contexts by asking feature questions (&ldquo;is the
+    left neighbour a nasal?&rdquo;); multilingual recognisers map a universal phone set onto each language's inventory (<a href="phoneme_inventories.html#tech">page 2, section 8</a>), and some predict articulatory
+    features directly, which lets them handle a sound they have never seen as a new combination of familiar features.
+  </p>
+</section>
+
+<!-- ============================================================ 4. ONE OR TWO -->
+<section id="contrast">
+  <div class="kicker">04 &middot; One phoneme or two?</div>
+  <h2>Hindi splits what English merges, and the other way round.</h2>
+  <p>
+    <a href="#classify">Section 3</a> gave the dimensions along which two sounds can differ. Whether a given difference separates words is a fact about a language, and that is why a contrast obvious to one
+    listener can be nearly inaudible to another: English speakers learning Hindi struggle to hear <span lang="hi">ताल</span> versus <span lang="hi">टाल</span> (dental vs retroflex, a
+    difference of <em>place</em>), and many Hindi speakers learning English merge <em>vine</em> and <em>wine</em>. Test yourself: for each pair of sounds below (they differ in
+    aspiration, breathy voice, place or manner), guess whether English and Hindi treat them as one phoneme or two. The answers are computed from PHOIBLE: a pair counts as &ldquo;two
+    phonemes&rdquo; if the language's inventory lists both sounds. For English we use General American, inventory 2175 (source
+    ph: Western and Mid-Western US; Southern California), one of 9; all nine give the same answers here. For Hindi we use its <strong>median inventory</strong> (the rule
+    explained on <a href="phoneme_inventories.html#what">page 2, section 1</a>), inventory 354 (source upsid, no dialect given), one of 5.
+    These are the two inventories coloured in the IPA chart of section 3. The answers also say how many of the language's other inventories agree.
+  </p>
+  <div class="card demo" id="tqDemo">
+    <h4 style="margin:0 0 6px;">One phoneme or two? English vs Hindi</h4>
+    <div class="ctlrow" style="margin-top:4px;"><span>pick a pair of sounds:</span><div class="seg" id="tqBtns"></div></div>
+    <div id="tqOut"></div>
+    <div class="readout" id="tqScore"></div>
+  </div>
+  <p>
+    Mind the notation of the sources. PHOIBLE's English inventories write the voiceless stops as aspirated /pʰ tʰ kʰ/ (the phone you hear word-initially) and have no plain /p/, so
+    &ldquo;p vs pʰ&rdquo; comes out as one phoneme. English /t/ is alveolar (tongue on the gum ridge), Hindi /t̪/ dental (tongue on the teeth) next to a retroflex /ʈ/: three different
+    places, three different columns of the IPA chart, and English has neither of the two Hindi sounds as such. UPSID (Maddieson 1984) marks Hindi /ʃ/ and /z/ as <em>marginal</em>
+    (mainly in loanwords), and writes some coronals as <span class="ipx">s̪|s</span>, &ldquo;dental or alveolar, undecided&rdquo;.
+  </p>
+</section>
+
+<!-- ============================================================ 5. WRITING -->
+<section id="writing">
+  <div class="kicker">05 &middot; Writing sounds down</div>
+  <h2>Spelling is not sound.</h2>
+  <p>
+    The IPA of section 3 was designed so that one symbol stands for one sound, in every language. Ordinary spelling is a separate system, and its relation to the phonemes can be loose.
+    The unit of writing is the <strong>grapheme</strong>: one letter (⟨b⟩), a group of letters acting together (⟨sh⟩, ⟨ough⟩), or in Indian scripts a consonant letter, a vowel sign or a
+    mark that removes a vowel. English spelling kept many old spellings after the pronunciation changed: ⟨ough⟩ is said differently in <em>though</em>, <em>through</em>,
+    <em>tough</em>, <em>cough</em> and <em>bough</em>; /iː/ is spelt six ways in <em>see</em>, <em>sea</em>, <em>me</em>, <em>key</em>, <em>field</em>, <em>receive</em>; the ⟨k⟩ of
+    <em>knight</em> has been silent for centuries.
+  </p>
+  <p>
+    Writing systems differ in what their graphemes stand for. <strong>Alphabets</strong> (Latin, Greek, Cyrillic) write consonants and vowels as separate letters. <strong>Abugidas</strong>,
+    which include nearly all scripts of India, write each consonant with a built-in vowel: <span lang="hi">क</span> is <em>ka</em>, a vowel sign (<em>mātrā</em>) changes it
+    (<span lang="hi">कि</span> <em>ki</em>), and the <em>virāma</em> removes it (<span lang="hi">क्</span> <em>k</em>). <strong>Abjads</strong> (Arabic, and the Perso-Arabic script of Urdu)
+    mostly leave vowels unwritten, and <strong>logographic</strong> scripts (Chinese) write units of meaning. The Brahmi-derived scripts were organised by ancient Indian grammarians who had
+    analysed how sounds are made, so their consonant letters already form the place-and-manner grid of <a href="#classify">section 3</a> (Hindi values):
+  </p>
+  <div class="card" style="overflow-x:auto;">
+    <table class="varga ipa-font">
+      <tr><th></th><th>voiceless</th><th>aspirated</th><th>voiced</th><th>breathy</th><th>nasal</th></tr>
+      <tr><th>velar (back of tongue)</th><td><b lang="hi">क</b><span>k</span></td><td><b lang="hi">ख</b><span>kʰ</span></td><td><b lang="hi">ग</b><span>ɡ</span></td><td><b lang="hi">घ</b><span>ɡʱ</span></td><td><b lang="hi">ङ</b><span>ŋ</span></td></tr>
+      <tr><th>palatal</th><td><b lang="hi">च</b><span>t͡ʃ</span></td><td><b lang="hi">छ</b><span>t͡ʃʰ</span></td><td><b lang="hi">ज</b><span>d͡ʒ</span></td><td><b lang="hi">झ</b><span>d͡ʒʱ</span></td><td><b lang="hi">ञ</b><span>ɲ</span></td></tr>
+      <tr class="rx"><th>retroflex (tongue curled back)</th><td><b lang="hi">ट</b><span>ʈ</span></td><td><b lang="hi">ठ</b><span>ʈʰ</span></td><td><b lang="hi">ड</b><span>ɖ</span></td><td><b lang="hi">ढ</b><span>ɖʱ</span></td><td><b lang="hi">ण</b><span>ɳ</span></td></tr>
+      <tr><th>dental (tongue on teeth)</th><td><b lang="hi">त</b><span>t̪</span></td><td><b lang="hi">थ</b><span>t̪ʰ</span></td><td><b lang="hi">द</b><span>d̪</span></td><td><b lang="hi">ध</b><span>d̪ʱ</span></td><td><b lang="hi">न</b><span>n̪</span></td></tr>
+      <tr><th>labial (lips)</th><td><b lang="hi">प</b><span>p</span></td><td><b lang="hi">फ</b><span>pʰ</span></td><td><b lang="hi">ब</b><span>b</span></td><td><b lang="hi">भ</b><span>bʱ</span></td><td><b lang="hi">म</b><span>m</span></td></tr>
+    </table>
+    <p class="note">The rows are places, the five columns the four-way laryngeal contrast plus a nasal: the &ldquo;South Asian signature&rdquo; measured on
+      <a href="phoneme_inventories.html#areal">page 2, section 5</a> is built into the alphabet. (The &ldquo;palatal&rdquo; row is the traditional name; in IPA terms
+      <span lang="hi">च ज</span> are post-alveolar affricates.) Tamil script, by contrast, has one stop letter per row (<span lang="ta">க ச ட த ப</span>), matching Tamil's lack of a native
+      voicing contrast.</p>
+  </div>
+  <p>
+    Indian scripts are therefore much closer to sound than English spelling, but still not a transcription. In Hindi the inherent vowel is often silent (<strong>schwa deletion</strong>):
+    <span lang="hi">कमल</span> is written <em>ka-ma-la</em> but said /kəməl/. Assamese writes ⟨স⟩ (an <em>s</em> letter) for the sound /x/, so <span lang="as">অসম</span> &lsquo;Assam&rsquo; is
+    said /ɔxɔm/. Loan sounds get a dot (<em>nuqtā</em>): <span lang="hi">ज़</span> /z/, <span lang="hi">फ़</span> /f/. Converting spelling into phonemes is a task of its own,
+    <strong>grapheme-to-phoneme conversion</strong> (G2P), and every text-to-speech system needs it.
+  </p>
+  <div class="card demo" id="g2pDemo">
+    <h4 style="margin:0 0 6px;">Spelling vs sound</h4>
+    <div class="ctlrow" style="margin-top:4px;"><span>pick a word:</span><div class="seg" id="g2pBtns"></div></div>
+    <div id="g2pOut"></div>
+  </div>
+  <div class="keyidea">
+    Three levels to keep apart: <strong>graphemes</strong> ⟨ ⟩ are units of a writing system; <strong>phones</strong> [ ] are actual sounds;
+    <strong>phonemes</strong> / / are the categories a language uses to tell words apart. The IPA writes phones and phonemes with one alphabet for every language, and the same pair of
+    sounds can be one phoneme in one language and two in another.
+  </div>
+</section>
+
+<!-- ============================================================ 6. QUIZ -->
+<section id="quiz">
+  <div class="kicker">06 &middot; Check your understanding</div>
+  <h2>Six questions.</h2>
+  <details><summary>1. In English, the [pʰ] of <em>pin</em> and the [p] of <em>spin</em> are one phoneme. How would you show that in Hindi they are two?</summary>
+    <p style="font-size:0.93rem;">Find a <strong>minimal pair</strong>: two Hindi words that differ only in that sound and mean different things, such as <span lang="hi">पल</span> /pəl/
+    &lsquo;moment&rsquo; and <span lang="hi">फल</span> /pʰəl/ &lsquo;fruit&rsquo;. English has no such pair: [pʰ] and [p] appear in different positions and never distinguish words, so they are
+    allophones of one /p/.</p></details>
+  <details><summary>2. What are allophones? Give an English example, and explain why the same pair of sounds is two phonemes in Hindi.</summary>
+    <p style="font-size:0.93rem;">Allophones are physically different sounds that a language treats as one phoneme, each used in its own context. English [pʰ] (<em>pin</em>) and [p]
+    (<em>spin</em>) are allophones of /p/: swapping them never changes a word. In Hindi the same difference separates words, <span lang="hi">पल</span> /pəl/ &lsquo;moment&rsquo; vs
+    <span lang="hi">फल</span> /pʰəl/ &lsquo;fruit&rsquo;, so there /p/ and /pʰ/ are two phonemes.</p></details>
+  <details><summary>3. Describe /b/, /s/, /t͡ʃ/ (<em>chin</em>) and Hindi /ɳ/ (<span lang="hi">ण</span>) by voicing, place and manner. Which single dimension separates /t/ from /d/, /t/ from /s/, and Hindi /t̪/ from /ʈ/?</summary>
+    <p style="font-size:0.93rem;">/b/: voiced bilabial stop. /s/: voiceless alveolar fricative. /t͡ʃ/: voiceless post-alveolar affricate. /ɳ/: voiced retroflex nasal.
+    /t/&ndash;/d/ differ in <strong>voicing</strong>, /t/&ndash;/s/ in <strong>manner</strong> (stop vs fricative, same place), and /t̪/&ndash;/ʈ/ in <strong>place</strong> (dental vs
+    retroflex, both voiceless stops).</p></details>
+  <details><summary>4. Describe the vowels /i/ (<em>see</em>), /u/ (<em>food</em>) and /aː/ (Hindi <span lang="hi">आम</span>) by height, backness and rounding. Which formant tracks height, and which backness?</summary>
+    <p style="font-size:0.93rem;">/i/: close front unrounded. /u/: close back rounded. /aː/: open, unrounded, long (front to central, depending on the description). Height shows up mainly in
+    \(F_1\) (close vowels have a low \(F_1\), open vowels a high one), backness mainly in \(F_2\) (front vowels have a high \(F_2\), back vowels a low one; lip rounding lowers it further).</p></details>
+  <details><summary>5. Using PHOIBLE's features, how far apart are /p/ and /b/, and Hindi /t̪/ and /ʈ/? Which features differ?</summary>
+    <p style="font-size:0.93rem;">/p/&ndash;/b/: Hamming distance 1, only <em>voice</em> (periodicGlottalSource). /t̪/&ndash;/ʈ/: 2, <em>anterior</em> and
+    <em>distributed</em> (tongue tip at the teeth vs curled back behind the gum ridge). Minimal pairs typically differ in one or two features, which is what makes features a compact
+    &ldquo;embedding&rdquo; of the phoneme set.</p></details>
+  <details><summary>6. How many letters, graphemes and phonemes are there in English <em>though</em>, and in Hindi <span lang="hi">कमल</span> &lsquo;lotus&rsquo;?</summary>
+    <p style="font-size:0.93rem;"><em>though</em>: six letters, two graphemes (⟨th⟩ ⟨ough⟩), two phonemes /ð əʊ/. <span lang="hi">कमल</span>: three consonant letters, each carrying the
+    inherent vowel, but five phonemes /k ə m ə l/, because the final inherent vowel is not pronounced (schwa deletion). Indian scripts are far closer to sound than English spelling, but
+    still not a transcription.</p></details>
+</section>
+
+<footer>
+  Speech and Audio Processing &middot; Module 2, page 1 &middot; demo data and audio from <code>sounds_language/make_intro.py</code>, demos in <code>sounds_language/intro.js</code> (data:
+  <code>sentence.js</code>, <code>intro_data.js</code>).
+  Speech: CMU ARCTIC speaker ksp, Carnegie Mellon University (Kominek &amp; Black), free for any use with the copyright notice kept; excerpts trimmed, faded and normalised for this site; phone
+  labels are the corpus's automatic ones. The English and Hindi inventories (sections 3 and 4) and the feature vectors are <strong>based on PHOIBLE 2.0 data, CC BY 4.0</strong>.
+  <ul class="refs" style="margin-top:12px;">
+    <li>J. Kominek &amp; A. W. Black, &ldquo;The CMU Arctic speech databases,&rdquo; <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, Pittsburgh, 2004 (speaker ksp).</li>
+    <li>P. Ladefoged &amp; K. Johnson, <em>A Course in Phonetics</em>, 7th ed., Cengage, 2015.</li>
+    <li>International Phonetic Association, <em>Handbook of the International Phonetic Association</em>, Cambridge University Press, 1999.</li>
+    <li>B. Hayes, <em>Introductory Phonology</em>, Wiley-Blackwell, 2009.</li>
+    <li>R. Jakobson, C. G. M. Fant &amp; M. Halle, <em>Preliminaries to Speech Analysis</em>, MIT Press, 1952; N. Chomsky &amp; M. Halle, <em>The Sound Pattern of English</em>, Harper &amp; Row, 1968 (distinctive features).</li>
+    <li>S. Moran &amp; D. McCloy (eds.), <em>PHOIBLE 2.0</em>, Jena: Max Planck Institute for the Science of Human History, 2019. <a href="https://phoible.org" target="_blank" rel="noopener">https://phoible.org</a>, doi:10.5281/zenodo.2626687. CC BY 4.0.</li>
+    <li>S. Moran, <em>Phonetics Information Base and Lexicon</em>, PhD thesis, University of Washington, 2012 (PHOIBLE source &ldquo;ph&rdquo;, the English inventory).</li>
+    <li>I. Maddieson, <em>Patterns of Sounds</em>, Cambridge University Press, 1984; I. Maddieson &amp; K. Precoda, UPSID, 1990 (PHOIBLE source &ldquo;upsid&rdquo;, the Hindi inventory).</li>
+  </ul>
+</footer>
+
+<script src="sounds_language/sentence.js?v=1"></script>
+<script src="sounds_language/intro_data.js?v=1"></script>
+<script src="sounds_language/intro.js?v=5"></script>
+
+<!--ai:foot--><footer class="ai-foot"><a href="../index.html">Speech and Audio Processing</a> &middot; Instructor: <a href="https://spinlabiitg.github.io/" target="_blank" rel="noopener">Neeraj Kumar Sharma</a>, IIT Guwahati &middot; <a href="../index.html#credits">data credits</a></footer><!--/ai:foot-->
+</body>
+</html>
